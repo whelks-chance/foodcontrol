@@ -44,24 +44,37 @@ class ReadRaw:
 
         print(pprint.pformat(self.users))
 
+        feedback = []
+
         for user in self.users.keys():
+            individual_feedback = {}
+
             user_data = self.users[user]
 
             initial_bmi = float(user_data[0]['bmi'])
             recent_bmi = float(user_data[-1]['bmi'])
 
             print('User {} had Initial BMI of {}, now has {}'.format(user, initial_bmi, recent_bmi))
+            individual_feedback['comment'] ='User {} had Initial BMI of {}, now has {}'.format(
+                user, initial_bmi, recent_bmi
+            )
 
             upper = initial_bmi * 1.1
             lower = initial_bmi * 0.9
             if recent_bmi < lower:
                 print('Unhealthy user - too much weight loss')
+                individual_feedback['error'] = 'Unhealthy user - too much weight loss'
             elif recent_bmi > upper:
                 print('Unhealthy user - too much weight gain')
+                individual_feedback['error'] = 'Unhealthy user - too much weight gain'
             else:
                 print('User is within 10% of initial BMI')
+                individual_feedback['ok'] = 'User is within 10% of initial BMI'
 
             print('\n')
+            feedback.append(individual_feedback)
+
+        return self.users, feedback
 
 
 if __name__ == '__main__':

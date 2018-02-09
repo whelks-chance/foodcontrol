@@ -1,1 +1,23 @@
 <strong>Leah's Project</strong>
+
+{% for u, d in user_data.items %}
+<p>
+    {{ u }}
+</p>
+    <p>
+    {{ d }}
+    </p>
+{% endfor %}
+
+{% for d in feedback %}
+
+    <p style="color: gray; font-weight: 300">
+        {{ d.comment }}
+    </p>
+    <p style="color: red">
+        {{ d.error }}
+    </p>
+        <p style="color: green">
+        {{ d.ok }}
+    </p>
+{% endfor %}
