@@ -7,6 +7,10 @@ from openpyxl.cell import Cell
 
 class ReadStop:
 
+    def __init__(self):
+        self.filename = ''
+        self.all_data_file_idx = 0
+
     def read_stop_file(self, json_file):
         with open(json_file, 'r') as json_file_handle:
             json_blob = json.load(json_file_handle)
@@ -29,8 +33,14 @@ class ReadStop:
 
         response_times = []
 
+        sheet.cell(
+            column=1, row=1, value='Data ({}) from {}'.format(
+                self.all_data_file_idx,
+                self.filename)
+        )
+
         for idx, col_header in enumerate(col_headers):
-            sheet.cell(column=idx+1, row=1, value=col_header)
+            sheet.cell(column=idx+1, row=2, value=col_header)
 
         for s_idx, trial in enumerate(session_data):
             for col_idx, col_header in enumerate(col_headers):
@@ -39,7 +49,7 @@ class ReadStop:
                 if col_header == 'tapResponseStart' and value:
                     response_times.append(value)
 
-                sheet.cell(column=col_idx+1, row=s_idx+2, value=value)
+                sheet.cell(column=col_idx+1, row=s_idx+3, value=value)
 
         try:
             response_times = sorted(response_times)
@@ -47,25 +57,29 @@ class ReadStop:
 
             wb.create_sheet('Data Summary')
             sheet2 = wb['Data Summary']
-            sheet2.cell(column=1, row=1, value='Response Avg')
-            sheet2.cell(column=1, row=2, value=avg_res)
+            sheet2.cell(column=1, row=2, value='Response Avg')
+            sheet2.cell(column=1, row=3, value=avg_res)
 
-            sheet2.cell(column=2, row=1, value='Response Low')
-            sheet2.cell(column=2, row=2, value=response_times[0])
+            sheet2.cell(column=2, row=2, value='Response Low')
+            sheet2.cell(column=2, row=3, value=response_times[0])
 
-            sheet2.cell(column=3, row=1, value='Response High')
-            sheet2.cell(column=3, row=2, value=response_times[-1])
+            sheet2.cell(column=3, row=2, value='Response High')
+            sheet2.cell(column=3, row=3, value=response_times[-1])
         except:
             pass
 
         wb.save(output_filepath)
 
     def sort_all_data(self, all_data_file):
+        self.filename = all_data_file
+
         with open(all_data_file, 'r') as all_data_handle:
             all_data =  json.load(all_data_handle)
 
             all_types = []
             for idx, a in enumerate(all_data):
+                self.all_data_file_idx = idx
+
                 all_types.append(a['type'])
 
                 if a['type'] == 'STOP':
