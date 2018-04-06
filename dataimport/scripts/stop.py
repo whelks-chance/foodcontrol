@@ -7,47 +7,41 @@ from openpyxl.cell import Cell
 
 class ReadStop:
 
-    def output_spreadsheet(self, json_file):
-        extra_headers = [{
-            'col': 'tapResponseStart',
-            'output': 'avg_response',
-            'method': 'avg'
-        }]
-
+    def read_stop_file(self, json_file):
         with open(json_file, 'r') as json_file_handle:
             json_blob = json.load(json_file_handle)
+            self.output_srgame_spreadsheet(json_blob[0])
 
-            session_data = json_blob[0]['data'][0]['sessionEvents']
+    def output_srgame_spreadsheet(self, json_blob, output_filepath='test101.xlsx'):
+        # extra_headers = [{
+        #     'col': 'tapResponseStart',
+        #     'output': 'avg_response',
+        #     'method': 'avg'
+        # }]
 
-            print(len(session_data))
+        session_data = json_blob['data'][0]['sessionEvents']
+        col_headers = sorted(session_data[0].keys())
 
-            col_headers = sorted(session_data[0].keys())
-            print(col_headers)
+        wb = Workbook()
+        wb.get_sheet_names()
+        sheet = wb.active
+        sheet.title = 'Data Output'
 
-            # for trial in session_data:
-            #     print(trial.keys())
+        response_times = []
 
-            wb = Workbook()
-            wb.get_sheet_names()
-            sheet = wb.active
-            sheet.title = 'Data Output'
+        for idx, col_header in enumerate(col_headers):
+            sheet.cell(column=idx+1, row=1, value=col_header)
 
-            filepath = "test101.xlsx"
+        for s_idx, trial in enumerate(session_data):
+            for col_idx, col_header in enumerate(col_headers):
+                value = trial[col_header]
 
-            response_times = []
+                if col_header == 'tapResponseStart' and value:
+                    response_times.append(value)
 
-            for idx, col_header in enumerate(col_headers):
-                sheet.cell(column=idx+1, row=1, value=col_header)
+                sheet.cell(column=col_idx+1, row=s_idx+2, value=value)
 
-            for s_idx, trial in enumerate(session_data):
-                for col_idx, col_header in enumerate(col_headers):
-                    value = trial[col_header]
-
-                    if col_header == 'tapResponseStart' and value:
-                        response_times.append(value)
-
-                    sheet.cell(column=col_idx+1, row=s_idx+2, value=value)
-
+        try:
             response_times = sorted(response_times)
             avg_res = sum(response_times) / len(response_times)
 
@@ -61,12 +55,70 @@ class ReadStop:
 
             sheet2.cell(column=3, row=1, value='Response High')
             sheet2.cell(column=3, row=2, value=response_times[-1])
+        except:
+            pass
 
-            wb.save(filepath)
+        wb.save(output_filepath)
+
+    def sort_all_data(self, all_data_file):
+        with open(all_data_file, 'r') as all_data_handle:
+            all_data =  json.load(all_data_handle)
+
+            all_types = []
+            for idx, a in enumerate(all_data):
+                all_types.append(a['type'])
+
+                if a['type'] == 'STOP':
+                    self.output_srgame_spreadsheet(
+                        a, output_filepath='{}_STOP_{}.xlsx'.format(
+                            a['userId'],
+                            a['data'][0]['gameSessionID']
+                        )
+                    )
+
+                if a['type'] == 'NASTOP':
+                    self.output_srgame_spreadsheet(
+                        a, output_filepath='{}_NASTOP_{}.xlsx'.format(
+                            a['userId'],
+                            a['data'][0]['gameSessionID']
+                        )
+                    )
+
+                if a['type'] == 'GSTOP':
+                    self.output_srgame_spreadsheet(
+                        a, output_filepath='{}_GSTOP_{}.xlsx'.format(
+                            a['userId'],
+                            a['data'][0]['gameSessionID']
+                        )
+                    )
+
+                if a['type'] == 'GRESTRAINT':
+                    self.output_srgame_spreadsheet(
+                        a, output_filepath='{}_GRESTRAINT_{}.xlsx'.format(
+                            a['userId'],
+                            a['data'][0]['gameSessionID']
+                        )
+                    )
+
+                if a['type'] == 'DOUBLE':
+                    self.output_srgame_spreadsheet(
+                        a, output_filepath='{}_DOUBLE_{}.xlsx'.format(
+                            a['userId'],
+                            a['data'][0]['gameSessionID']
+                        )
+                    )
+
+                if a['type'] == 'virtual-supermarket-selected':
+                    print('virtual-supermarket-selected idx', idx)
+
+            print(set(all_types))
 
 
 if __name__ == '__main__':
     rs = ReadStop()
 
-    json_file = '/home/ianh/Downloads/STOP.json'
-    rs.output_spreadsheet(json_file)
+    # json_file = '/home/ianh/Downloads/STOP.json'
+    # rs.read_stop_file(json_file)
+
+    all_data_file = '/home/ianh/Downloads/200318_new.json'
+    rs.sort_all_data(all_data_file)
