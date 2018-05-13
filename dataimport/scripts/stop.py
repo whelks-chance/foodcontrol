@@ -1,5 +1,6 @@
 import json
 
+import os
 from openpyxl.workbook import Workbook
 from openpyxl.reader.excel import load_workbook, InvalidFileException
 from openpyxl.cell import Cell
@@ -16,7 +17,7 @@ class ReadStop:
             json_blob = json.load(json_file_handle)
             self.output_srgame_spreadsheet(json_blob[0])
 
-    def output_srgame_spreadsheet(self, json_blob, output_filepath='test101.xlsx'):
+    def output_srgame_spreadsheet(self, json_blob, folder='test_folder', output_filepath='test101.xlsx'):
         # extra_headers = [{
         #     'col': 'tapResponseStart',
         #     'output': 'avg_response',
@@ -27,7 +28,7 @@ class ReadStop:
         col_headers = sorted(session_data[0].keys())
 
         wb = Workbook()
-        wb.get_sheet_names()
+        # wb.sheetnames
         sheet = wb.active
         sheet.title = 'Data Output'
 
@@ -43,13 +44,28 @@ class ReadStop:
             sheet.cell(column=idx+1, row=2, value=col_header)
 
         for s_idx, trial in enumerate(session_data):
+
+            print('row', s_idx)
+            trial_start = None
+            trial_end = None
+
             for col_idx, col_header in enumerate(col_headers):
                 value = trial[col_header]
+
+                if col_header == 'trialStart' and value:
+                    trial_start = value
+                if col_header == 'trialEnd' and value:
+                    trial_end = value
 
                 if col_header == 'tapResponseStart' and value:
                     response_times.append(value)
 
                 sheet.cell(column=col_idx+1, row=s_idx+3, value=value)
+
+            if trial_start and trial_end:
+                trial_duration = trial_end - trial_start
+                sheet.cell(column=len(col_headers) + 1, row=2, value="trialDuration")
+                sheet.cell(column=len(col_headers) + 1, row=s_idx+3, value=trial_duration)
 
         try:
             response_times = sorted(response_times)
@@ -68,23 +84,38 @@ class ReadStop:
         except:
             pass
 
-        wb.save(output_filepath)
+        parent = os.path.dirname(os.path.abspath(output_filepath))
+        new_folder = os.path.join(parent, folder)
+        if not os.path.exists(new_folder):
+            os.mkdir(new_folder)
+
+        output_file_and_dir = os.path.join(new_folder, output_filepath)
+        print(output_file_and_dir)
+        wb.save(output_file_and_dir)
 
     def sort_all_data(self, all_data_file):
         self.filename = all_data_file
+
+        head, tail = os.path.split(self.filename)
+        new_folder_name = tail.split('.')[0]
 
         with open(all_data_file, 'r') as all_data_handle:
             all_data =  json.load(all_data_handle)
 
             all_types = []
             for idx, a in enumerate(all_data):
+
+                print((idx + 1), a['type'])
+
                 self.all_data_file_idx = idx
 
                 all_types.append(a['type'])
 
                 if a['type'] == 'STOP':
                     self.output_srgame_spreadsheet(
-                        a, output_filepath='{}_STOP_{}.xlsx'.format(
+                        a,
+                        folder=new_folder_name,
+                        output_filepath='{}_STOP_{}.xlsx'.format(
                             a['userId'],
                             a['data'][0]['gameSessionID']
                         )
@@ -92,7 +123,9 @@ class ReadStop:
 
                 if a['type'] == 'NASTOP':
                     self.output_srgame_spreadsheet(
-                        a, output_filepath='{}_NASTOP_{}.xlsx'.format(
+                        a,
+                        folder=new_folder_name,
+                        output_filepath='{}_NASTOP_{}.xlsx'.format(
                             a['userId'],
                             a['data'][0]['gameSessionID']
                         )
@@ -100,7 +133,9 @@ class ReadStop:
 
                 if a['type'] == 'GSTOP':
                     self.output_srgame_spreadsheet(
-                        a, output_filepath='{}_GSTOP_{}.xlsx'.format(
+                        a,
+                        folder=new_folder_name,
+                        output_filepath='{}_GSTOP_{}.xlsx'.format(
                             a['userId'],
                             a['data'][0]['gameSessionID']
                         )
@@ -108,7 +143,9 @@ class ReadStop:
 
                 if a['type'] == 'GRESTRAINT':
                     self.output_srgame_spreadsheet(
-                        a, output_filepath='{}_GRESTRAINT_{}.xlsx'.format(
+                        a,
+                        folder=new_folder_name,
+                        output_filepath='{}_GRESTRAINT_{}.xlsx'.format(
                             a['userId'],
                             a['data'][0]['gameSessionID']
                         )
@@ -116,7 +153,9 @@ class ReadStop:
 
                 if a['type'] == 'DOUBLE':
                     self.output_srgame_spreadsheet(
-                        a, output_filepath='{}_DOUBLE_{}.xlsx'.format(
+                        a,
+                        folder=new_folder_name,
+                        output_filepath='{}_DOUBLE_{}.xlsx'.format(
                             a['userId'],
                             a['data'][0]['gameSessionID']
                         )
@@ -134,5 +173,10 @@ if __name__ == '__main__':
     # json_file = '/home/ianh/Downloads/STOP.json'
     # rs.read_stop_file(json_file)
 
-    all_data_file = '/home/ianh/Downloads/200318_new.json'
-    rs.sort_all_data(all_data_file)
+    data_dir = '../../'
+    abspath = os.path.abspath(data_dir)
+    # all_data_file = '200318_new.json'
+    # rs.sort_all_data(os.path.join(data_dir, all_data_file))
+
+    all_data_file = '020518.json'
+    rs.sort_all_data(os.path.join(data_dir, all_data_file))

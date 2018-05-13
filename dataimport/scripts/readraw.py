@@ -140,7 +140,6 @@ class Eligibility:
     def eating_disorder_other(self):
         return self.data.get('eating-disorder-other', None)
 
-
     def get_complex_fields(self):
         cfs = []
         for cf in self.complex_fields():
