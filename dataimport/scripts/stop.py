@@ -33,6 +33,8 @@ class ReadStop:
         sheet.title = 'Data Output'
 
         response_times = []
+        session_start = json_blob['data'][0]['sessionStart']
+        session_end = json_blob['data'][0]['sessionEnd']
 
         sheet.cell(
             column=1, row=1, value='Data ({}) from {}'.format(
@@ -46,8 +48,12 @@ class ReadStop:
         for s_idx, trial in enumerate(session_data):
 
             print('row', s_idx)
+
             trial_start = None
             trial_end = None
+
+            stop_signal_offset = None
+            stop_signal_onset = None
 
             for col_idx, col_header in enumerate(col_headers):
                 value = trial[col_header]
@@ -56,6 +62,11 @@ class ReadStop:
                     trial_start = value
                 if col_header == 'trialEnd' and value:
                     trial_end = value
+
+                if col_header == 'stopSignalOffset' and value:
+                    stop_signal_offset = value
+                if col_header == 'stopSignalOnset' and value:
+                    stop_signal_onset = value
 
                 if col_header == 'tapResponseStart' and value:
                     response_times.append(value)
@@ -66,6 +77,13 @@ class ReadStop:
                 trial_duration = trial_end - trial_start
                 sheet.cell(column=len(col_headers) + 1, row=2, value="trialDuration")
                 sheet.cell(column=len(col_headers) + 1, row=s_idx+3, value=trial_duration)
+
+            if stop_signal_offset and stop_signal_onset:
+                stop_signal_duration = stop_signal_offset - stop_signal_onset
+                sheet.cell(column=len(col_headers) + 2, row=2, value="stopSignalDuration")
+                sheet.cell(column=len(col_headers) + 2, row=s_idx+3, value=stop_signal_duration)
+
+
 
         try:
             response_times = sorted(response_times)
@@ -81,6 +99,9 @@ class ReadStop:
 
             sheet2.cell(column=3, row=2, value='Response High')
             sheet2.cell(column=3, row=3, value=response_times[-1])
+
+            sheet2.cell(column=4, row=2, value='Session Duration')
+            sheet2.cell(column=4, row=3, value=(session_end - session_start))
         except:
             pass
 
