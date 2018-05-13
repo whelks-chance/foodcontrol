@@ -35,6 +35,7 @@ class ReadStop:
         response_times = []
         session_start = json_blob['data'][0]['sessionStart']
         session_end = json_blob['data'][0]['sessionEnd']
+        previous_trial_start = None
 
         sheet.cell(
             column=1, row=1, value='Data ({}) from {}'.format(
@@ -45,44 +46,62 @@ class ReadStop:
         for idx, col_header in enumerate(col_headers):
             sheet.cell(column=idx+1, row=2, value=col_header)
 
+        # Rows within a session
         for s_idx, trial in enumerate(session_data):
 
-            print('row', s_idx)
-
-            trial_start = None
-            trial_end = None
-
-            stop_signal_offset = None
-            stop_signal_onset = None
+            # print('row', s_idx)
 
             for col_idx, col_header in enumerate(col_headers):
                 value = trial[col_header]
-
-                if col_header == 'trialStart' and value:
-                    trial_start = value
-                if col_header == 'trialEnd' and value:
-                    trial_end = value
-
-                if col_header == 'stopSignalOffset' and value:
-                    stop_signal_offset = value
-                if col_header == 'stopSignalOnset' and value:
-                    stop_signal_onset = value
 
                 if col_header == 'tapResponseStart' and value:
                     response_times.append(value)
 
                 sheet.cell(column=col_idx+1, row=s_idx+3, value=value)
 
-            if trial_start and trial_end:
-                trial_duration = trial_end - trial_start
-                sheet.cell(column=len(col_headers) + 1, row=2, value="trialDuration")
-                sheet.cell(column=len(col_headers) + 1, row=s_idx+3, value=trial_duration)
+            # Trial duration: trialEnd - trialStart
+            if 'trialEnd' in trial and 'trialStart' in trial:
+                if trial['trialEnd'] and trial['trialStart']:
+                    trial_duration = trial['trialEnd'] - trial['trialStart']
+                    sheet.cell(column=len(col_headers) + 1, row=2, value="Trial Duration")
+                    sheet.cell(column=len(col_headers) + 1, row=s_idx+3, value=trial_duration)
 
-            if stop_signal_offset and stop_signal_onset:
-                stop_signal_duration = stop_signal_offset - stop_signal_onset
-                sheet.cell(column=len(col_headers) + 2, row=2, value="stopSignalDuration")
-                sheet.cell(column=len(col_headers) + 2, row=s_idx+3, value=stop_signal_duration)
+            # Stop signal duration: stopSignalOffset - stopSignalOnset
+            if 'stopSignalOffset' in trial and 'stopSignalOnset' in trial:
+                if trial['stopSignalOffset'] and trial['stopSignalOnset']:
+                    stop_signal_duration = trial['stopSignalOffset'] - trial['stopSignalOnset']
+                    sheet.cell(column=len(col_headers) + 2, row=2, value="Stop Signal Duration")
+                    sheet.cell(column=len(col_headers) + 2, row=s_idx+3, value=stop_signal_duration)
 
+            # Stimulus duration: stimulusOffset - stimulusOnset
+            if 'stimulusOffset' in trial and 'stimulusOnset' in trial:
+                stimulus_duration = trial['stimulusOffset'] - trial['stimulusOnset']
+                sheet.cell(column=len(col_headers) + 3, row=2, value="Stimulus Duration")
+                sheet.cell(column=len(col_headers) + 3, row=s_idx+3, value=stimulus_duration)
+
+            # Difference between signal onset and stop signal delay: stopSignalOnset - stopSignalDelay
+            if 'stopSignalOnset' in trial and 'stopSignalDelay' in trial:
+                if trial['stopSignalOnset'] and trial['stopSignalDelay']:
+                    signal_stop_delay = trial['stopSignalOnset'] - trial['stopSignalDelay']
+                    sheet.cell(column=len(col_headers) + 4, row=2, value="stopSignalOnset - stopSignalDelay")
+                    sheet.cell(column=len(col_headers) + 4, row=s_idx + 3, value=signal_stop_delay)
+
+            # interTrialInterval
+            # Duration between trials: trialOnsetB - trialOnsetA,
+            # where B is the trial of interest and A is the trial preceding that.
+            # Calculations needed without 1st trial of each block (because of inter-block/graphical feedback).
+            # TODO does 'trialOnsetA' mean trialStart?
+            if 'trialStart' in trial:
+                if trial['trialStart']:
+                    if previous_trial_start:
+                        interTrialInterval = trial['trialStart'] - previous_trial_start
+                        sheet.cell(column=len(col_headers) + 5, row=2,
+                                   value="interTrialInterval")
+                        sheet.cell(column=len(col_headers) + 5, row=s_idx + 3,
+                                   value=interTrialInterval)
+                    previous_trial_start = trial['trialStart']
+
+            # Duration between signal offset and stimulus offset: stimulusOffset - stopSignalOffset
 
 
         try:
