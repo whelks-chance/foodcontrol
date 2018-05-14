@@ -37,6 +37,9 @@ class ReadStop:
         session_end = json_blob['data'][0]['sessionEnd']
         previous_trial_start = None
 
+        max_round = 0
+        round_trial_counts = {}
+
         sheet.cell(
             column=1, row=1, value='Data ({}) from {}'.format(
                 self.all_data_file_idx,
@@ -58,6 +61,16 @@ class ReadStop:
                     response_times.append(value)
 
                 sheet.cell(column=col_idx+1, row=s_idx+3, value=value)
+
+            # roundID
+            if 'roundID' in trial and trial['roundID']:
+                if trial['roundID'] > max_round:
+                    max_round = trial['roundID']
+
+                if trial['roundID'] in round_trial_counts:
+                    round_trial_counts[trial['roundID']] = round_trial_counts[trial['roundID']] + 1
+                else:
+                    round_trial_counts[trial['roundID']] = 0
 
             # Trial duration: trialEnd - trialStart
             if 'trialEnd' in trial and 'trialStart' in trial:
@@ -102,7 +115,12 @@ class ReadStop:
                     previous_trial_start = trial['trialStart']
 
             # Duration between signal offset and stimulus offset: stimulusOffset - stopSignalOffset
-
+            if 'stimulusOffset' in trial and 'stopSignalOffset' in trial:
+                if trial['stimulusOffset'] and trial['stopSignalOffset']:
+                    # TODO this is zero apparently
+                    signal_stimulus_offsets = trial['stimulusOffset'] - trial['stopSignalOffset']
+                    sheet.cell(column=len(col_headers) + 6, row=2, value="stimulusOffset - stopSignalOffset")
+                    sheet.cell(column=len(col_headers) + 6, row=s_idx + 3, value=signal_stimulus_offsets)
 
         try:
             response_times = sorted(response_times)
@@ -121,7 +139,24 @@ class ReadStop:
 
             sheet2.cell(column=4, row=2, value='Session Duration')
             sheet2.cell(column=4, row=3, value=(session_end - session_start))
-        except:
+
+            sheet2.cell(column=5, row=2, value='Session Event Count')
+            sheet2.cell(column=5, row=3, value=len(session_data))
+
+            sheet2.cell(column=6, row=2, value='Max round ID')
+            sheet2.cell(column=6, row=3, value=max_round)
+
+            # round number and count
+            sheet2.cell(column=7, row=2, value='Round trial numbers')
+            sheet2.cell(column=8, row=2, value='Round trial count')
+            for itr, value in enumerate(round_trial_counts):
+                sheet2.cell(column=7, row=3 + itr, value=value)
+                sheet2.cell(column=8, row=3 + itr, value=round_trial_counts[value])
+
+
+        except Exception as e1:
+            print(e1)
+
             pass
 
         parent = os.path.dirname(os.path.abspath(output_filepath))
@@ -143,6 +178,7 @@ class ReadStop:
             all_data =  json.load(all_data_handle)
 
             all_types = []
+            task_count = 0
             for idx, a in enumerate(all_data):
 
                 print((idx + 1), a['type'])
@@ -150,6 +186,11 @@ class ReadStop:
                 self.all_data_file_idx = idx
 
                 all_types.append(a['type'])
+                if 'data' in a:
+                    if isinstance(a['data'], list) and len(a['data']):
+                        print(a['data'])
+                        if 'sessionEvents' in a['data'][0]:
+                            task_count += len(a['data'][0]['sessionEvents'])
 
                 if a['type'] == 'STOP':
                     self.output_srgame_spreadsheet(
@@ -205,6 +246,7 @@ class ReadStop:
                     print('virtual-supermarket-selected idx', idx)
 
             print(set(all_types))
+            print('task_count', task_count)
 
 
 if __name__ == '__main__':
