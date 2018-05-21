@@ -31,6 +31,7 @@ class ReadStop:
         # wb.sheetnames
         sheet = wb.active
         sheet.title = 'Data Output'
+        print('\ncreating data output sheet for {}\n'.format(output_filepath))
 
         response_times = []
         session_start = json_blob['data'][0]['sessionStart']
@@ -39,6 +40,15 @@ class ReadStop:
 
         max_round = 0
         round_trial_counts = {}
+
+        trial_type_counts = {
+            'STOP': 0,
+            'GO': 0,
+            'HEALTHY': 0,
+            'NON_HEALTHY': 0,
+            'HEALTHY_RANDOM': 0,
+            'HEALTHY_NOT_RANDOM': 0
+        }
 
         sheet.cell(
             column=1, row=1, value='Data ({}) from {}'.format(
@@ -122,20 +132,45 @@ class ReadStop:
                     sheet.cell(column=len(col_headers) + 6, row=2, value="stimulusOffset - stopSignalOffset")
                     sheet.cell(column=len(col_headers) + 6, row=s_idx + 3, value=signal_stimulus_offsets)
 
+            if 'trialType' in trial:
+                if trial['trialType'] == 'GO':
+                    trial_type_counts['GO'] = trial_type_counts['GO'] + 1
+                if trial['trialType'] == 'STOP':
+                    trial_type_counts['STOP'] = trial_type_counts['STOP'] + 1
+
+            if 'itemType' in trial:
+                if trial['itemType'] == 'HEALTHY':
+                    trial_type_counts['HEALTHY'] = trial_type_counts['HEALTHY'] + 1
+
+                    if trial['selected'] == 'RANDOM':
+                        trial_type_counts['HEALTHY_RANDOM'] = trial_type_counts['HEALTHY_RANDOM'] + 1
+                    else:
+                        trial_type_counts['HEALTHY_NOT_RANDOM'] = trial_type_counts['HEALTHY_NOT_RANDOM'] + 1
+
+                if trial['itemType'] == 'NON_HEALTHY':
+                    trial_type_counts['NON_HEALTHY'] = trial_type_counts['NON_HEALTHY'] + 1
+
         try:
-            response_times = sorted(response_times)
-            avg_res = sum(response_times) / len(response_times)
+            print('\ncreating summary sheet for {}\n'.format(output_filepath))
 
             wb.create_sheet('Data Summary')
             sheet2 = wb['Data Summary']
+
             sheet2.cell(column=1, row=2, value='Response Avg')
-            sheet2.cell(column=1, row=3, value=avg_res)
-
             sheet2.cell(column=2, row=2, value='Response Low')
-            sheet2.cell(column=2, row=3, value=response_times[0])
-
             sheet2.cell(column=3, row=2, value='Response High')
-            sheet2.cell(column=3, row=3, value=response_times[-1])
+
+            # If we don't have any response times, put N/A to maintain data shape
+            if len(response_times):
+                response_times = sorted(response_times)
+                avg_res = sum(response_times) / len(response_times)
+                sheet2.cell(column=1, row=3, value=avg_res)
+                sheet2.cell(column=2, row=3, value=response_times[0])
+                sheet2.cell(column=3, row=3, value=response_times[-1])
+            else:
+                sheet2.cell(column=1, row=3, value='N/A')
+                sheet2.cell(column=2, row=3, value='N/A')
+                sheet2.cell(column=3, row=3, value='N/A')
 
             sheet2.cell(column=4, row=2, value='Session Duration')
             sheet2.cell(column=4, row=3, value=(session_end - session_start))
@@ -153,9 +188,28 @@ class ReadStop:
                 sheet2.cell(column=7, row=3 + itr, value=value)
                 sheet2.cell(column=8, row=3 + itr, value=round_trial_counts[value])
 
+            sheet2.cell(column=9, row=2, value='Num GOs')
+            sheet2.cell(column=9, row=3, value=trial_type_counts['GO'])
+
+            sheet2.cell(column=10, row=2, value='Num STOPs')
+            sheet2.cell(column=10, row=3, value=trial_type_counts['STOP'])
+
+            sheet2.cell(column=11, row=2, value='Num HEALTHYs')
+            sheet2.cell(column=11, row=3, value=trial_type_counts['HEALTHY'])
+
+            sheet2.cell(column=12, row=2, value='Num NON_HEALTHYs')
+            sheet2.cell(column=12, row=3, value=trial_type_counts['NON_HEALTHY'])
+
+            # HEALTHY_RANDOM
+            sheet2.cell(column=13, row=2, value='Num HEALTHY_RANDOMs')
+            sheet2.cell(column=13, row=3, value=trial_type_counts['HEALTHY_RANDOM'])
+
+            # HEALTHY_NOT_RANDOM
+            sheet2.cell(column=14, row=2, value='Num HEALTHY_NOT_RANDOMs')
+            sheet2.cell(column=14, row=3, value=trial_type_counts['HEALTHY_NOT_RANDOM'])
 
         except Exception as e1:
-            print(e1)
+            print('Data Summary error', e1)
 
             pass
 
@@ -188,7 +242,7 @@ class ReadStop:
                 all_types.append(a['type'])
                 if 'data' in a:
                     if isinstance(a['data'], list) and len(a['data']):
-                        print(a['data'])
+                        # print(a['data'])
                         if 'sessionEvents' in a['data'][0]:
                             task_count += len(a['data'][0]['sessionEvents'])
 
