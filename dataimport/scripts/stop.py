@@ -1,6 +1,9 @@
 import json
 
 import os
+import pprint
+
+from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
 from openpyxl.reader.excel import load_workbook, InvalidFileException
 from openpyxl.cell import Cell
@@ -11,28 +14,43 @@ class ReadStop:
     def __init__(self):
         self.filename = ''
         self.all_data_file_idx = 0
+        self.summary_count = 1
 
     def read_stop_file(self, json_file):
         with open(json_file, 'r') as json_file_handle:
             json_blob = json.load(json_file_handle)
             self.output_srgame_spreadsheet(json_blob[0])
 
-    def output_srgame_spreadsheet(self, json_blob, folder='test_folder', output_filepath='test101.xlsx'):
+    def resize_sheet_columns(self, sheet, row_number=0):
+        # Changing the column width to approx the length of the headers
+        for idx, col_header in enumerate(list(sheet.rows)[row_number]):
+            dim = sheet.column_dimensions[get_column_letter(idx + 1)]
+            dim.width = len(col_header.value)
+
+    def output_srgame_spreadsheet(self, json_blob, folder='test_folder'):
         # extra_headers = [{
         #     'col': 'tapResponseStart',
         #     'output': 'avg_response',
         #     'method': 'avg'
         # }]
 
+        output_filepath = '{}_{}_{}.xlsx'.format(
+            json_blob['userId'],
+            json_blob['type'],
+            json_blob['data'][0]['gameSessionID']
+        )
+
         session_data = json_blob['data'][0]['sessionEvents']
         col_headers = sorted(session_data[0].keys())
 
         wb = Workbook()
+        self.wb = wb
         # wb.sheetnames
         sheet = wb.active
         sheet.title = 'Data Output'
         print('\ncreating data output sheet for {}\n'.format(output_filepath))
 
+        self.summary_count = 0
         response_times = []
         session_start = json_blob['data'][0]['sessionStart']
         session_end = json_blob['data'][0]['sessionEnd']
@@ -41,13 +59,16 @@ class ReadStop:
         max_round = 0
         round_trial_counts = {}
 
-        trial_type_counts = {
-            'STOP': 0,
-            'GO': 0,
-            'HEALTHY': 0,
-            'NON_HEALTHY': 0,
-            'HEALTHY_RANDOM': 0,
-            'HEALTHY_NOT_RANDOM': 0
+        self.trial_type_counts = {
+            'total': {
+                'STOP': 0,
+                'GO': 0,
+                'HEALTHY': 0,
+                'NON_HEALTHY': 0,
+                'HEALTHY_RANDOM': 0,
+                'HEALTHY_NOT_RANDOM': 0
+            },
+            'blocks': {}
         }
 
         sheet.cell(
@@ -83,30 +104,30 @@ class ReadStop:
                     round_trial_counts[trial['roundID']] = 0
 
             # Trial duration: trialEnd - trialStart
+            sheet.cell(column=len(col_headers) + 1, row=2, value="Trial Duration")
             if 'trialEnd' in trial and 'trialStart' in trial:
                 if trial['trialEnd'] and trial['trialStart']:
                     trial_duration = trial['trialEnd'] - trial['trialStart']
-                    sheet.cell(column=len(col_headers) + 1, row=2, value="Trial Duration")
                     sheet.cell(column=len(col_headers) + 1, row=s_idx+3, value=trial_duration)
 
             # Stop signal duration: stopSignalOffset - stopSignalOnset
+            sheet.cell(column=len(col_headers) + 2, row=2, value="Stop Signal Duration")
             if 'stopSignalOffset' in trial and 'stopSignalOnset' in trial:
                 if trial['stopSignalOffset'] and trial['stopSignalOnset']:
                     stop_signal_duration = trial['stopSignalOffset'] - trial['stopSignalOnset']
-                    sheet.cell(column=len(col_headers) + 2, row=2, value="Stop Signal Duration")
                     sheet.cell(column=len(col_headers) + 2, row=s_idx+3, value=stop_signal_duration)
 
             # Stimulus duration: stimulusOffset - stimulusOnset
+            sheet.cell(column=len(col_headers) + 3, row=2, value="Stimulus Duration")
             if 'stimulusOffset' in trial and 'stimulusOnset' in trial:
                 stimulus_duration = trial['stimulusOffset'] - trial['stimulusOnset']
-                sheet.cell(column=len(col_headers) + 3, row=2, value="Stimulus Duration")
                 sheet.cell(column=len(col_headers) + 3, row=s_idx+3, value=stimulus_duration)
 
             # Difference between signal onset and stop signal delay: stopSignalOnset - stopSignalDelay
+            sheet.cell(column=len(col_headers) + 4, row=2, value="stopSignalOnset - stopSignalDelay")
             if 'stopSignalOnset' in trial and 'stopSignalDelay' in trial:
                 if trial['stopSignalOnset'] and trial['stopSignalDelay']:
                     signal_stop_delay = trial['stopSignalOnset'] - trial['stopSignalDelay']
-                    sheet.cell(column=len(col_headers) + 4, row=2, value="stopSignalOnset - stopSignalDelay")
                     sheet.cell(column=len(col_headers) + 4, row=s_idx + 3, value=signal_stop_delay)
 
             # interTrialInterval
@@ -133,22 +154,32 @@ class ReadStop:
                     sheet.cell(column=len(col_headers) + 6, row=s_idx + 3, value=signal_stimulus_offsets)
 
             if 'trialType' in trial:
-                if trial['trialType'] == 'GO':
-                    trial_type_counts['GO'] = trial_type_counts['GO'] + 1
-                if trial['trialType'] == 'STOP':
-                    trial_type_counts['STOP'] = trial_type_counts['STOP'] + 1
+                # Global store of numbers of trialType (STOP, GO) by Block
+                self.store_trial_round_game_type(trial)
+
+                # Keep a count of trialTypes, probably STOP or GO
+                if trial['trialType'] not in self.trial_type_counts['total']:
+                    self.trial_type_counts['total'][trial['trialType']] = 1
+                else:
+                    self.trial_type_counts['total'][trial['trialType']] += 1
 
             if 'itemType' in trial:
                 if trial['itemType'] == 'HEALTHY':
-                    trial_type_counts['HEALTHY'] = trial_type_counts['HEALTHY'] + 1
+                    self.trial_type_counts['total']['HEALTHY'] += 1
 
                     if trial['selected'] == 'RANDOM':
-                        trial_type_counts['HEALTHY_RANDOM'] = trial_type_counts['HEALTHY_RANDOM'] + 1
+                        self.trial_type_counts['total']['HEALTHY_RANDOM'] += 1
                     else:
-                        trial_type_counts['HEALTHY_NOT_RANDOM'] = trial_type_counts['HEALTHY_NOT_RANDOM'] + 1
+                        self.trial_type_counts['total']['HEALTHY_NOT_RANDOM'] += 1
 
                 if trial['itemType'] == 'NON_HEALTHY':
-                    trial_type_counts['NON_HEALTHY'] = trial_type_counts['NON_HEALTHY'] + 1
+                    self.trial_type_counts['total']['NON_HEALTHY'] += 1
+
+        # # Changing the column width to approx the length of the headers
+        # for idx, col_header in enumerate(list(sheet.rows)[1]):
+        #     dim = sheet.column_dimensions[get_column_letter(idx + 1)]
+        #     dim.width = len(col_header.value)
+        self.resize_sheet_columns(sheet, 1)
 
         try:
             print('\ncreating summary sheet for {}\n'.format(output_filepath))
@@ -167,19 +198,31 @@ class ReadStop:
                 sheet2.cell(column=1, row=3, value=avg_res)
                 sheet2.cell(column=2, row=3, value=response_times[0])
                 sheet2.cell(column=3, row=3, value=response_times[-1])
+
+                self.store_summary_key_value('Response Avg', avg_res)
+                self.store_summary_key_value('Response Low', response_times[0])
+                self.store_summary_key_value('Response High', response_times[-1])
+
             else:
                 sheet2.cell(column=1, row=3, value='N/A')
                 sheet2.cell(column=2, row=3, value='N/A')
                 sheet2.cell(column=3, row=3, value='N/A')
 
+                self.store_summary_key_value('Response Avg', 'N/A')
+                self.store_summary_key_value('Response Low', 'N/A')
+                self.store_summary_key_value('Response High', 'N/A')
+
             sheet2.cell(column=4, row=2, value='Session Duration')
             sheet2.cell(column=4, row=3, value=(session_end - session_start))
+            self.store_summary_key_value('Session Duration', (session_end - session_start))
 
             sheet2.cell(column=5, row=2, value='Session Event Count')
             sheet2.cell(column=5, row=3, value=len(session_data))
+            self.store_summary_key_value('Session Event Count', len(session_data))
 
             sheet2.cell(column=6, row=2, value='Max round ID')
             sheet2.cell(column=6, row=3, value=max_round)
+            self.store_summary_key_value('Max round ID', max_round)
 
             # round number and count
             sheet2.cell(column=7, row=2, value='Round trial numbers')
@@ -189,29 +232,43 @@ class ReadStop:
                 sheet2.cell(column=8, row=3 + itr, value=round_trial_counts[value])
 
             sheet2.cell(column=9, row=2, value='Num GOs')
-            sheet2.cell(column=9, row=3, value=trial_type_counts['GO'])
+            sheet2.cell(column=9, row=3, value=self.trial_type_counts['total']['GO'])
+            self.store_summary_key_value('Num GOs', self.trial_type_counts['total']['GO'])
 
             sheet2.cell(column=10, row=2, value='Num STOPs')
-            sheet2.cell(column=10, row=3, value=trial_type_counts['STOP'])
+            sheet2.cell(column=10, row=3, value=self.trial_type_counts['total']['STOP'])
+            self.store_summary_key_value('Num STOPs', self.trial_type_counts['total']['STOP'])
 
             sheet2.cell(column=11, row=2, value='Num HEALTHYs')
-            sheet2.cell(column=11, row=3, value=trial_type_counts['HEALTHY'])
+            sheet2.cell(column=11, row=3, value=self.trial_type_counts['total']['HEALTHY'])
+            self.store_summary_key_value('Num HEALTHYs', self.trial_type_counts['total']['HEALTHY'])
 
             sheet2.cell(column=12, row=2, value='Num NON_HEALTHYs')
-            sheet2.cell(column=12, row=3, value=trial_type_counts['NON_HEALTHY'])
+            sheet2.cell(column=12, row=3, value=self.trial_type_counts['total']['NON_HEALTHY'])
+            self.store_summary_key_value('Num NON_HEALTHYs', self.trial_type_counts['total']['NON_HEALTHY'])
 
             # HEALTHY_RANDOM
             sheet2.cell(column=13, row=2, value='Num HEALTHY_RANDOMs')
-            sheet2.cell(column=13, row=3, value=trial_type_counts['HEALTHY_RANDOM'])
+            sheet2.cell(column=13, row=3, value=self.trial_type_counts['total']['HEALTHY_RANDOM'])
+            self.store_summary_key_value('Num HEALTHY_RANDOMs', self.trial_type_counts['total']['HEALTHY_RANDOM'])
 
             # HEALTHY_NOT_RANDOM
             sheet2.cell(column=14, row=2, value='Num HEALTHY_NOT_RANDOMs')
-            sheet2.cell(column=14, row=3, value=trial_type_counts['HEALTHY_NOT_RANDOM'])
+            sheet2.cell(column=14, row=3, value=self.trial_type_counts['total']['HEALTHY_NOT_RANDOM'])
+            self.store_summary_key_value('Num HEALTHY_NOT_RANDOMs',
+                                         self.trial_type_counts['total']['HEALTHY_NOT_RANDOM'])
 
+            for block in self.trial_type_counts['blocks'].keys():
+                for key in self.trial_type_counts['blocks'][block].keys():
+                    self.store_summary_key_value("{}-{}".format(block, key),
+                                                 self.trial_type_counts['blocks'][block][key])
+                    if key in self.trial_type_counts['total']:
+                        self.store_summary_key_value("{}_block_{} / {}_total".format(key, block, key),
+                                                     (self.trial_type_counts['blocks'][block][key]/self.trial_type_counts['total'][key]))
+
+            self.resize_sheet_columns(sheet2, 1)
         except Exception as e1:
             print('Data Summary error', e1)
-
-            pass
 
         parent = os.path.dirname(os.path.abspath(output_filepath))
         new_folder = os.path.join(parent, folder)
@@ -221,6 +278,8 @@ class ReadStop:
         output_file_and_dir = os.path.join(new_folder, output_filepath)
         print(output_file_and_dir)
         wb.save(output_file_and_dir)
+
+        print(pprint.pformat(self.trial_type_counts, indent=4))
 
     def sort_all_data(self, all_data_file):
         self.filename = all_data_file
@@ -235,7 +294,7 @@ class ReadStop:
             task_count = 0
             for idx, a in enumerate(all_data):
 
-                print((idx + 1), a['type'])
+                # print((idx + 1), a['type'])
 
                 self.all_data_file_idx = idx
 
@@ -246,61 +305,108 @@ class ReadStop:
                         if 'sessionEvents' in a['data'][0]:
                             task_count += len(a['data'][0]['sessionEvents'])
 
-                if a['type'] == 'STOP':
-                    self.output_srgame_spreadsheet(
-                        a,
-                        folder=new_folder_name,
-                        output_filepath='{}_STOP_{}.xlsx'.format(
-                            a['userId'],
-                            a['data'][0]['gameSessionID']
-                        )
-                    )
-
-                if a['type'] == 'NASTOP':
-                    self.output_srgame_spreadsheet(
-                        a,
-                        folder=new_folder_name,
-                        output_filepath='{}_NASTOP_{}.xlsx'.format(
-                            a['userId'],
-                            a['data'][0]['gameSessionID']
-                        )
-                    )
-
-                if a['type'] == 'GSTOP':
-                    self.output_srgame_spreadsheet(
-                        a,
-                        folder=new_folder_name,
-                        output_filepath='{}_GSTOP_{}.xlsx'.format(
-                            a['userId'],
-                            a['data'][0]['gameSessionID']
-                        )
-                    )
-
-                if a['type'] == 'GRESTRAINT':
-                    self.output_srgame_spreadsheet(
-                        a,
-                        folder=new_folder_name,
-                        output_filepath='{}_GRESTRAINT_{}.xlsx'.format(
-                            a['userId'],
-                            a['data'][0]['gameSessionID']
-                        )
-                    )
-
-                if a['type'] == 'DOUBLE':
-                    self.output_srgame_spreadsheet(
-                        a,
-                        folder=new_folder_name,
-                        output_filepath='{}_DOUBLE_{}.xlsx'.format(
-                            a['userId'],
-                            a['data'][0]['gameSessionID']
-                        )
-                    )
+                # if a['type'] == 'STOP':
+                #     self.output_srgame_spreadsheet(
+                #         a,
+                #         folder=new_folder_name
+                #     )
+                #
+                # elif a['type'] == 'NASTOP':
+                #     self.output_srgame_spreadsheet(
+                #         a,
+                #         folder=new_folder_name
+                #     )
+                #
+                # elif a['type'] == 'GSTOP':
+                #     self.output_srgame_spreadsheet(
+                #         a,
+                #         folder=new_folder_name
+                #     )
+                #
+                # elif a['type'] == 'GRESTRAINT':
+                #     self.output_srgame_spreadsheet(
+                #         a,
+                #         folder=new_folder_name
+                #     )
+                #
+                # elif a['type'] == 'DOUBLE':
+                #     self.output_srgame_spreadsheet(
+                #         a,
+                #         folder=new_folder_name
+                #     )
 
                 if a['type'] == 'virtual-supermarket-selected':
                     print('virtual-supermarket-selected idx', idx)
+                else:
+                    # print('\n', type(a['data']), a['data'], '\n')
+                    if 'data' in a and isinstance(a['data'], list) and len(a['data']) and 'gameSessionID' in a['data'][0]:
+                        self.output_srgame_spreadsheet(
+                            a,
+                            folder=new_folder_name
+                        )
 
             print(set(all_types))
             print('task_count', task_count)
+
+    def store_summary_key_value(self, key, value, sheet_title='Data Summary 2'):
+        if sheet_title not in self.wb:
+            print('creating a sheet', sheet_title)
+            self.wb.create_sheet(sheet_title)
+
+        sheet = self.wb[sheet_title]
+        self.summary_count += 1
+
+        sheet.cell(column=1,
+                   row=self.summary_count,
+                   value=key)
+        sheet.cell(column=2,
+                   row=self.summary_count,
+                   value=value)
+
+    def store_trial_round_game_type(self, trial):
+        # print('\n\n', trial)
+
+        block_number = trial['roundID']
+        game_name = trial['trialType']
+        # print(block_number, game_name)
+
+        if block_number not in self.trial_type_counts['blocks']:
+            self.trial_type_counts['blocks'][block_number] = {
+                game_name: 1
+            }
+        else:
+            if game_name not in self.trial_type_counts['blocks'][block_number]:
+                self.trial_type_counts['blocks'][block_number][game_name] = 1
+            else:
+                self.trial_type_counts['blocks'][block_number][game_name] += 1
+
+        if 'itemType' in trial:
+
+            # If itemType is HEALTHY, count them.
+            # Also count if this was selected randomly or not
+            if trial['itemType'] == 'HEALTHY':
+                if 'HEALTHY' not in self.trial_type_counts['blocks'][block_number]:
+                    self.trial_type_counts['blocks'][block_number]['HEALTHY'] = 1
+                else:
+                    self.trial_type_counts['blocks'][block_number]['HEALTHY'] += 1
+
+                if trial['selected'] == 'RANDOM':
+                    if 'HEALTHY_RANDOM' not in self.trial_type_counts['blocks'][block_number]:
+                        self.trial_type_counts['blocks'][block_number]['HEALTHY_RANDOM'] = 1
+                    else:
+                        self.trial_type_counts['blocks'][block_number]['HEALTHY_RANDOM'] += 1
+                else:
+                    if 'HEALTHY_NOT_RANDOM' not in self.trial_type_counts['blocks'][block_number]:
+                        self.trial_type_counts['blocks'][block_number]['HEALTHY_NOT_RANDOM'] = 1
+                    else:
+                        self.trial_type_counts['blocks'][block_number]['HEALTHY_NOT_RANDOM'] += 1
+
+            # If itemType is not healthy, count this
+            if trial['itemType'] == 'NON_HEALTHY':
+                if 'NON_HEALTHY' not in self.trial_type_counts['blocks'][block_number]:
+                    self.trial_type_counts['blocks'][block_number]['NON_HEALTHY'] = 1
+                else:
+                    self.trial_type_counts['blocks'][block_number]['NON_HEALTHY'] += 1
 
 
 if __name__ == '__main__':
