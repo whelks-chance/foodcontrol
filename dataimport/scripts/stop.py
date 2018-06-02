@@ -18,6 +18,7 @@ class ReadStop:
         self.all_data_file_idx = 0
         self.summary_count = 1
         self.session_durations = []
+        self.trial_type_counts = {}
 
     def read_stop_file(self, json_file):
         with open(json_file, 'r') as json_file_handle:
@@ -65,6 +66,19 @@ class ReadStop:
         signal_stop_delays = []
         interTrialIntervals = []
         stim_stop_sig_offset_diffs = []
+
+        healthy_ones = 0
+        healthy_twos = 0
+        non_healthy_ones = 0
+        non_healthy_twos = 0
+
+        itemID_selected = {
+            'MB': [],
+            'random': [],
+            'user': [],
+            'upload': [],
+            'non-food': []
+        }
 
         max_round = 0
         round_trial_counts = {}
@@ -188,8 +202,27 @@ class ReadStop:
                     else:
                         self.trial_type_counts['total']['HEALTHY_NOT_RANDOM'] += 1
 
+                    # the number (and %) of foods labelled ‘HEALTHY’ (itemType)
+                    # for which itemID starts with ‘1_ and ‘2_
+                    if 'itemID' in trial:
+                        if str(trial['itemID']).startswith('1_'):
+                            healthy_ones += 1
+                        if str(trial['itemID']).startswith('2_'):
+                            healthy_twos += 1
+
                 if trial['itemType'] == 'NON_HEALTHY':
                     self.trial_type_counts['total']['NON_HEALTHY'] += 1
+
+                    # the number (and %) of foods labelled ‘HEALTHY’ (itemType)
+                    # for which itemID starts with ‘1_ and ‘2_
+                    if 'itemID' in trial:
+                        if str(trial['itemID']).startswith('1_'):
+                            non_healthy_ones += 1
+                        if str(trial['itemID']).startswith('2_'):
+                            non_healthy_twos += 1
+
+            if 'selected' in trial:
+                itemID_selected[trial['selected']].append(trial['itemID'])
 
         # # Changing the column width to approx the length of the headers
         # for idx, col_header in enumerate(list(sheet.rows)[1]):
@@ -231,6 +264,7 @@ class ReadStop:
             sheet2.cell(column=4, row=2, value='Session Duration')
             session_duration = (session_end - session_start)
             self.session_durations.append(session_duration)
+            print('self.session_durations', self.session_durations)
             sheet2.cell(column=4, row=3, value=session_duration)
             self.store_summary_key_value('Session Duration', session_duration)
 
@@ -283,6 +317,11 @@ class ReadStop:
                     if key in self.trial_type_counts['total']:
                         self.store_summary_key_value("{}_block_{} / {}_total".format(key, block, key),
                                                      (self.trial_type_counts['blocks'][block][key]/self.trial_type_counts['total'][key]))
+
+            self.store_summary_key_value('Num HEALTHY 1_s', healthy_ones)
+            self.store_summary_key_value('Num HEALTHY 2_s', healthy_twos)
+            self.store_summary_key_value('Num Non HEALTHY 1_s', non_healthy_ones)
+            self.store_summary_key_value('Num Non HEALTHY 2_s', non_healthy_twos)
 
             if len(trial_durations):
                 min_trial_duration = min(trial_durations)
@@ -353,6 +392,15 @@ class ReadStop:
                                              mean_stim_stop_sig_offset_diff)
                 self.store_summary_key_value('Stimulus - Stop Signal Offset Difference Std Dev',
                                              stim_stop_sig_offset_diff_stdev)
+
+            itemid_set = set()
+            for key in itemID_selected:
+                self.store_summary_key_value('itemID_selected_{}'.format(key),
+                                             str(itemID_selected[key])
+                                             # json.dumps(itemID_selected[key], indent=4)
+                                             )
+                itemid_set.update(itemID_selected[key])
+            self.store_summary_key_value('Unique itemIDs', str(list(itemid_set)))
 
             self.resize_sheet_columns(sheet2, 1)
         except Exception as e1:
@@ -487,15 +535,19 @@ class ReadStop:
         sheet.title = 'Data Output'
 
         if len(self.session_durations):
-            sheet.cell(column=1, row=2, value='avg')
-            sheet.cell(column=2, row=2, value=sum(self.session_durations) / len(self.session_durations))
+            print(self.session_durations)
 
-            sheet.cell(column=1, row=2, value='avg')
-            sheet.cell(column=2, row=2, value=sum(self.session_durations) / len(self.session_durations))
+            sheet.cell(column=1, row=1, value='Min Session Duration')
+            sheet.cell(column=2, row=1, value=min(self.session_durations))
 
-            sheet.cell(column=1, row=2, value='avg')
-            sheet.cell(column=2, row=2, value=sum(self.session_durations) / len(self.session_durations))
+            sheet.cell(column=1, row=2, value='Max Session Duration')
+            sheet.cell(column=2, row=2, value=max(self.session_durations))
 
+            sheet.cell(column=1, row=3, value='Mean Session Duration')
+            sheet.cell(column=2, row=3, value=statistics.mean(self.session_durations))
+
+            sheet.cell(column=1, row=4, value='Session Duration Std Dev')
+            sheet.cell(column=2, row=4, value=statistics.stdev(self.session_durations))
         wb.save('globals.xlsx')
 
 
