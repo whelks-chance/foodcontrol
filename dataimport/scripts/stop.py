@@ -43,6 +43,12 @@ class ReadStop:
             json_blob['type'],
             json_blob['data'][0]['gameSessionID']
         )
+        parent = os.path.dirname(os.path.abspath(output_filepath))
+        new_folder = os.path.join(parent, folder)
+        if not os.path.exists(new_folder):
+            os.mkdir(new_folder)
+        output_file_and_dir = os.path.join(new_folder, output_filepath)
+        print(output_file_and_dir)
 
         session_data = json_blob['data'][0]['sessionEvents']
         col_headers = sorted(session_data[0].keys())
@@ -193,6 +199,34 @@ class ReadStop:
                 else:
                     self.trial_type_counts['total'][trial['trialType']] += 1
 
+                if trial['trialType'] == 'GO' and 'tapResponseStart' in trial:
+                    # TODO catch case where DOUBLE has initialTapResponseStart and secondTapResponseStart
+                    # TODO something is wrong here, way too many incorrect 'tapResponseType' recorded
+                    if trial['tapResponseStart'] is None:
+                        if trial['tapResponseType'] == 'INCORRECT_GO':
+                            # print('Correctly identified INCORRECT_GO')
+                            pass
+                        else:
+                            print(s_idx+1, json_blob['type'])
+                            print('Incorrect, should be INCORRECT_GO not', trial['tapResponseType'])
+
+                    # CORRECT_GO = tapResponseStart>0 and tap made within stimulus boundaries
+                    elif trial['tapResponseStart'] > 0:
+                        if trial['stimulusOnset'] < trial['tapResponseStart'] < trial['stimulusOffset']:
+                            if trial['tapResponseType'] == 'CORRECT_GO':
+                                # print('Correctly identified CORRECT_GO')
+                                pass
+                            else:
+                                print(s_idx + 1, json_blob['type'])
+                                print('Incorrect, should be CORRECT_GO not', trial['tapResponseType'])
+                        else:
+                            if trial['tapResponseType'] == 'MISS_GO':
+                                # print('Correctly identified MISS_GO')
+                                pass
+                            else:
+                                print(s_idx + 1, json_blob['type'])
+                                print('Incorrect, should be MISS_GO', trial['tapResponseType'])
+
             if 'itemType' in trial:
                 if trial['itemType'] == 'HEALTHY':
                     self.trial_type_counts['total']['HEALTHY'] += 1
@@ -223,6 +257,9 @@ class ReadStop:
 
             if 'selected' in trial:
                 itemID_selected[trial['selected']].append(trial['itemID'])
+
+            sheet.cell(column=len(col_headers) + 7, row=2, value="trial number")
+            sheet.cell(column=len(col_headers) + 7, row=s_idx + 3, value=s_idx+1)
 
         # # Changing the column width to approx the length of the headers
         # for idx, col_header in enumerate(list(sheet.rows)[1]):
@@ -409,13 +446,6 @@ class ReadStop:
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             print(exc_type, fname, exc_tb.tb_lineno)
 
-        parent = os.path.dirname(os.path.abspath(output_filepath))
-        new_folder = os.path.join(parent, folder)
-        if not os.path.exists(new_folder):
-            os.mkdir(new_folder)
-
-        output_file_and_dir = os.path.join(new_folder, output_filepath)
-        print(output_file_and_dir)
         wb.save(output_file_and_dir)
 
         print(pprint.pformat(self.trial_type_counts, indent=4))
@@ -433,7 +463,7 @@ class ReadStop:
             task_count = 0
             for idx, a in enumerate(all_data):
 
-                # print((idx + 1), a['type'])
+                print((idx + 1), a['type'])
 
                 self.all_data_file_idx = idx
 
