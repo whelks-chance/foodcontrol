@@ -20,6 +20,9 @@ class ReadStop:
         self.session_durations = []
         self.trial_type_counts = {}
 
+        self.event_on = {}
+        self.event_off = {}
+
     def read_stop_file(self, json_file):
         with open(json_file, 'r') as json_file_handle:
             json_blob = json.load(json_file_handle)
@@ -30,6 +33,29 @@ class ReadStop:
         for idx, col_header in enumerate(list(sheet.rows)[row_number]):
             dim = sheet.column_dimensions[get_column_letter(idx + 1)]
             dim.width = len(col_header.value)
+
+    def tap_within_circle(self, trial_event, itemRadius=95):
+
+        tx = float(trial_event['tapResponsePositionX'])
+        ix = trial_event['itemPositionX']
+        ty = float(trial_event['tapResponsePositionY'])
+        iy = trial_event['itemPositionY']
+        if ((tx - ix) ** 2) + ((ty - iy) ** 2) < (itemRadius ** 2):
+            return True
+        else:
+            return False
+
+    def count_raw_events(self, raw_data):
+        for raw_event in raw_data:
+            if raw_event['eventOn'] not in self.event_on:
+                self.event_on[raw_event['eventOn']] = 1
+            else:
+                self.event_on[raw_event['eventOn']] += 1
+
+            if raw_event['eventOff'] not in self.event_off:
+                self.event_off[raw_event['eventOff']] = 1
+            else:
+                self.event_off[raw_event['eventOff']] += 1
 
     def output_srgame_spreadsheet(self, json_blob, folder='test_folder'):
         # extra_headers = [{
@@ -53,6 +79,9 @@ class ReadStop:
         session_data = json_blob['data'][0]['sessionEvents']
         col_headers = sorted(session_data[0].keys())
 
+        raw_data = json_blob['data'][0]['rawEvents']
+        self.count_raw_events(raw_data)
+
         wb = Workbook()
         self.wb = wb
         # wb.sheetnames
@@ -72,11 +101,13 @@ class ReadStop:
         signal_stop_delays = []
         interTrialIntervals = []
         stim_stop_sig_offset_diffs = []
+        correct_go_tapResponseStarts = []
 
         healthy_ones = 0
         healthy_twos = 0
         non_healthy_ones = 0
         non_healthy_twos = 0
+        trial_points = 0
 
         itemID_selected = {
             'MB': [],
@@ -189,6 +220,7 @@ class ReadStop:
                         interTrialIntervals.append(interTrialInterval)
                     previous_trial_start = trial['trialStart']
 
+            points_this_trial = 0
             if 'trialType' in trial:
                 # Global store of numbers of trialType (STOP, GO) by Block
                 self.store_trial_round_game_type(trial)
@@ -200,6 +232,14 @@ class ReadStop:
                     self.trial_type_counts['total'][trial['trialType']] += 1
 
                 if trial['trialType'] == 'GO' and 'tapResponseStart' in trial:
+
+                    if trial['tapResponseType'] == 'CORRECT_GO':
+                        points_this_trial = 20
+                    if trial['tapResponseType'] == 'INCORRECT_GO':
+                        points_this_trial = -50
+                    if trial['tapResponseType'] == 'MISS_GO':
+                        points_this_trial = -20
+
                     # TODO catch case where DOUBLE has initialTapResponseStart and secondTapResponseStart
                     # TODO something is wrong here, way too many incorrect 'tapResponseType' recorded
                     if trial['tapResponseStart'] is None:
@@ -207,25 +247,67 @@ class ReadStop:
                             # print('Correctly identified INCORRECT_GO')
                             pass
                         else:
-                            print(s_idx+1, json_blob['type'])
+                            print(s_idx+1, json_blob['type'], trial['trialType'])
                             print('Incorrect, should be INCORRECT_GO not', trial['tapResponseType'])
 
                     # CORRECT_GO = tapResponseStart>0 and tap made within stimulus boundaries
                     elif trial['tapResponseStart'] > 0:
-                        if trial['stimulusOnset'] < trial['tapResponseStart'] < trial['stimulusOffset']:
+                        if self.tap_within_circle(trial):
                             if trial['tapResponseType'] == 'CORRECT_GO':
                                 # print('Correctly identified CORRECT_GO')
+                                # TODO tapResponseTimeAverage correct:
+                                # TODO is this across all games, or within the game?
+                                # this should be equivalent to the average of tapResponseStart
+                                # across CORRECT_GO trials (tapResponseType)
+                                correct_go_tapResponseStarts.append(trial['tapResponseStart'])
                                 pass
                             else:
-                                print(s_idx + 1, json_blob['type'])
+                                print(s_idx + 1, json_blob['type'], trial['trialType'])
                                 print('Incorrect, should be CORRECT_GO not', trial['tapResponseType'])
                         else:
                             if trial['tapResponseType'] == 'MISS_GO':
                                 # print('Correctly identified MISS_GO')
                                 pass
                             else:
-                                print(s_idx + 1, json_blob['type'])
+                                print(s_idx + 1, json_blob['type'], trial['trialType'])
                                 print('Incorrect, should be MISS_GO', trial['tapResponseType'])
+
+                if trial['trialType'] == 'STOP' and 'tapResponseStart' in trial:
+
+                    if trial['tapResponseType'] == 'CORRECT_STOP':
+                        points_this_trial = 50
+                    if trial['tapResponseType'] == 'INCORRECT_STOP':
+                        points_this_trial = -50
+                    if trial['tapResponseType'] == 'MISS_STOP':
+                        points_this_trial = -50
+
+                    # TODO catch case where DOUBLE has initialTapResponseStart and secondTapResponseStart
+                    # TODO something is wrong here, way too many incorrect 'tapResponseType' recorded
+                    if trial['tapResponseStart'] is None:
+                        if trial['tapResponseType'] == 'CORRECT_STOP':
+                            # print('Correctly identified INCORRECT_STOP')
+                            pass
+                        else:
+                            print(s_idx+1, json_blob['type'], trial['trialType'])
+                            print('Incorrect, should be CORRECT_STOP not', trial['tapResponseType'])
+
+                    # CORRECT_GO = tapResponseStart>0 and tap made within stimulus boundaries
+                    elif trial['tapResponseStart'] > 0:
+                        if self.tap_within_circle(trial):
+                            if trial['tapResponseType'] == 'INCORRECT_STOP':
+                                # print('Correctly identified INCORRECT_STOP')
+                                pass
+                            else:
+                                print(s_idx + 1, json_blob['type'], trial['trialType'])
+                                print('Incorrect, should be INCORRECT_STOP not', trial['tapResponseType'])
+                        else:
+                            if trial['tapResponseType'] == 'MISS_STOP':
+                                # print('Correctly identified MISS_STOP')
+                                pass
+                            else:
+                                print(s_idx + 1, json_blob['type'], trial['trialType'])
+                                print('Incorrect, should be MISS_STOP', trial['tapResponseType'])
+                trial_points += points_this_trial
 
             if 'itemType' in trial:
                 if trial['itemType'] == 'HEALTHY':
@@ -260,6 +342,14 @@ class ReadStop:
 
             sheet.cell(column=len(col_headers) + 7, row=2, value="trial number")
             sheet.cell(column=len(col_headers) + 7, row=s_idx + 3, value=s_idx+1)
+
+            # pointsThisTrial
+            sheet.cell(column=len(col_headers) + 8, row=2, value="pointsThisTrial")
+            sheet.cell(column=len(col_headers) + 8, row=s_idx + 3, value=points_this_trial)
+
+            # pointsRunningTotal
+            sheet.cell(column=len(col_headers) + 9, row=2, value="pointsRunningTotal")
+            sheet.cell(column=len(col_headers) + 9, row=s_idx + 3, value=trial_points)
 
         # # Changing the column width to approx the length of the headers
         # for idx, col_header in enumerate(list(sheet.rows)[1]):
@@ -433,11 +523,20 @@ class ReadStop:
             itemid_set = set()
             for key in itemID_selected:
                 self.store_summary_key_value('itemID_selected_{}'.format(key),
-                                             str(itemID_selected[key])
-                                             # json.dumps(itemID_selected[key], indent=4)
+                                             # str(itemID_selected[key])
+                                             json.dumps(itemID_selected[key], indent=4)
                                              )
                 itemid_set.update(itemID_selected[key])
             self.store_summary_key_value('Unique itemIDs', str(list(itemid_set)))
+
+            self.store_summary_key_value('Points', trial_points)
+
+            self.store_summary_key_value('tapResponseTimeAverage correct',
+                                         statistics.mean(correct_go_tapResponseStarts))
+
+            self.store_summary_key_value('Points', max())
+            self.store_summary_key_value('Points', trial_points)
+
 
             self.resize_sheet_columns(sheet2, 1)
         except Exception as e1:
@@ -457,7 +556,7 @@ class ReadStop:
         new_folder_name = tail.split('.')[0]
 
         with open(all_data_file, 'r') as all_data_handle:
-            all_data =  json.load(all_data_handle)
+            all_data = json.load(all_data_handle)
 
             all_types = []
             task_count = 0
@@ -578,6 +677,10 @@ class ReadStop:
 
             sheet.cell(column=1, row=4, value='Session Duration Std Dev')
             sheet.cell(column=2, row=4, value=statistics.stdev(self.session_durations))
+
+        print(json.dumps(self.event_on, indent=4))
+        print(json.dumps(self.event_off, indent=4))
+
         wb.save('globals.xlsx')
 
 
