@@ -34,11 +34,11 @@ class ReadStop:
             dim = sheet.column_dimensions[get_column_letter(idx + 1)]
             dim.width = len(col_header.value)
 
-    def tap_within_circle(self, trial_event, itemRadius=95):
+    def tap_within_circle(self, trial_event, itemRadius=95, prefix='tapResponsePosition'):
 
-        tx = float(trial_event['tapResponsePositionX'])
+        tx = float(trial_event['{}X'.format(prefix)])
         ix = trial_event['itemPositionX']
-        ty = float(trial_event['tapResponsePositionY'])
+        ty = float(trial_event['{}Y'.format(prefix)])
         iy = trial_event['itemPositionY']
         if ((tx - ix) ** 2) + ((ty - iy) ** 2) < (itemRadius ** 2):
             return True
@@ -76,6 +76,12 @@ class ReadStop:
         output_file_and_dir = os.path.join(new_folder, output_filepath)
         print(output_file_and_dir)
 
+        if json_blob['data'][0]['sessionState'] == 'INCOMPLETE':
+            print('sessionState Incomplete')
+            return
+        if len(json_blob['data'][0]['sessionEvents']) == 0:
+            return
+
         session_data = json_blob['data'][0]['sessionEvents']
         col_headers = sorted(session_data[0].keys())
 
@@ -84,7 +90,6 @@ class ReadStop:
 
         wb = Workbook()
         self.wb = wb
-        # wb.sheetnames
         sheet = wb.active
         sheet.title = 'Data Output'
         print('\ncreating data output sheet for {}\n'.format(output_filepath))
@@ -231,82 +236,175 @@ class ReadStop:
                 else:
                     self.trial_type_counts['total'][trial['trialType']] += 1
 
-                if trial['trialType'] == 'GO' and 'tapResponseStart' in trial:
+                if json_blob['type'] == 'DOUBLE':
+                    initialtapResponseType = trial['initialTapResponseType']
+                    secondtapResponseType = trial['secondTapResponseType']
+                    print('\nFound a double trial')
+                    print(s_idx + 1, json_blob['type'], trial['trialType'], trial['trialID'])
 
-                    if trial['tapResponseType'] == 'CORRECT_GO':
-                        points_this_trial = 20
-                    if trial['tapResponseType'] == 'INCORRECT_GO':
-                        points_this_trial = -50
-                    if trial['tapResponseType'] == 'MISS_GO':
-                        points_this_trial = -20
+                    # For initialResponseType
+                    # When trialType = ‘GO’
+                    # CORRECT_GO = initialtapResponseStart>0 and tap made within stimulus boundaries
+                    if trial['trialType'] == 'GO':
 
-                    # TODO catch case where DOUBLE has initialTapResponseStart and secondTapResponseStart
-                    # TODO something is wrong here, way too many incorrect 'tapResponseType' recorded
-                    if trial['tapResponseStart'] is None:
+                        if trial['initialTapResponseStart'] and trial['initialTapResponseStart'] > 0 and self.tap_within_circle(
+                                trial,
+                                prefix='initialTapResponsePosition'):
+
+                            if trial['initialTapResponseType'] == 'CORRECT_GO':
+                                print('Correctly identified DOUBLE CORRECT_GO')
+                                # TODO record these initialtapResponseStart s?
+                                # correct_go_tapResponseStarts.append(trial['tapResponseStart'])
+                                pass
+                            else:
+                                print(s_idx + 1, json_blob['type'], trial['trialType'])
+                                print('Incorrect, should be DOUBLE CORRECT_GO not', trial['tapResponseType'])
+
+                    # INCORRECT_GO = initialtapResponseStart=0
+                        if trial['initialTapResponseStart'] == 0 and self.tap_within_circle(
+                                trial,
+                                prefix='initialTapResponsePosition'):
+                            if trial['initialTapResponseType'] == 'INCORRECT_GO':
+                                print('Correctly identified DOUBLE INCORRECT_GO')
+                                # TODO record these initialtapResponseStart s?
+                                # correct_go_tapResponseStarts.append(trial['tapResponseStart'])
+                                pass
+                            else:
+                                print(s_idx + 1, json_blob['type'], trial['trialType'])
+                                print('Incorrect, should be DOUBLE INCORRECT_GO not', trial['tapResponseType'])
+
+                    # MISS_GO =  initial tapResponseStartap>0 and response made outside stimulus boundaries
+                        if trial['initialTapResponseStart'] and trial['initialTapResponseStart'] > 0 and not self.tap_within_circle(
+                                trial,
+                                prefix='initialTapResponsePosition'):
+                            if trial['initialTapResponseType'] == 'MISS_GO':
+                                print('Correctly identified DOUBLE MISS_GO')
+                                # TODO record these initialtapResponseStart s?
+                                # correct_go_tapResponseStarts.append(trial['tapResponseStart'])
+                                pass
+                            else:
+                                print(s_idx + 1, json_blob['type'], trial['trialType'])
+                                print('Incorrect, should be DOUBLE MISS_GO not', trial['tapResponseType'])
+
+                    if trial['trialType'] == 'DOUBLE':
+                        if trial['initialTapResponseStart'] and trial[
+                            'initialTapResponseStart'] > 0 and self.tap_within_circle(
+                                trial,
+                                prefix='initialTapResponsePosition'):
+
+                            if trial['initialTapResponseType'] == 'CORRECT':
+                                print('Correctly identified DOUBLE CORRECT')
+                                # TODO record these initialtapResponseStart s?
+                                # correct_go_tapResponseStarts.append(trial['tapResponseStart'])
+                                pass
+                            else:
+                                print(s_idx + 1, json_blob['type'], trial['trialType'])
+                                print('Incorrect, should be DOUBLE CORRECT not', trial['tapResponseType'])
+
+                                # INCORRECT_GO = initialtapResponseStart=0
+                        if trial['initialTapResponseStart'] == 0 and self.tap_within_circle(
+                                trial,
+                                prefix='initialTapResponsePosition'):
+                            if trial['initialTapResponseType'] == 'INCORRECT':
+                                print('Correctly identified DOUBLE INCORRECT')
+                                # TODO record these initialtapResponseStart s?
+                                # correct_go_tapResponseStarts.append(trial['tapResponseStart'])
+                                pass
+                            else:
+                                print(s_idx + 1, json_blob['type'], trial['trialType'])
+                                print('Incorrect, should be DOUBLE INCORRECT not', trial['tapResponseType'])
+
+                                # MISS_GO =  initial tapResponseStartap>0 and response made outside stimulus boundaries
+                        if trial['initialTapResponseStart'] and trial[
+                            'initialTapResponseStart'] > 0 and not self.tap_within_circle(
+                                trial,
+                                prefix='initialTapResponsePosition'):
+                            if trial['initialTapResponseType'] == 'MISS':
+                                print('Correctly identified DOUBLE MISS')
+                                # TODO record these initialtapResponseStart s?
+                                # correct_go_tapResponseStarts.append(trial['tapResponseStart'])
+                                pass
+                            else:
+                                print(s_idx + 1, json_blob['type'], trial['trialType'])
+                                print('Incorrect, should be DOUBLE MISS not', trial['tapResponseType'])
+                else:
+
+                    if trial['trialType'] == 'GO' and 'tapResponseStart' in trial:
+
+                        # TODO catch case where DOUBLE has initialTapResponseStart and secondTapResponseStart
+                        # TODO something is wrong here, way too many incorrect 'tapResponseType' recorded
+                        if trial['tapResponseStart'] is None:
+
+                            if trial['tapResponseType'] == 'INCORRECT_GO':
+                                # print('Correctly identified INCORRECT_GO')
+                                pass
+                            else:
+                                print(s_idx+1, json_blob['type'], trial['trialType'])
+                                print('Incorrect, should be INCORRECT_GO not', trial['tapResponseType'])
+
+                        # CORRECT_GO = tapResponseStart>0 and tap made within stimulus boundaries
+                        elif trial['tapResponseStart'] > 0:
+                            if self.tap_within_circle(trial):
+                                if trial['tapResponseType'] == 'CORRECT_GO':
+                                    # print('Correctly identified CORRECT_GO')
+                                    # TODO tapResponseTimeAverage correct:
+                                    # TODO is this across all games, or within the game?
+                                    # this should be equivalent to the average of tapResponseStart
+                                    # across CORRECT_GO trials (tapResponseType)
+                                    correct_go_tapResponseStarts.append(trial['tapResponseStart'])
+                                    pass
+                                else:
+                                    print(s_idx + 1, json_blob['type'], trial['trialType'])
+                                    print('Incorrect, should be CORRECT_GO not', trial['tapResponseType'])
+                            else:
+                                if trial['tapResponseType'] == 'MISS_GO':
+                                    # print('Correctly identified MISS_GO')
+                                    pass
+                                else:
+                                    print(s_idx + 1, json_blob['type'], trial['trialType'])
+                                    print('Incorrect, should be MISS_GO', trial['tapResponseType'])
+
+                        if trial['tapResponseType'] == 'CORRECT_GO':
+                            points_this_trial = 20
                         if trial['tapResponseType'] == 'INCORRECT_GO':
-                            # print('Correctly identified INCORRECT_GO')
-                            pass
-                        else:
-                            print(s_idx+1, json_blob['type'], trial['trialType'])
-                            print('Incorrect, should be INCORRECT_GO not', trial['tapResponseType'])
+                            points_this_trial = -50
+                        if trial['tapResponseType'] == 'MISS_GO':
+                            points_this_trial = -20
 
-                    # CORRECT_GO = tapResponseStart>0 and tap made within stimulus boundaries
-                    elif trial['tapResponseStart'] > 0:
-                        if self.tap_within_circle(trial):
-                            if trial['tapResponseType'] == 'CORRECT_GO':
-                                # print('Correctly identified CORRECT_GO')
-                                # TODO tapResponseTimeAverage correct:
-                                # TODO is this across all games, or within the game?
-                                # this should be equivalent to the average of tapResponseStart
-                                # across CORRECT_GO trials (tapResponseType)
-                                correct_go_tapResponseStarts.append(trial['tapResponseStart'])
-                                pass
-                            else:
-                                print(s_idx + 1, json_blob['type'], trial['trialType'])
-                                print('Incorrect, should be CORRECT_GO not', trial['tapResponseType'])
-                        else:
-                            if trial['tapResponseType'] == 'MISS_GO':
-                                # print('Correctly identified MISS_GO')
-                                pass
-                            else:
-                                print(s_idx + 1, json_blob['type'], trial['trialType'])
-                                print('Incorrect, should be MISS_GO', trial['tapResponseType'])
+                    if trial['trialType'] == 'STOP' and 'tapResponseStart' in trial:
 
-                if trial['trialType'] == 'STOP' and 'tapResponseStart' in trial:
-
-                    if trial['tapResponseType'] == 'CORRECT_STOP':
-                        points_this_trial = 50
-                    if trial['tapResponseType'] == 'INCORRECT_STOP':
-                        points_this_trial = -50
-                    if trial['tapResponseType'] == 'MISS_STOP':
-                        points_this_trial = -50
-
-                    # TODO catch case where DOUBLE has initialTapResponseStart and secondTapResponseStart
-                    # TODO something is wrong here, way too many incorrect 'tapResponseType' recorded
-                    if trial['tapResponseStart'] is None:
-                        if trial['tapResponseType'] == 'CORRECT_STOP':
-                            # print('Correctly identified INCORRECT_STOP')
-                            pass
-                        else:
-                            print(s_idx+1, json_blob['type'], trial['trialType'])
-                            print('Incorrect, should be CORRECT_STOP not', trial['tapResponseType'])
-
-                    # CORRECT_GO = tapResponseStart>0 and tap made within stimulus boundaries
-                    elif trial['tapResponseStart'] > 0:
-                        if self.tap_within_circle(trial):
-                            if trial['tapResponseType'] == 'INCORRECT_STOP':
+                        if trial['tapResponseStart'] is None:
+                            if trial['tapResponseType'] == 'CORRECT_STOP':
                                 # print('Correctly identified INCORRECT_STOP')
                                 pass
                             else:
-                                print(s_idx + 1, json_blob['type'], trial['trialType'])
-                                print('Incorrect, should be INCORRECT_STOP not', trial['tapResponseType'])
-                        else:
-                            if trial['tapResponseType'] == 'MISS_STOP':
-                                # print('Correctly identified MISS_STOP')
-                                pass
+                                print(s_idx+1, json_blob['type'], trial['trialType'])
+                                print('Incorrect, should be CORRECT_STOP not', trial['tapResponseType'])
+
+                        # CORRECT_GO = tapResponseStart>0 and tap made within stimulus boundaries
+                        elif trial['tapResponseStart'] > 0:
+                            if self.tap_within_circle(trial):
+                                if trial['tapResponseType'] == 'INCORRECT_STOP':
+                                    # print('Correctly identified INCORRECT_STOP')
+                                    pass
+                                else:
+                                    print(s_idx + 1, json_blob['type'], trial['trialType'])
+                                    print('Incorrect, should be INCORRECT_STOP not', trial['tapResponseType'])
                             else:
-                                print(s_idx + 1, json_blob['type'], trial['trialType'])
-                                print('Incorrect, should be MISS_STOP', trial['tapResponseType'])
+                                if trial['tapResponseType'] == 'MISS_STOP':
+                                    # print('Correctly identified MISS_STOP')
+                                    pass
+                                else:
+                                    print(s_idx + 1, json_blob['type'], trial['trialType'])
+                                    print('Incorrect, should be MISS_STOP', trial['tapResponseType'])
+
+                        if trial['tapResponseType'] == 'CORRECT_STOP':
+                            points_this_trial = 50
+                        if trial['tapResponseType'] == 'INCORRECT_STOP':
+                            points_this_trial = -50
+                        if trial['tapResponseType'] == 'MISS_STOP':
+                            points_this_trial = -50
+
                 trial_points += points_this_trial
 
             if 'itemType' in trial:
@@ -562,7 +660,7 @@ class ReadStop:
             task_count = 0
             for idx, a in enumerate(all_data):
 
-                print((idx + 1), a['type'])
+                print((idx), a['type'])
 
                 self.all_data_file_idx = idx
 
@@ -696,5 +794,7 @@ if __name__ == '__main__':
     # rs.sort_all_data(os.path.join(data_dir, all_data_file))
 
     all_data_file = '020518.json'
+    # all_data_file = '060618.json'
+    # all_data_file = '070618.json'
     rs.sort_all_data(os.path.join(data_dir, all_data_file))
     rs.output_global_stats()
