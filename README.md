@@ -12,9 +12,10 @@ You'll need to change the file location on line 123 to whatever file you're load
 
 ## New Development
 
-The ```extract``` branch contains new development and refactoring of the ```dataimport/scripts/stop.py``` script into a set of extractor classes stored in the ```extractors``` folder.
+The ```extract``` branch contains new development in the ```extract``` folder, which is new development and refactoring of the ```dataimport/scripts/stop.py``` script into a set of extractor classes stored in the ```extractors``` folder.
 
 Each ```DataExtractor``` subclass handles the extraction, calculation and checking required to process one type of game.
+
 
 The games are:
 
@@ -31,3 +32,5 @@ The games are:
 * Eligibility
 * AdditionalInfo
 * VirtualSupermarket
+
+Extraction is driven by the ```extract.py``` script.
