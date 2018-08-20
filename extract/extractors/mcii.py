@@ -36,10 +36,10 @@ class MCIIDataExtractor(DataExtractor):
     def check(self, row):
 
         def check_session_score():
-            session_score = self.value(row, 'data.sessionScore')
+            session_score = row.get_keypath_value('data.sessionScore')
             if session_score is not None:
-                plan_1_visualise_points = self.value(row, 'data.plans.0.visualisePoints')
-                plan_2_visualise_points = self.value(row, 'data.plans.1.visualisePoints')
+                plan_1_visualise_points = row.get_keypath_value('data.plans.0.visualisePoints')
+                plan_2_visualise_points = row.get_keypath_value('data.plans.1.visualisePoints')
                 assert session_score == plan_1_visualise_points + plan_2_visualise_points
 
         check_session_score()

@@ -20,10 +20,10 @@ class GoalVisDataExtractor(DataExtractor):
     def check(self, row):
 
         def check_session_score():
-            session_score = self.value(row, 'data.sessionScore')
+            session_score = row.get_keypath_value('data.sessionScore')
             if session_score is not None:
-                goal_1_visualise_points = self.value(row, 'data.goals.0.visualisePoints')
-                goal_2_visualise_points = self.value(row, 'data.goals.1.visualisePoints')
+                goal_1_visualise_points = row.get_keypath_value('data.goals.0.visualisePoints')
+                goal_2_visualise_points = row.get_keypath_value('data.goals.1.visualisePoints')
                 assert session_score == goal_1_visualise_points + goal_2_visualise_points
 
         check_session_score()

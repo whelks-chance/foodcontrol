@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from settings import food_control_path
 from extractors import ExtractorFactory
+from keypathdict import KeypathDict
 
 
 class Extractor:
@@ -29,6 +30,7 @@ class Extractor:
             csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC)
             csv_writer.writerow(extractor.column_names())
             for row in json_array:
+                row = KeypathDict(row)
                 if extractor.process(row):
                     csv_writer.writerow(extractor.row_values())
 

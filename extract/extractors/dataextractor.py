@@ -1,6 +1,3 @@
-import dpath
-
-
 class DataExtractor:
 
     common_fields = [
@@ -35,13 +32,9 @@ class DataExtractor:
         """Store the column value for each keypath"""
         self.clear()
         for column_name, keypath in self.all_fields():
-            value = self.value(row, keypath)
+            # value = self.value(row, keypath)
+            value = row.get_keypath_value(keypath)
             self.values[column_name] = value
-
-    @staticmethod
-    def value(json_object, keypath):
-        """Access nested dictionary values with a dot-separated string of keys"""
-        return dpath.util.get(json_object, keypath, separator='.')
 
     def check(self, row):
         """Override to perform type-specific row checks"""

@@ -32,7 +32,7 @@ class AbstractStopDataExtractor(DataExtractor):
         def check_trials_count():
             number_of_rounds = 4
             number_of_trials = 48
-            session_events = self.value(row, 'data.0.sessionEvents')
+            session_events = row.get_keypath_value('data.0.sessionEvents')
             assert len(session_events) == number_of_rounds * number_of_trials
 
         def check_trial_numbers():
@@ -56,8 +56,8 @@ class AbstractStopDataExtractor(DataExtractor):
 
             def calculate_session_duration():
                 # Game play duration: sessionEnd - sessionStart
-                session_start = self.value(row, 'data.0.sessionStart')
-                session_end = self.value(row, 'data.0.sessionEnd')
+                session_start = row.get_keypath_value('data.0.sessionStart')
+                session_end = row.get_keypath_value('data.0.sessionEnd')
                 session_duration = session_start - session_end
                 # TODO: Record session_duration
 
@@ -65,7 +65,7 @@ class AbstractStopDataExtractor(DataExtractor):
                 self.durations[key].append(value)
 
             def calculate_trial_durations():
-                session_events = self.value(row, 'data.0.sessionEvents')
+                session_events = row.get_keypath_value('data.0.sessionEvents')
                 previous_session_event = None
                 for session_event in session_events:
                     trial_start = session_event['trialStart']
@@ -110,13 +110,14 @@ class AbstractStopDataExtractor(DataExtractor):
             calculate_trial_durations()
 
         def count_raw_events():
-            raw_events = self.value(row, 'data.0.rawEvents')
+            # raw_events = self.value(row, 'data.0.rawEvents')
+            raw_events = row.get_keypath_value('data.0.rawEvents')
             for raw_event in raw_events:
                 self.raw_count['on'][raw_event['eventOn']] += 1
                 self.raw_count['off'][raw_event['eventOff']] += 1
 
         def count_trial_types():
-            session_events = self.value(row, 'data.0.sessionEvents')
+            session_events = row.get_keypath_value('data.0.sessionEvents')
             for session_event in session_events:
                 self.trial_type_count[session_event['trialType']] += 1
                 itemType = session_event['itemType']
