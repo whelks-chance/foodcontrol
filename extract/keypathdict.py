@@ -7,4 +7,4 @@ class KeypathDict(dict):
         return dpath.util.get(self, keypath, separator='.')
 
     def set_keypath_value(self, keypath, value):
-        pass
+        dpath.util.set(self, keypath, value, separator='.')
