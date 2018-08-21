@@ -11,12 +11,25 @@ class DataExtractor:
         """Combine the common fields with the type-specific fields"""
         return self.common_fields + self.fields
 
+    @staticmethod
+    def session_is_complete(row):
+        session_state = None
+        # Handle inconsistently formatted data structures between games:
+        # data -> object vs data -> [ object ]
+        try:
+            session_state = row.get_keypath_value('data.0.sessionState')
+        except KeyError:
+            session_state = row.get_keypath_value('data.sessionState')
+        finally:
+            return session_state == 'COMPLETE'
+
     def process(self, row):
         if self.can_process_row(row):
-            self.extract(row)
-            self.check(row)
-            self.calculate(row)
-            return True
+            if self.session_is_complete(row):
+                self.extract(row)
+                self.check(row)
+                self.calculate(row)
+                return True
         else:
             return False
 
@@ -32,7 +45,6 @@ class DataExtractor:
         """Store the column value for each keypath"""
         self.clear()
         for column_name, keypath in self.all_fields():
-            # value = self.value(row, keypath)
             value = row.get_keypath_value(keypath)
             self.values[column_name] = value
 
