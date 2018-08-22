@@ -50,8 +50,9 @@ if __name__ == '__main__':
 
     json_filenames = [
         # '020518.json', #  Old format?
-        '060618.json',
-        '070618.json',
+        # '060618.json',
+        # '070618.json',
+        '200818.json'
     ]
 
 
