@@ -24,8 +24,8 @@ class MCIIDataExtractor(DataExtractor):
         ('Plan 2 Visualise Time', 'data.plans.1.visualiseTime',),
         ('Plan 2 Visualise Points', 'data.plans.1.visualisePoints',),
 
-        # There are more than 1 goals - how should this be handled in a tabular format?
-        # Using first index (0) for now
+        # There is occasionally more than 1 goal but there should only ever be one goal
+        # More than one goal is a data output error so handle this by using the first element
         ('Goal', 'data.goals.0.goal', ),
         ('Goal Likelihood', 'data.goals.0.goal-likelihood', ),
         ('Outcome Thoughts', 'data.goals.0.outcome-thoughts', ),
