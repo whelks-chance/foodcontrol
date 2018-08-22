@@ -13,13 +13,17 @@ class DataExtractor:
 
     @staticmethod
     def session_is_complete(row):
-        session_state = None
+        session_state = 'COMPLETE'
         # Handle inconsistently formatted data structures between games:
         # data -> object vs data -> [ object ]
         try:
             session_state = row.get_keypath_value('data.0.sessionState')
         except KeyError:
-            session_state = row.get_keypath_value('data.sessionState')
+            try:
+                session_state = row.get_keypath_value('data.sessionState')
+            except KeyError:
+                # There is no sessionState for this row so it is implicitly complete
+                pass
         finally:
             return session_state == 'COMPLETE'
 
