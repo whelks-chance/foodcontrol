@@ -6,6 +6,7 @@ from .measures import MeasuresDataExtractor
 from .eligibility import EligibilityDataExtractor
 from .additionalinfo import AdditionalInfoDataExtractor
 from .virtualsupermarket import VirtualSupermarketDataExtractor
+from .tellusmore import TellUsMoreDataExtractor
 
 
 class ExtractorFactory:
@@ -24,6 +25,7 @@ class ExtractorFactory:
         EligibilityDataExtractor(),
         AdditionalInfoDataExtractor(),
         VirtualSupermarketDataExtractor(),
+        TellUsMoreDataExtractor(),
     ]
 
     def __init__(self):
