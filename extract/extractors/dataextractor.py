@@ -1,5 +1,7 @@
 class DataExtractor:
 
+    empty_cell_value = '[]'
+
     common_fields = [
         ('User ID', 'userID', ),
         ('Session ID', 'sessionId', ),
@@ -65,14 +67,20 @@ class DataExtractor:
         return [column_name for column_name, _ in self.all_fields()]
 
     def row_values(self):
-        """Return a list of row values. Missing data or None values are blank ''"""
-        values = []
-        empty_cell_value = ''
-        for column_name, _ in self.all_fields():
-            value = empty_cell_value
-            if column_name in self.values:
-                value = self.values[column_name]
+        return self.to_list(self.values)
+
+    def to_list(self, values):
+        """Return a list of row values ordered by column"""
+        values_list = []
+        print('-->VALUES', values)
+        for column_name in self.column_names():
+            value = self.empty_cell_value
+            if column_name in values:
+                value = values[column_name]
                 if value is None:
-                    value = empty_cell_value
-            values.append(value)
-        return values
+                    value = self.empty_cell_value
+            values_list.append(value)
+        return values_list
+
+    def extracted_rows(self):
+        return [self.row_values()]

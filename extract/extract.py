@@ -29,13 +29,22 @@ class Extractor:
 
         output_filename = json_csv_path / '{}.csv'.format(extractor.type)
         with open(output_filename, 'w', encoding='utf-8') as csv_file:
-            csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC)
-            csv_writer.writerow(extractor.column_names())
+            csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
             for row in json_array:
                 row = KeypathDict(row)
                 if extractor.process(row):
-                    print(extractor.row_values())
-                    csv_writer.writerow(extractor.row_values())
+                    for extracted_row in extractor.extracted_rows():
+                        csv_writer.writerow(extracted_row)
+
+        # We need to prepend the column header row to the file containing the data rows
+        # because in the case of question extraction the column names are not known until
+        # a row has been read
+        with open(output_filename, 'r+', encoding='utf-8') as csv_file:
+            file_data = csv_file.read()  # Read the data rows
+            csv_file.seek(0, 0)          # Move the file pointer to the beginning
+            csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
+            csv_writer.writerow(extractor.column_names())  # Write the header row
+            csv_file.write(file_data)                      # Write the data rows
 
     @staticmethod
     def has_row_to_extract(json_array, extractor):
@@ -60,7 +69,7 @@ if __name__ == '__main__':
         path.mkdir(parents=True, exist_ok=True)
 
     def filename_without_extension(filename):
-        (base_filename, _) = os.path.splitext(os.path.basename(json_filename))
+        base_filename, _ = os.path.splitext(os.path.basename(json_filename))
         return base_filename
 
 

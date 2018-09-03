@@ -1,4 +1,7 @@
 import re
+import pprint
+
+pp = pprint.PrettyPrinter()
 
 from .dataextractor import DataExtractor
 
@@ -12,10 +15,20 @@ def irange(start, end):
 
 class AbstractQuestionExtractor:
 
-    values = {}
+    rows = []
+
+    def column_names(self):
+        """Return a list of column names"""
+        column_names = []
+        for column_name, _, code in self.fields:
+            column_names.append(column_name)
+            if code:
+                code_column_name, _ = code
+                column_names.append(code_column_name)
+        return column_names
 
     def can_process_data(self, data):
-        """Create a pattern that matches a question prefix with major and minor numbers"""
+        # Create a pattern that matches a question prefix with major and minor numbers
         pattern = self.prefix + r'[12345]-1?\d'
         return self.can_process_data_with_pattern(data, pattern)
 
@@ -29,7 +42,23 @@ class AbstractQuestionExtractor:
 
     def clear(self):
         """Reset common value and calculation stores. Override to to reset type-specific value and calculation stores"""
-        self.values.clear()
+        self.rows = []
+
+    def extract(self, data):
+        """Store the column value for each keypath"""
+        self.clear()
+        self.extract_key_data(data)
+
+    def extract_key_data(self, key_data):
+        values = {}
+        for column_name, keypath, code in self.fields:
+            value = key_data.get_keypath_value(keypath)
+            values[column_name] = value
+            if code:
+                code_column_name, code_function_name = code
+                code_function = getattr(self, code_function_name)
+                values[code_column_name] = code_function(value)
+        self.rows.append(values)
 
 
 class MajorMinorQuestionExtractor(AbstractQuestionExtractor):
@@ -53,21 +82,6 @@ class MajorMinorQuestionExtractor(AbstractQuestionExtractor):
                 except KeyError:
                     pass
 
-    def extract_key_data(self, key_data):
-        for column_name, keypath, code in self.fields:
-            value = key_data.get_keypath_value(keypath)
-            # print('--->', column_name, keypath, value)
-            self.values[column_name] = value
-            if code:
-                self.code_value(*code, value)
-
-    def code_value(self, code_column_name, code_function_name, value):
-        # print('Call "{}()" to get value for "{}"'.format(code_function_name, code_column_name))
-        code_function = getattr(self, code_function_name)
-        code_value = code_function(value)
-        # print('"{}()" -> {}'.format(code_function_name, code_value))
-        self.values[code_column_name] = code_value
-
 
 class FreqExtractor(MajorMinorQuestionExtractor):
 
@@ -80,8 +94,8 @@ class FreqExtractor(MajorMinorQuestionExtractor):
         ('FC Answer', 'answers.FC.answer', ('FC Score', 'code_answer'), ),
         ('FC Slider Value', 'answers.FC.sliderValue', None, ),
         ('ID', 'VsmInfo.id', None, ),
-        ('Type', 'VsmInfo.type', ('Type Value', 'code_food_type'),),
-        ('Selected', 'VsmInfo.selected', ('Selected Value', 'code_food_selected'),),
+        ('Type', 'VsmInfo.type', ('Type Value', 'code_food_type'), ),
+        ('Selected', 'VsmInfo.selected', ('Selected Value', 'code_food_selected'), ),
         ('Time On Question', 'timeOnQuestion', None, ),
     )
 
@@ -118,38 +132,96 @@ class FreqExtractor(MajorMinorQuestionExtractor):
 
 class TasteExtractor(MajorMinorQuestionExtractor):
 
+    prefix = 'TASTE'
+    major_range = irange(1, 5)
+    minor_range = irange(1, 12)
+
     fields = (
-        ('FE', 'answers.FE.answer', None, ),
+        ('FE', 'answers.0.answer', None, ),
         ('ID', 'VsmInfo.id', None, ),
-        ('Type', 'VsmInfo.type', None, ),
-        ('Selected', 'VsmInfo.selected', None, ),
+        ('Type', 'VsmInfo.type', ('Type Value', 'code_food_type'), ),
+        ('Selected', 'VsmInfo.selected', ('Selected Value', 'code_food_selected'), ),
         ('Time On Question', 'timeOnQuestion', None, ),
     )
 
-    major_range = irange(1, 5)
-    minor_range = irange(1, 12)
-    prefix = 'TASTE'
+    @staticmethod
+    def code_food_type(food_value):
+        food_type_codes = {
+            'U': 0,
+            'H': 1,
+        }
+        return food_type_codes[food_value]
+
+    @staticmethod
+    def code_food_selected(food_selected_value):
+        food_selected_codes = {
+            'Selected': 1,
+            'MB':       2,
+            'upload':   3,
+            'random':   4,
+            'add':      5,
+        }
+        return food_selected_codes[food_selected_value]
 
 
 class AttractExtractor(MajorMinorQuestionExtractor):
 
+    prefix = 'ATTRACT'
+    major_range = irange(1, 5)
+    minor_range = irange(1, 12)
+
     fields = (
-        ('FE', 'answers.FE.answer', None, ),
+        ('FE', 'answers.0.answer', None, ),
         ('ID', 'VsmInfo.id', None, ),
-        ('Type', 'VsmInfo.type', None, ),
-        ('Selected', 'VsmInfo.selected', None, ),
+        ('Type', 'VsmInfo.type', ('Type Value', 'code_food_type'), ),
+        ('Selected', 'VsmInfo.selected', ('Selected Value', 'code_food_selected'), ),
         ('Time On Question', 'timeOnQuestion', None, ),
     )
 
-    major_range = irange(1, 5)
-    minor_range = irange(1, 12)
-    prefix = 'ATTRACT'
+    @staticmethod
+    def code_food_type(food_value):
+        food_type_codes = {
+            'U': 0,
+            'H': 1,
+        }
+        return food_type_codes[food_value]
+
+    @staticmethod
+    def code_food_selected(food_selected_value):
+        food_selected_codes = {
+            'Selected': 1,
+            'MB':       2,
+            'upload':   3,
+            'random':   4,
+            'add':      5,
+        }
+        return food_selected_codes[food_selected_value]
 
 
 class EXExtractor(AbstractQuestionExtractor):
 
+    fields = (
+        ('EX A Answer', 'EX-A.answers.0.answer', ('EX A Answer Score', 'code_answer'), ),
+        ('EX A Time On Question', 'EX-A.timeOnQuestion', None, ),
+        ('EX F Times Moderate', 'EX-F.answers.exercise-times-moderate.answer', None, ),
+        ('EX F Times Vigorous', 'EX-F.answers.exercise-times-vigorous.answer', None, ),
+        ('EX F Times Strengthening', 'EX-F.answers.exercise-times-strengthening.answer', None, ),
+        ('EX F Minutes Moderate', 'EX-F.answers.exercise-minutes-moderate.answer', None, ),
+        ('EX F Minutes Vigorous', 'EX-F.answers.exercise-minutes-vigorous.answer', None, ),
+        ('EX F Minutes Strengthening', 'EX-F.answers.exercise-minutes-strengthening.answer', None, ),
+    )
+
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'EX-[AF]')
+
+    @staticmethod
+    def code_answer(answer_value):
+        answer_codes = {
+            'I am inactive':                   0,
+            'My activity levels are low':      1,
+            'My activity levels are moderate': 2,
+        }
+        return answer_codes[answer_value]
 
 
 class WillExtractor(AbstractQuestionExtractor):
@@ -222,13 +294,15 @@ class TellUsMoreDataExtractor(DataExtractor):
 
     type = 'tellusmore'
 
-    fields = []
+    # fields = []
+    rows = []
+    question_extractor = None
 
     question_extractors = [
         FreqExtractor(),
         TasteExtractor(),
         AttractExtractor(),
-        # EXExtractor(),
+        EXExtractor(),
         # WillExtractor(),
         # MoodExtractor(),
         # IMPExtractor(),
@@ -242,6 +316,13 @@ class TellUsMoreDataExtractor(DataExtractor):
         # RESTRExtractor(),
     ]
 
+    def column_names(self):
+        """Return a list of column names"""
+        if self.question_extractor:
+            return self.question_extractor.column_names()
+        else:
+            return []
+
     def get_question_extractor(self, data):
         for question_extractor in self.question_extractors:
             if question_extractor.can_process_data(data):
@@ -249,17 +330,26 @@ class TellUsMoreDataExtractor(DataExtractor):
         return None
 
     def extract(self, row):
+        self.rows = []
         data = KeypathDict(row['data'])
         question_extractor = self.get_question_extractor(data)
         if question_extractor:
-            print('row is', type(question_extractor).__name__)
-            question_extractor.extract(data)
-            print('values =', question_extractor.values)
+            self.question_extractor = question_extractor
+            # print('row is', type(self.question_extractor).__name__)
+            self.question_extractor.extract(data)
+            self.rows = self.question_extractor.rows
+            # print('values =', question_extractor.values)
+            # print('rows =', self.question_extractor.rows)
         else:
-            print('no QE for row:', row['type'])
+            # print('no QE for row:', row['type'])
+            pass
 
     def check(self, row):
         pass
 
     def calculate(self, row):
         pass
+
+    def extracted_rows(self):
+        print('#######', self.rows)
+        return [self.to_list(row) for row in self.rows]
