@@ -68,8 +68,26 @@ class AbstractQuestionExtractor:
         self.rows.append(values)
 
     def calculate(self, values):
-        # return values
         pass
+
+    @staticmethod
+    def calculate_sum_and_missing_scores(values, number_of_scores):
+        print(values)
+        scores_sum = 0
+        missing_sum = 0
+        # S1, S2, ...
+        column_names = ['S' + str(response) for response in irange(1, number_of_scores)]
+        for column_name in column_names:
+            value = values[column_name]
+            if value == DataExtractor.empty_cell_value or value is None:
+                missing_sum += 1
+            else:
+                print('column_name:', column_name)
+                print('      value:', values[column_name])
+                scores_sum += int(values[column_name])
+        values['Scores Sum'] = scores_sum
+        values['Num Missing'] = missing_sum
+
 
 class MajorMinorQuestionExtractor(AbstractQuestionExtractor):
     """
@@ -225,9 +243,6 @@ class EXExtractor(AbstractQuestionExtractor):
         ('EX F Minutes Strengthening', 'EX-F.answers.exercise-minutes-strengthening.answer', None, ),
     )
 
-    def can_process_data(self, data):
-        return self.can_process_data_with_pattern(data, r'EX-[AF]')
-
     @staticmethod
     def code_answer(answer_value):
         answer_codes = {
@@ -237,29 +252,45 @@ class EXExtractor(AbstractQuestionExtractor):
         }
         return answer_codes[answer_value]
 
+    def can_process_data(self, data):
+        return self.can_process_data_with_pattern(data, r'EX-[AF]')
 
-class WillExtractor(AbstractQuestionExtractor):
+
+class MajorCharacterQuestionExtractor(AbstractQuestionExtractor):
+    """
+    A major character question has a pattern of the form: MOODD, MOODA and MOODS
+    i.e. a question prefix, e.g. WILL, MOOD and IMP, followed by a major character
+    e.g. ['D', 'A', 'S']
+    """
+
+    def extract(self, data):
+        """Store the column value for each keypath"""
+        self.clear()
+        for major in self.major_characters:
+            key = '{}{}'.format(self.prefix, major)
+            try:
+                key_data = KeypathDict(data[key])
+                print(key, '->', key_data)
+                self.extract_key_data(key_data)
+            except KeyError:
+                pass
+
+
+class WillExtractor(MajorCharacterQuestionExtractor):
+
+    prefix = 'WILL'
+    major_characters = ['M', 'T']
 
     fields = (
-        ('TUM Session ID', 'TUMsessionID', None, ),
+        # ('TUM Session ID', 'TUMsessionID', None, ),
 
-        ('S1', 'WILLM.answers.S1.answer', ('S1 Score', 'code_response_reversed'), ),
-        ('S2', 'WILLM.answers.S2.answer', ('S2 Score', 'code_response_reversed'), ),
-        ('S3', 'WILLM.answers.S3.answer', ('S3 Score', 'code_response'), ),
-        ('S4', 'WILLM.answers.S4.answer', ('S4 Score', 'code_response'), ),
-        ('S5', 'WILLM.answers.S5.answer', ('S5 Score', 'code_response_reversed'), ),
-        ('S6', 'WILLM.answers.S6.answer', ('S6 Score', 'code_response'), ),
-
-        ('S1', 'WILLT.answers.S1.answer', ('S1 Score', 'code_response_reversed'), ),
-        ('S2', 'WILLT.answers.S2.answer', ('S2 Score', 'code_response_reversed'), ),
-        ('S3', 'WILLT.answers.S3.answer', ('S3 Score', 'code_response'), ),
-        ('S4', 'WILLT.answers.S4.answer', ('S4 Score', 'code_response_reversed'), ),
-        ('S5', 'WILLT.answers.S5.answer', ('S5 Score', 'code_response'), ),
-        ('S6', 'WILLT.answers.S6.answer', ('S6 Score', 'code_response'), ),
+        ('S1', 'answers.S1.answer', ('S1 Score', 'code_response_reversed'), ),
+        ('S2', 'answers.S2.answer', ('S2 Score', 'code_response_reversed'), ),
+        ('S3', 'answers.S3.answer', ('S3 Score', 'code_response'), ),
+        ('S4', 'answers.S4.answer', ('S4 Score', 'code_response'), ),
+        ('S5', 'answers.S5.answer', ('S5 Score', 'code_response_reversed'), ),
+        ('S6', 'answers.S6.answer', ('S6 Score', 'code_response'), ),
     )
-
-    def can_process_data(self, data):
-        return self.can_process_data_with_pattern(data, r'WILL[MT]')
 
     @staticmethod
     def code_response(response_value):
@@ -285,32 +316,106 @@ class WillExtractor(AbstractQuestionExtractor):
         }
         return reversed_response_codes[response_value]
 
+    def can_process_data(self, data):
+        return self.can_process_data_with_pattern(data, r'WILL[MT]')
+
     def column_names(self):
         return super().column_names() + ['Scores Sum', 'Num Missing']
 
     def calculate(self, values):
-        scores_sum = 0
-        missing_sum = 0
-        # Score 1, Score 2, ... , Score 6
-        column_names = ['S' + str(response) + ' Score' for response in irange(1, 6)]
-        for column_name in column_names:
-            value = values[column_name]
-            if value == DataExtractor.empty_cell_value:
-                missing_sum += 1
-            else:
-                scores_sum += values[column_name]
-        values['Scores Sum'] = scores_sum
-        values['Num Missing'] = missing_sum
-        # return values
+        self.calculate_sum_and_missing_scores(values, number_of_scores=6)
 
 
-class MoodExtractor(AbstractQuestionExtractor):
+class MoodExtractor(MajorCharacterQuestionExtractor):
+
+    prefix = 'MOOD'
+    major_characters = ['D', 'A', 'S']
+
+    fields = (
+        # ('TUM Session ID', 'TUMsessionID', None, ),
+
+        ( 'S1',  'answers.S1.answer', ( 'S1 Score', 'code_response'), ),
+        ( 'S2',  'answers.S2.answer', ( 'S2 Score', 'code_response'), ),
+        ( 'S3',  'answers.S3.answer', ( 'S3 Score', 'code_response'), ),
+        ( 'S4',  'answers.S4.answer', ( 'S4 Score', 'code_response'), ),
+        ( 'S5',  'answers.S5.answer', ( 'S5 Score', 'code_response'), ),
+        ( 'S6',  'answers.S6.answer', ( 'S6 Score', 'code_response'), ),
+        ( 'S7',  'answers.S7.answer', ( 'S7 Score', 'code_response'), ),
+        ( 'S8',  'answers.S8.answer', ( 'S8 Score', 'code_response_reversed'), ),
+        ( 'S9',  'answers.S9.answer', ( 'S9 Score', 'code_response'), ),
+        ('S10', 'answers.S10.answer', ('S10 Score', 'code_response_reversed'), ),
+        ('S11', 'answers.S11.answer', ('S11 Score', 'code_response'), ),
+        ('S12', 'answers.S12.answer', ('S12 Score', 'code_response_reversed'), ),
+        ('S13', 'answers.S13.answer', ('S13 Score', 'code_response'), ),
+        ('S14', 'answers.S14.answer', ('S14 Score', 'code_response_reversed'), ),
+        ('S15', 'answers.S15.answer', ('S15 Score', 'code_response_reversed'), ),
+        ('S16', 'answers.S16.answer', ('S16 Score', 'code_response_reversed'), ),
+        ('Time On Question', 'timeOnQuestion', None, ),
+    )
+
+    @staticmethod
+    def code_response(response_value):
+        response_codes = {
+            '1': 1,
+            '0': 0,
+        }
+        return response_codes[response_value]
+
+    @staticmethod
+    def code_response_reversed(response_value):
+        reversed_response_codes = {
+            '1': 0,
+            '0': 1,
+        }
+        return reversed_response_codes[response_value]
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'MOOD[DAS]')
 
+    def column_names(self):
+        return super().column_names() + ['Scores Sum', 'Num Missing']
 
-class IMPExtractor(AbstractQuestionExtractor):
+    def calculate(self, values):
+        self.calculate_sum_and_missing_scores(values, number_of_scores=7)
+
+
+class IMPExtractor(MajorCharacterQuestionExtractor):
+
+    prefix = 'IMP'
+    major_characters = ['A', 'M', 'N']
+
+    fields = (
+        # ('TUM Session ID', 'TUMsessionID', None, ),
+
+        ('S1', 'answers.S1.answer', ('S1 Score', 'code_response'), ),
+        ('S2', 'answers.S2.answer', ('S2 Score', 'code_response'), ),
+        ('S3', 'answers.S3.answer', ('S3 Score', 'code_response'), ),
+        ('S4', 'answers.S4.answer', ('S4 Score', 'code_response'), ),
+        ('S5', 'answers.S5.answer', ('S5 Score', 'code_response'), ),
+        ('S6', 'answers.S6.answer', ('S6 Score', 'code_response'), ),
+        ('S7', 'answers.S7.answer', ('S7 Score', 'code_response'), ),
+        ('Time On Question', 'MOODD.timeOnQuestion', None, ),
+    )
+
+    @staticmethod
+    def code_response(response_value):
+        response_codes = {
+            '1': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4,
+        }
+        return response_codes[response_value]
+
+    @staticmethod
+    def code_response_reversed(response_value):
+        reversed_response_codes = {
+            '4': 4,
+            '3': 3,
+            '2': 2,
+            '1': 1,
+        }
+        return reversed_response_codes[response_value]
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'IMP[AMN]')
@@ -318,29 +423,185 @@ class IMPExtractor(AbstractQuestionExtractor):
 
 class FoodIMPExtractor(AbstractQuestionExtractor):
 
+    fields = (
+        # ('TUM Session ID', 'TUMsessionID', None, ),
+
+        ( 'S1',  'answers.S1.answer', ( 'S1 Score', 'code_response'), ),
+        ( 'S2',  'answers.S2.answer', ( 'S2 Score', 'code_response'), ),
+        ( 'S3',  'answers.S3.answer', ( 'S3 Score', 'code_response'), ),
+        ( 'S4',  'answers.S4.answer', ( 'S4 Score', 'code_response'), ),
+        ( 'S5',  'answers.S5.answer', ( 'S5 Score', 'code_response'), ),
+        ( 'S6',  'answers.S6.answer', ( 'S6 Score', 'code_response'), ),
+        ( 'S7',  'answers.S7.answer', ( 'S7 Score', 'code_response'), ),
+        ( 'S8',  'answers.S8.answer', ( 'S8 Score', 'code_response_reversed'), ),
+        ( 'S9',  'answers.S9.answer', ( 'S9 Score', 'code_response'), ),
+        ('S10', 'answers.S10.answer', ('S10 Score', 'code_response_reversed'), ),
+        ('S11', 'answers.S11.answer', ('S11 Score', 'code_response'), ),
+        ('S12', 'answers.S12.answer', ('S12 Score', 'code_response_reversed'), ),
+        ('S13', 'answers.S13.answer', ('S13 Score', 'code_response'), ),
+        ('S14', 'answers.S14.answer', ('S14 Score', 'code_response_multiple'), ),
+        ('S15', 'answers.S15.answer', ('S15 Score', 'code_response_multiple'), ),
+        ('S16', 'answers.S16.answer', ('S16 Score', 'code_response_multiple'), ),
+        ('Time On Question', 'timeOnQuestion', None, ),
+    )
+
+    @staticmethod
+    def code_response(response_value):
+        response_codes = {
+            '1': 1,
+            '0': 0,
+        }
+        return response_codes[response_value]
+
+    @staticmethod
+    def code_response_reversed(response_value):
+        reversed_response_codes = {
+            '1': 0,
+            '0': 1,
+        }
+        return reversed_response_codes[response_value]
+
+    @staticmethod
+    def code_response_multiple(response_value):
+        multiple_response_codes = {
+            '0': 0,
+            '1': 0,
+            '2': 1,
+            '3': 1,
+        }
+        return multiple_response_codes[response_value]
+
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'FOODIMP')
 
 
-class EMREGExtractor(AbstractQuestionExtractor):
+class EMREGExtractor(MajorCharacterQuestionExtractor):
+
+    prefix = 'EMREG'
+    major_characters = ['N', 'G', 'I', 'A', 'S', 'C']
+
+    fields = (
+        ('S1', 'answers.S1.answer', None, ),
+        ('S2', 'answers.S2.answer', None, ),
+        ('S3', 'answers.S3.answer', None, ),
+        ('S4', 'answers.S4.answer', None, ),
+        ('S5', 'answers.S5.answer', None, ),
+        ('S6', 'answers.S6.answer', None, ),
+        ('S7', 'answers.S7.answer', None, ),
+        ('S8', 'answers.S8.answer', None, ),
+        ('Time on Question', 'timeOnQuestion', None, ),
+    )
+
+    @staticmethod
+    def code_response(response_value):
+        response_codes = {
+            '1': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4,
+            '5': 5,
+        }
+        return response_codes[response_value]
+
+    @staticmethod
+    def code_response_reversed(response_value):
+        reversed_response_codes = {
+            '5': 5,
+            '4': 4,
+            '3': 3,
+            '2': 2,
+            '1': 1,
+        }
+        return reversed_response_codes[response_value]
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'EMREG[NGIASC]')
 
+    def calculate(self, values):
+        # self.calculate_sum_and_missing_scores(values, number_of_scores=15)
+        pass
+
 
 class GoalsExtractor(AbstractQuestionExtractor):
+
+    fields = (
+        ('Ideal Weight Unit 1 Value', 'answers.ideal-weight.answer.unit1_val', None, ),
+        ('Ideal Weight Unit 2 Value', 'answers.ideal-weight.answer.unit2_val', None, ),
+        ('Ideal Weight Units', 'answers.ideal-weight.answer.units', None, ),
+        ('Achievable Weight Unit 1 Value', 'answers.achievable-weight.answer.unit1_val', None, ),
+        ('Achievable Weight Unit 2 Value', 'answers.achievable-weight.answer.unit2_val', None, ),
+        ('Achievable Weight Units', 'answers.achievable-weight.answer.units', None, ),
+        ('Happy Weight Unit 1 Value', 'answers.happy-weight.answer.unit1_val', None, ),
+        ('Happy Weight Unit 2 Value', 'answers.happy-weight.answer.unit2_val', None, ),
+        ('Happy Weight Units', 'answers.happy-weight.answer.units', None, ),
+        ('Time On Question', 'timeOnQuestion', None, ),
+    )
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'GOALS')
 
+    def extract(self, data):
+        """Store the column value for each keypath"""
+        self.clear()
+        key = 'GOALS'
+        key_data = KeypathDict(data[key])
+        print(key, '->', key_data)
+        self.extract_key_data(key_data)
+
 
 class IntentExtractor(AbstractQuestionExtractor):
+
+    fields = (
+        ('Healthy Foods Answer', 'INTENT-H.answers.healthy-foods.answer', None, ),
+        ('Healthy Foods Answer', 'INTENT-H.timeOnQuestion', None, ),
+        ('Unhealthy Foods Answer', 'INTENT-U.answers.unhealthy-foods.answer', None, ),
+        ('Unhealthy Foods Answer', 'INTENT-U.timeOnQuestion', None, ),
+    )
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'INTENT-[UH]')
 
 
-class PersonExtractor(AbstractQuestionExtractor):
+class PersonExtractor(MajorCharacterQuestionExtractor):
+
+    prefix = 'PERSON'
+    major_characters = ['N', 'E', 'O', 'A', 'C']
+
+    fields = (
+        ( 'S1', 'answers.S1.answer',  ('S1 Score',  'code_response'), ),
+        ( 'S2', 'answers.S2.answer',  ('S2 Score',  'code_response'), ),
+        ( 'S3', 'answers.S3.answer',  ('S3 Score',  'code_response'), ),
+        ( 'S4', 'answers.S4.answer',  ('S4 Score',  'code_response'), ),
+        ( 'S5', 'answers.S5.answer',  ('S5 Score',  'code_response'), ),
+        ( 'S6', 'answers.S6.answer',  ('S6 Score',  'code_response_reversed'), ),
+        ( 'S7', 'answers.S7.answer',  ('S7 Score',  'code_response_reversed'), ),
+        ( 'S8', 'answers.S8.answer',  ('S8 Score',  'code_response_reversed'), ),
+        ( 'S9', 'answers.S9.answer',  ('S9 Score',  'code_response_reversed'), ),
+        ('S10', 'answers.S10.answer', ('S10 Score', 'code_response_reversed'), ),
+        ('Time On Question', 'timeOnQuestion', None,),
+    )
+
+    @staticmethod
+    def code_response(response_value):
+        response_codes = {
+            '1': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4,
+            '5': 5,
+        }
+        return response_codes[response_value]
+
+    @staticmethod
+    def code_response_reversed(response_value):
+        reversed_response_codes = {
+            '5': 5,
+            '4': 4,
+            '3': 3,
+            '2': 2,
+            '1': 1,
+        }
+        return reversed_response_codes[response_value]
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'PERSON[NEOAC]')
@@ -348,20 +609,67 @@ class PersonExtractor(AbstractQuestionExtractor):
 
 class EffectExtractor(AbstractQuestionExtractor):
 
+    fields = (
+        ('H Answer', 'EFFECT-H.answers.healthy.answer', None, ),
+        ('H Time on Question', 'EFFECT-H.timeOnQuestion', None, ),
+        ('U Answer', 'EFFECT-U.answers.unhealthy.answer', None, ),
+        ('U Time on Question', 'EFFECT-U.timeOnQuestion', None, ),
+        ('W Answer', 'EFFECT-W.answers.weight.answer', None, ),
+        ('W Time on Question', 'EFFECT-W.timeOnQuestion', None, ),
+    )
+
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'EFFECT-[HUW]')
 
 
 class MINDFExtractor(AbstractQuestionExtractor):
 
+    fields = (
+        ( 'S1', 'answers.S1.answer',  None, ),
+        ( 'S2', 'answers.S2.answer',  None, ),
+        ( 'S3', 'answers.S3.answer',  None, ),
+        ( 'S4', 'answers.S4.answer',  None, ),
+        ( 'S5', 'answers.S5.answer',  None, ),
+        ( 'S6', 'answers.S6.answer',  None, ),
+        ( 'S7', 'answers.S7.answer',  None, ),
+        ( 'S8', 'answers.S8.answer',  None, ),
+        ( 'S9', 'answers.S9.answer',  None, ),
+        ('S10', 'answers.S10.answer', None, ),
+        ('S11', 'answers.S11.answer', None, ),
+        ('S12', 'answers.S12.answer', None, ),
+        ('S13', 'answers.S13.answer', None, ),
+        ('S14', 'answers.S14.answer', None, ),
+        ('S15', 'answers.S15.answer', None, ),
+        ('Time On Question', 'timeOnQuestion', None,),
+    )
+
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'MINDF')
 
+    def calculate(self, values):
+        self.calculate_sum_and_missing_scores(values, number_of_scores=15)
 
-class RESTRExtractor(AbstractQuestionExtractor):
+
+class RESTRExtractor(MajorCharacterQuestionExtractor):
+
+    prefix = 'RESTR-'
+    major_characters = ['C', 'W']
+
+    fields = (
+        ('S1', 'answers.S1.answer', None, ),
+        ('S2', 'answers.S2.answer', None, ),
+        ('S3', 'answers.S3.answer', None, ),
+        ('S4', 'answers.S4.answer', None, ),
+        ('S5', 'answers.S5.answer', None, ),
+        ('S6', 'answers.S6.answer', None, ),
+        ('Time on Question', 'timeOnQuestion', None, ),
+    )
 
     def can_process_data(self, data):
-        return self.can_process_data_with_pattern(data, r'RESTR')
+        return self.can_process_data_with_pattern(data, r'RESTR-[CW]')
+
+    def calculate(self, values):
+        self.calculate_sum_and_missing_scores(values, number_of_scores=16)
 
 
 class TellUsMoreDataExtractor(DataExtractor):
@@ -377,22 +685,22 @@ class TellUsMoreDataExtractor(DataExtractor):
         AttractExtractor(),
         EXExtractor(),
         WillExtractor(),
-        # MoodExtractor(),
-        # IMPExtractor(),
-        # FoodIMPExtractor(),
+        MoodExtractor(),
+        IMPExtractor(),
+        FoodIMPExtractor(),
         # EMREGExtractor(),
-        # GoalsExtractor(),
-        # IntentExtractor(),
-        # PersonExtractor(),
-        # EffectExtractor(),
-        # MINDFExtractor(),
-        # RESTRExtractor(),
+        GoalsExtractor(),
+        IntentExtractor(),
+        PersonExtractor(),
+        EffectExtractor(),
+        MINDFExtractor(),
+        RESTRExtractor(),
     ]
 
     def column_names(self):
         """Return a list of column names"""
         if self.question_extractor:
-            return self.question_extractor.column_names()
+            return ['Type'] + self.question_extractor.column_names()
         else:
             return []
 
