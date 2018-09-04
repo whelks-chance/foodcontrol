@@ -1,5 +1,5 @@
-from .stop import StopDataExtractor, RestraintDataExtractor, NAStopDataExtractor, GStopDataExtractor
-from .stop import GRestraintDataExtractor, NARestraintDataExtractor, DoubleDataExtractor
+from .stop import StopDataExtractor,RestraintDataExtractor, NAStopDataExtractor, GStopDataExtractor,\
+    GRestraintDataExtractor, NARestraintDataExtractor, DoubleDataExtractor
 from .mcii import MCIIDataExtractor
 from .goalvis import GoalVisDataExtractor
 from .measures import MeasuresDataExtractor

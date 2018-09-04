@@ -339,13 +339,10 @@ class TellUsMoreDataExtractor(DataExtractor):
         question_extractor = self.get_question_extractor(data)
         if question_extractor:
             self.question_extractor = question_extractor
-            # print('row is', type(self.question_extractor).__name__)
             self.question_extractor.extract(data)
             self.rows = self.question_extractor.rows
-            # print('values =', question_extractor.values)
-            # print('rows =', self.question_extractor.rows)
         else:
-            # print('no QE for row:', row['type'])
+            # TODO: Implement the remaining question extractors
             pass
 
     def check(self, row):
@@ -356,4 +353,4 @@ class TellUsMoreDataExtractor(DataExtractor):
 
     def extracted_rows(self):
         print('#######', self.rows)
-        return [self.to_list(row) for row in self.rows]
+        return [self.common_row_values() + self.to_list(self.column_names(), row) for row in self.rows]

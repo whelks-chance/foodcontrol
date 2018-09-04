@@ -7,11 +7,13 @@ class DataExtractor:
         ('Session ID', 'sessionId', ),
     ]
 
+    common_values = {}
+
     values = {}
 
-    def all_fields(self):
-        """Combine the common fields with the type-specific fields"""
-        return self.common_fields + self.fields
+    # def all_fields(self):
+    #     """Combine the common fields with the type-specific fields"""
+    #     return self.common_fields + self.fields
 
     @staticmethod
     def session_is_complete(row):
@@ -32,6 +34,7 @@ class DataExtractor:
     def process(self, row):
         if self.can_process_row(row):
             if self.session_is_complete(row):
+                self.extract_common_values(row)
                 self.extract(row)
                 self.check(row)
                 self.calculate(row)
@@ -47,12 +50,21 @@ class DataExtractor:
         """Reset common value and calculation stores. Override to to reset type-specific value and calculation stores"""
         self.values.clear()
 
+    @staticmethod
+    def extract_fields(fields, values, row):
+        for column_name, keypath in fields:
+            value = row.get_keypath_value(keypath)
+            values[column_name] = value
+
+    def extract_common_values(self, row):
+        """Store the common column values"""
+        self.common_values = {}
+        self.extract_fields(self.common_fields, self.common_values, row)
+
     def extract(self, row):
         """Store the column value for each keypath"""
         self.clear()
-        for column_name, keypath in self.all_fields():
-            value = row.get_keypath_value(keypath)
-            self.values[column_name] = value
+        self.extract_fields(self.fields, self.values, row)
 
     def check(self, row):
         """Override to perform type-specific row checks"""
@@ -62,18 +74,31 @@ class DataExtractor:
         """Override to perform type-specific row calculations"""
         pass
 
+    def common_column_names(self):
+        """Return a list of the common column names"""
+        return [column_name for column_name, _ in self.common_fields]
+
     def column_names(self):
         """Return a list of column names"""
-        return [column_name for column_name, _ in self.all_fields()]
+        return [column_name for column_name, _ in self.fields]
+
+    def all_column_names(self):
+        return self.common_column_names() + self.column_names()
+
+    def common_row_values(self):
+        return self.to_list(self.common_column_names(), self.common_values)
 
     def row_values(self):
-        return self.to_list(self.values)
+        return self.to_list(self.column_names(), self.values)
 
-    def to_list(self, values):
+    def all_row_values(self):
+        return self.common_row_values() + self.row_values()
+
+    def to_list(self, column_names, values):
         """Return a list of row values ordered by column"""
         values_list = []
         print('-->VALUES', values)
-        for column_name in self.column_names():
+        for column_name in column_names:
             value = self.empty_cell_value
             if column_name in values:
                 value = values[column_name]
@@ -83,4 +108,4 @@ class DataExtractor:
         return values_list
 
     def extracted_rows(self):
-        return [self.row_values()]
+        return [self.all_row_values()]
