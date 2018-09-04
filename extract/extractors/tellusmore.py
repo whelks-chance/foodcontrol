@@ -410,10 +410,10 @@ class IMPExtractor(MajorCharacterQuestionExtractor):
     @staticmethod
     def code_response_reversed(response_value):
         reversed_response_codes = {
-            '4': 4,
-            '3': 3,
-            '2': 2,
-            '1': 1,
+            '1': 4,
+            '2': 3,
+            '3': 2,
+            '4': 1,
         }
         return reversed_response_codes[response_value]
 
@@ -506,11 +506,11 @@ class EMREGExtractor(MajorCharacterQuestionExtractor):
     @staticmethod
     def code_response_reversed(response_value):
         reversed_response_codes = {
-            '5': 5,
-            '4': 4,
+            '1': 5,
+            '2': 4,
             '3': 3,
-            '2': 2,
-            '1': 1,
+            '4': 2,
+            '5': 1,
         }
         return reversed_response_codes[response_value]
 
@@ -595,11 +595,11 @@ class PersonExtractor(MajorCharacterQuestionExtractor):
     @staticmethod
     def code_response_reversed(response_value):
         reversed_response_codes = {
-            '5': 5,
-            '4': 4,
+            '1': 5,
+            '2': 4,
             '3': 3,
-            '2': 2,
-            '1': 1,
+            '4': 2,
+            '5': 1,
         }
         return reversed_response_codes[response_value]
 
