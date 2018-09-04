@@ -57,7 +57,11 @@ class AbstractQuestionExtractor:
             if code:
                 code_column_name, code_function_name = code
                 code_function = getattr(self, code_function_name)
-                values[code_column_name] = code_function(value)
+                if value:
+                    code_value = code_function(value)
+                else:
+                    code_value = DataExtractor.empty_cell_value
+                values[code_column_name] = code_value
         self.rows.append(values)
 
 
