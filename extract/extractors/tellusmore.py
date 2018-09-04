@@ -52,18 +52,24 @@ class AbstractQuestionExtractor:
     def extract_key_data(self, key_data):
         values = {}
         for column_name, keypath, code in self.fields:
-            value = key_data.get_keypath_value(keypath)
-            values[column_name] = value
-            if code:
-                code_column_name, code_function_name = code
-                code_function = getattr(self, code_function_name)
-                if value:
-                    code_value = code_function(value)
-                else:
+            try:
+                value = key_data.get_keypath_value(keypath)
+                values[column_name] = value
+                if code:
+                    code_column_name, code_function_name = code
+                    code_function = getattr(self, code_function_name)
                     code_value = DataExtractor.empty_cell_value
-                values[code_column_name] = code_value
+                    if value and value != DataExtractor.empty_cell_value:
+                        code_value = code_function(value)
+                    values[code_column_name] = code_value
+            except KeyError as e:
+                print('KeyError', e)
+        self.calculate(values)
         self.rows.append(values)
 
+    def calculate(self, values):
+        # return values
+        pass
 
 class MajorMinorQuestionExtractor(AbstractQuestionExtractor):
     """
@@ -94,6 +100,7 @@ class FreqExtractor(MajorMinorQuestionExtractor):
     minor_range = irange(1, 12)
 
     fields = (
+        ('TUM Session ID', 'TUMsessionID', None, ),
         ('FE', 'answers.FE.answer', ('FE Score', 'code_answer'), ),
         ('FC Answer', 'answers.FC.answer', ('FC Score', 'code_answer'), ),
         ('FC Slider Value', 'answers.FC.sliderValue', None, ),
@@ -141,6 +148,7 @@ class TasteExtractor(MajorMinorQuestionExtractor):
     minor_range = irange(1, 12)
 
     fields = (
+        ('TUM Session ID', 'TUMsessionID', None, ),
         ('FE', 'answers.0.answer', None, ),
         ('ID', 'VsmInfo.id', None, ),
         ('Type', 'VsmInfo.type', ('Type Value', 'code_food_type'), ),
@@ -175,6 +183,7 @@ class AttractExtractor(MajorMinorQuestionExtractor):
     minor_range = irange(1, 12)
 
     fields = (
+        ('TUM Session ID', 'TUMsessionID', None, ),
         ('FE', 'answers.0.answer', None, ),
         ('ID', 'VsmInfo.id', None, ),
         ('Type', 'VsmInfo.type', ('Type Value', 'code_food_type'), ),
@@ -205,6 +214,7 @@ class AttractExtractor(MajorMinorQuestionExtractor):
 class EXExtractor(AbstractQuestionExtractor):
 
     fields = (
+        ('TUM Session ID', 'TUMsessionID', None, ),
         ('EX A Answer', 'EX-A.answers.0.answer', ('EX A Answer Score', 'code_answer'), ),
         ('EX A Time On Question', 'EX-A.timeOnQuestion', None, ),
         ('EX F Times Moderate', 'EX-F.answers.exercise-times-moderate.answer', None, ),
@@ -230,8 +240,68 @@ class EXExtractor(AbstractQuestionExtractor):
 
 class WillExtractor(AbstractQuestionExtractor):
 
+    fields = (
+        ('TUM Session ID', 'TUMsessionID', None, ),
+
+        ('S1', 'WILLM.answers.S1.answer', ('S1 Score', 'code_response_reversed'), ),
+        ('S2', 'WILLM.answers.S2.answer', ('S2 Score', 'code_response_reversed'), ),
+        ('S3', 'WILLM.answers.S3.answer', ('S3 Score', 'code_response'), ),
+        ('S4', 'WILLM.answers.S4.answer', ('S4 Score', 'code_response'), ),
+        ('S5', 'WILLM.answers.S5.answer', ('S5 Score', 'code_response_reversed'), ),
+        ('S6', 'WILLM.answers.S6.answer', ('S6 Score', 'code_response'), ),
+
+        ('S1', 'WILLT.answers.S1.answer', ('S1 Score', 'code_response_reversed'), ),
+        ('S2', 'WILLT.answers.S2.answer', ('S2 Score', 'code_response_reversed'), ),
+        ('S3', 'WILLT.answers.S3.answer', ('S3 Score', 'code_response'), ),
+        ('S4', 'WILLT.answers.S4.answer', ('S4 Score', 'code_response_reversed'), ),
+        ('S5', 'WILLT.answers.S5.answer', ('S5 Score', 'code_response'), ),
+        ('S6', 'WILLT.answers.S6.answer', ('S6 Score', 'code_response'), ),
+    )
+
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'WILL[MT]')
+
+    @staticmethod
+    def code_response(response_value):
+        response_codes = {
+            '1': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4,
+            '5': 5,
+            '6': 6,
+        }
+        return response_codes[response_value]
+
+    @staticmethod
+    def code_response_reversed(response_value):
+        reversed_response_codes = {
+            '1': 6,
+            '2': 5,
+            '3': 4,
+            '4': 3,
+            '5': 2,
+            '6': 1,
+        }
+        return reversed_response_codes[response_value]
+
+    def column_names(self):
+        return super().column_names() + ['Scores Sum', 'Num Missing']
+
+    def calculate(self, values):
+        scores_sum = 0
+        missing_sum = 0
+        # Score 1, Score 2, ... , Score 6
+        column_names = ['S' + str(response) + ' Score' for response in irange(1, 6)]
+        for column_name in column_names:
+            value = values[column_name]
+            if value == DataExtractor.empty_cell_value:
+                missing_sum += 1
+            else:
+                scores_sum += values[column_name]
+        values['Scores Sum'] = scores_sum
+        values['Num Missing'] = missing_sum
+        # return values
 
 
 class MoodExtractor(AbstractQuestionExtractor):
@@ -298,7 +368,6 @@ class TellUsMoreDataExtractor(DataExtractor):
 
     type = 'tellusmore'
 
-    # fields = []
     rows = []
     question_extractor = None
 
@@ -307,7 +376,7 @@ class TellUsMoreDataExtractor(DataExtractor):
         TasteExtractor(),
         AttractExtractor(),
         EXExtractor(),
-        # WillExtractor(),
+        WillExtractor(),
         # MoodExtractor(),
         # IMPExtractor(),
         # FoodIMPExtractor(),
@@ -341,6 +410,7 @@ class TellUsMoreDataExtractor(DataExtractor):
             self.question_extractor = question_extractor
             self.question_extractor.extract(data)
             self.rows = self.question_extractor.rows
+            print("self.rows:", self.rows)
         else:
             # TODO: Implement the remaining question extractors
             pass
@@ -353,4 +423,5 @@ class TellUsMoreDataExtractor(DataExtractor):
 
     def extracted_rows(self):
         print('#######', self.rows)
+        print(self.column_names())
         return [self.common_row_values() + self.to_list(self.column_names(), row) for row in self.rows]
