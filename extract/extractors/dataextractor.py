@@ -2,18 +2,22 @@ class DataExtractor:
 
     empty_cell_value = '[]'
 
-    common_fields = [
-        ('User ID', 'userID', ),
-        ('Session ID', 'sessionId', ),
-    ]
-
     common_values = {}
-
     values = {}
 
-    # def all_fields(self):
-    #     """Combine the common fields with the type-specific fields"""
-    #     return self.common_fields + self.fields
+    def name(self):
+        return self.type
+
+    @staticmethod
+    def common_fields():
+        print('DataExtractor.common_fields()')
+        return [
+            ('User ID', 'userID', ),
+            ('Session ID', 'sessionId', ),
+        ]
+
+    def _fields(self):
+        return self.fields
 
     @staticmethod
     def session_is_complete(row):
@@ -52,6 +56,7 @@ class DataExtractor:
 
     @staticmethod
     def extract_fields(fields, values, row):
+        print('fields:', fields)
         for column_name, keypath in fields:
             value = row.get_keypath_value(keypath)
             values[column_name] = value
@@ -59,12 +64,13 @@ class DataExtractor:
     def extract_common_values(self, row):
         """Store the common column values"""
         self.common_values = {}
-        self.extract_fields(self.common_fields, self.common_values, row)
+        print(self.common_fields())
+        self.extract_fields(self.common_fields(), self.common_values, row)
 
     def extract(self, row):
         """Store the column value for each keypath"""
         self.clear()
-        self.extract_fields(self.fields, self.values, row)
+        self.extract_fields(self._fields(), self.values, row)
 
     def check(self, row):
         """Override to perform type-specific row checks"""
@@ -76,11 +82,11 @@ class DataExtractor:
 
     def common_column_names(self):
         """Return a list of the common column names"""
-        return [column_name for column_name, _ in self.common_fields]
+        return [column_name for column_name, _ in self.common_fields()]
 
     def column_names(self):
         """Return a list of column names"""
-        return [column_name for column_name, _ in self.fields]
+        return [column_name for column_name, _ in self._fields()]
 
     def all_column_names(self):
         return self.common_column_names() + self.column_names()

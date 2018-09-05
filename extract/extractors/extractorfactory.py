@@ -6,12 +6,15 @@ from .measures import MeasuresDataExtractor
 from .eligibility import EligibilityDataExtractor
 from .additionalinfo import AdditionalInfoDataExtractor
 from .virtualsupermarket import VirtualSupermarketDataExtractor
-from .tellusmore import TellUsMoreDataExtractor
+from .tellusmore import FreqQuestionExtractor, TasteQuestionExtractor, AttractQuestionExtractor,\
+    EXQuestionExtractor, WillQuestionExtractor, MoodQuestionExtractor, IMPQuestionExtractor,\
+    FoodIMPQuestionExtractor, GoalsQuestionExtractor, IntentQuestionExtractor, PersonQuestionExtractor,\
+    EffectQuestionExtractor, MINDFQuestionExtractor, RESTRQuestionExtractor
 
 
 class ExtractorFactory:
 
-    extractors = [
+    game_extractors = [
         StopDataExtractor(),
         RestraintDataExtractor(),
         NAStopDataExtractor(),
@@ -25,8 +28,27 @@ class ExtractorFactory:
         EligibilityDataExtractor(),
         AdditionalInfoDataExtractor(),
         VirtualSupermarketDataExtractor(),
-        TellUsMoreDataExtractor(),
     ]
+
+    question_extractors = [
+        FreqQuestionExtractor(),
+        TasteQuestionExtractor(),
+        # AttractQuestionExtractor(),
+        # EXQuestionExtractor(),
+        # WillQuestionExtractor(),
+        # MoodQuestionExtractor(),
+        # IMPQuestionExtractor(),
+        # FoodIMPQuestionExtractor(),
+        # # EMREGExtractor(),
+        # GoalsQuestionExtractor(),
+        # IntentQuestionExtractor(),
+        # PersonQuestionExtractor(),
+        # EffectQuestionExtractor(),
+        # MINDFQuestionExtractor(),
+        # RESTRQuestionExtractor(),
+    ]
+
+    extractors = game_extractors + question_extractors
 
     def __init__(self):
         self.extractors_by_type = {extractor.type:extractor for extractor in self.extractors}

@@ -27,7 +27,7 @@ class Extractor:
             print('no rows to extract with: ', extractor.type)
             return
 
-        output_filename = json_csv_path / '{}.csv'.format(extractor.type)
+        output_filename = json_csv_path / '{}.csv'.format(extractor.name())
         with open(output_filename, 'w', encoding='utf-8') as csv_file:
             csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
             for row in json_array:
@@ -44,7 +44,7 @@ class Extractor:
             csv_file.seek(0, 0)          # Move the file pointer to the beginning
             csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
             csv_writer.writerow(extractor.all_column_names())  # Write the header row
-            csv_file.write(file_data)                      # Write the data rows
+            csv_file.write(file_data)                          # Write the data rows
 
     @staticmethod
     def has_row_to_extract(json_array, extractor):
@@ -61,9 +61,9 @@ if __name__ == '__main__':
         # '020518.json', #  Old format?
         # '060618.json',
         # '070618.json',
-        '200818.json'
+        '200818.json',
+        # '040918.json'
     ]
-
 
     def create_folder(path):
         path.mkdir(parents=True, exist_ok=True)
@@ -71,7 +71,6 @@ if __name__ == '__main__':
     def filename_without_extension(filename):
         base_filename, _ = os.path.splitext(os.path.basename(json_filename))
         return base_filename
-
 
     csv_path = Path('./csv')
     create_folder(csv_path)

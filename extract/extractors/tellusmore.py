@@ -13,24 +13,31 @@ def irange(start, end):
     return range(start, end + 1)
 
 
-class AbstractQuestionExtractor:
+class QuestionExtractor(DataExtractor):
+
+    type = 'tellusmore'
 
     rows = []
 
+    def name(self):
+        return '{}-{}'.format(self.type, self.prefix)
+
+    def common_fields(self):
+        print('QuestionExtractor.common_fields()')
+        return super().common_fields() + [
+            ('TUM Session ID', 'data.TUMsessionID', ),
+        ]
+
     def column_names(self):
         """Return a list of column names"""
-        column_names = []
-        for column_name, _, code in self.fields:
-            column_names.append(column_name)
-            if code:
-                code_column_name, _ = code
-                column_names.append(code_column_name)
+        column_names = super().column_names()
+        for _, derived_column_name, _ in self.derived_fields:
+            column_names.append(derived_column_name)
         return column_names
 
-    def can_process_data(self, data):
-        # Create a pattern that matches a question prefix with major and minor numbers
-        pattern = self.prefix + r'[12345]-1?\d'
-        return self.can_process_data_with_pattern(data, pattern)
+    def can_process_row(self, row):
+        """Return True if the row type matches the type this data extractor can process"""
+        return row['type'] == self.__class__.type and self.can_process_data(row['data'])
 
     @staticmethod
     def can_process_data_with_pattern(data, pattern):
@@ -40,32 +47,29 @@ class AbstractQuestionExtractor:
                 return True
         return False
 
-    def clear(self):
-        """Reset common value and calculation stores. Override to to reset type-specific value and calculation stores"""
-        self.rows = []
-
-    def extract(self, data):
+    def extract(self, row):
         """Store the column value for each keypath"""
         self.clear()
-        self.extract_key_data(data)
+        self.extract_key_data(row['data'])
 
     def extract_key_data(self, key_data):
+        print('------------------------------------->QuestionExtractor.extract_key_data()')
         values = {}
-        for column_name, keypath, code in self.fields:
+        for column_name, keypath in self._fields():
             try:
                 value = key_data.get_keypath_value(keypath)
                 values[column_name] = value
-                if code:
-                    code_column_name, code_function_name = code
-                    code_function = getattr(self, code_function_name)
-                    code_value = DataExtractor.empty_cell_value
-                    if value and value != DataExtractor.empty_cell_value:
-                        code_value = code_function(value)
-                    values[code_column_name] = code_value
+                # if code:
+                #     code_column_name, code_function_name = code
+                #     code_function = getattr(self, code_function_name)
+                #     code_value = DataExtractor.empty_cell_value
+                #     if value and value != DataExtractor.empty_cell_value:
+                #         code_value = code_function(value)
+                #     values[code_column_name] = code_value
             except KeyError as e:
                 print('KeyError', e)
         self.calculate(values)
-        self.rows.append(values)
+        print('## VALUES:', self.values)
 
     def calculate(self, values):
         pass
@@ -89,7 +93,7 @@ class AbstractQuestionExtractor:
         values['Num Missing'] = missing_sum
 
 
-class MajorMinorQuestionExtractor(AbstractQuestionExtractor):
+class MajorMinorQuestionExtractor(QuestionExtractor):
     """
     A major minor question has a pattern of the form: FREQ1-1, FREQ1-2, FREQ1-3
     i.e. a question prefix, e.g. FREQ, TASTE and ATTRACT, followed by a major number
@@ -100,9 +104,14 @@ class MajorMinorQuestionExtractor(AbstractQuestionExtractor):
     def extract(self, data):
         """Store the column value for each keypath"""
         self.clear()
+        print('------------------------------------->MajorMinorQuestionExtractor.extract()')
+        print(self.major_range, self.minor_range)
+        print(data)
+        data = data['data']
         for major in self.major_range:
             for minor in self.minor_range:
                 key = '{}{}-{}'.format(self.prefix, major, minor)
+                print(key)
                 try:
                     key_data = KeypathDict(data[key])
                     print(key, '->', key_data)
@@ -110,23 +119,35 @@ class MajorMinorQuestionExtractor(AbstractQuestionExtractor):
                 except KeyError:
                     pass
 
+    def can_process_data(self, data):
+        pattern = self.prefix + r'[12345]-1?\d'
+        if self.can_process_data_with_pattern(data, pattern):
+            print(self.prefix, '-->', data)
+        return self.can_process_data_with_pattern(data, pattern)
 
-class FreqExtractor(MajorMinorQuestionExtractor):
+
+class FreqQuestionExtractor(MajorMinorQuestionExtractor):
 
     prefix = 'FREQ'
     major_range = irange(1, 5)
     minor_range = irange(1, 12)
 
-    fields = (
-        ('TUM Session ID', 'TUMsessionID', None, ),
-        ('FE', 'answers.FE.answer', ('FE Score', 'code_answer'), ),
-        ('FC Answer', 'answers.FC.answer', ('FC Score', 'code_answer'), ),
-        ('FC Slider Value', 'answers.FC.sliderValue', None, ),
-        ('ID', 'VsmInfo.id', None, ),
-        ('Type', 'VsmInfo.type', ('Type Value', 'code_food_type'), ),
-        ('Selected', 'VsmInfo.selected', ('Selected Value', 'code_food_selected'), ),
-        ('Time On Question', 'timeOnQuestion', None, ),
-    )
+    fields = [
+        ('FE', 'answers.FE.answer', ),
+        ('FC Answer', 'answers.FC.answer', ),
+        ('FC Slider Value', 'answers.FC.sliderValue', ),
+        ('ID', 'VsmInfo.id', ),
+        ('Type', 'VsmInfo.type', ),
+        ('Selected', 'VsmInfo.selected', ),
+        ('Time On Question', 'timeOnQuestion', ),
+    ]
+
+    derived_fields = [
+        ('FE', 'FE Score', 'code_answer', ),
+        ('FC Answer', 'FC Score', 'code_answer', ),
+        ('Type', 'Type Value', 'code_food_type'),
+        ('Selected', 'Selected Value', 'code_food_selected', ),
+    ]
 
     @staticmethod
     def code_food_type(food_value):
@@ -159,20 +180,24 @@ class FreqExtractor(MajorMinorQuestionExtractor):
         return answer_codes[answer_value]
 
 
-class TasteExtractor(MajorMinorQuestionExtractor):
+class TasteQuestionExtractor(MajorMinorQuestionExtractor):
 
     prefix = 'TASTE'
     major_range = irange(1, 5)
     minor_range = irange(1, 12)
 
-    fields = (
-        ('TUM Session ID', 'TUMsessionID', None, ),
-        ('FE', 'answers.0.answer', None, ),
-        ('ID', 'VsmInfo.id', None, ),
-        ('Type', 'VsmInfo.type', ('Type Value', 'code_food_type'), ),
-        ('Selected', 'VsmInfo.selected', ('Selected Value', 'code_food_selected'), ),
-        ('Time On Question', 'timeOnQuestion', None, ),
-    )
+    fields = [
+        ('FE', 'answers.0.answer', ),
+        ('ID', 'VsmInfo.id', ),
+        ('Type', 'VsmInfo.type', ),
+        ('Selected', 'VsmInfo.selected', ),
+        ('Time On Question', 'timeOnQuestion', ),
+    ]
+
+    derived_fields = [
+        ('Type', 'Type Value', 'code_food_type', ),
+        ('Selected', 'Selected Value', 'code_food_selected', ),
+    ]
 
     @staticmethod
     def code_food_type(food_value):
@@ -194,7 +219,7 @@ class TasteExtractor(MajorMinorQuestionExtractor):
         return food_selected_codes[food_selected_value]
 
 
-class AttractExtractor(MajorMinorQuestionExtractor):
+class AttractQuestionExtractor(MajorMinorQuestionExtractor):
 
     prefix = 'ATTRACT'
     major_range = irange(1, 5)
@@ -229,7 +254,7 @@ class AttractExtractor(MajorMinorQuestionExtractor):
         return food_selected_codes[food_selected_value]
 
 
-class EXExtractor(AbstractQuestionExtractor):
+class EXQuestionExtractor(QuestionExtractor):
 
     fields = (
         ('TUM Session ID', 'TUMsessionID', None, ),
@@ -256,7 +281,7 @@ class EXExtractor(AbstractQuestionExtractor):
         return self.can_process_data_with_pattern(data, r'EX-[AF]')
 
 
-class MajorCharacterQuestionExtractor(AbstractQuestionExtractor):
+class MajorCharacterQuestionExtractor(QuestionExtractor):
     """
     A major character question has a pattern of the form: MOODD, MOODA and MOODS
     i.e. a question prefix, e.g. WILL, MOOD and IMP, followed by a major character
@@ -276,7 +301,7 @@ class MajorCharacterQuestionExtractor(AbstractQuestionExtractor):
                 pass
 
 
-class WillExtractor(MajorCharacterQuestionExtractor):
+class WillQuestionExtractor(MajorCharacterQuestionExtractor):
 
     prefix = 'WILL'
     major_characters = ['M', 'T']
@@ -326,7 +351,7 @@ class WillExtractor(MajorCharacterQuestionExtractor):
         self.calculate_sum_and_missing_scores(values, number_of_scores=6)
 
 
-class MoodExtractor(MajorCharacterQuestionExtractor):
+class MoodQuestionExtractor(MajorCharacterQuestionExtractor):
 
     prefix = 'MOOD'
     major_characters = ['D', 'A', 'S']
@@ -379,7 +404,7 @@ class MoodExtractor(MajorCharacterQuestionExtractor):
         self.calculate_sum_and_missing_scores(values, number_of_scores=7)
 
 
-class IMPExtractor(MajorCharacterQuestionExtractor):
+class IMPQuestionExtractor(MajorCharacterQuestionExtractor):
 
     prefix = 'IMP'
     major_characters = ['A', 'M', 'N']
@@ -421,7 +446,7 @@ class IMPExtractor(MajorCharacterQuestionExtractor):
         return self.can_process_data_with_pattern(data, r'IMP[AMN]')
 
 
-class FoodIMPExtractor(AbstractQuestionExtractor):
+class FoodIMPQuestionExtractor(QuestionExtractor):
 
     fields = (
         # ('TUM Session ID', 'TUMsessionID', None, ),
@@ -522,7 +547,7 @@ class EMREGExtractor(MajorCharacterQuestionExtractor):
         pass
 
 
-class GoalsExtractor(AbstractQuestionExtractor):
+class GoalsQuestionExtractor(QuestionExtractor):
 
     fields = (
         ('Ideal Weight Unit 1 Value', 'answers.ideal-weight.answer.unit1_val', None, ),
@@ -549,7 +574,7 @@ class GoalsExtractor(AbstractQuestionExtractor):
         self.extract_key_data(key_data)
 
 
-class IntentExtractor(AbstractQuestionExtractor):
+class IntentQuestionExtractor(QuestionExtractor):
 
     fields = (
         ('Healthy Foods Answer', 'INTENT-H.answers.healthy-foods.answer', None, ),
@@ -562,7 +587,7 @@ class IntentExtractor(AbstractQuestionExtractor):
         return self.can_process_data_with_pattern(data, r'INTENT-[UH]')
 
 
-class PersonExtractor(MajorCharacterQuestionExtractor):
+class PersonQuestionExtractor(MajorCharacterQuestionExtractor):
 
     prefix = 'PERSON'
     major_characters = ['N', 'E', 'O', 'A', 'C']
@@ -607,7 +632,7 @@ class PersonExtractor(MajorCharacterQuestionExtractor):
         return self.can_process_data_with_pattern(data, r'PERSON[NEOAC]')
 
 
-class EffectExtractor(AbstractQuestionExtractor):
+class EffectQuestionExtractor(QuestionExtractor):
 
     fields = (
         ('H Answer', 'EFFECT-H.answers.healthy.answer', None, ),
@@ -622,7 +647,7 @@ class EffectExtractor(AbstractQuestionExtractor):
         return self.can_process_data_with_pattern(data, r'EFFECT-[HUW]')
 
 
-class MINDFExtractor(AbstractQuestionExtractor):
+class MINDFQuestionExtractor(QuestionExtractor):
 
     fields = (
         ( 'S1', 'answers.S1.answer',  None, ),
@@ -650,7 +675,7 @@ class MINDFExtractor(AbstractQuestionExtractor):
         self.calculate_sum_and_missing_scores(values, number_of_scores=15)
 
 
-class RESTRExtractor(MajorCharacterQuestionExtractor):
+class RESTRQuestionExtractor(MajorCharacterQuestionExtractor):
 
     prefix = 'RESTR-'
     major_characters = ['C', 'W']
@@ -680,21 +705,21 @@ class TellUsMoreDataExtractor(DataExtractor):
     question_extractor = None
 
     question_extractors = [
-        FreqExtractor(),
-        TasteExtractor(),
-        AttractExtractor(),
-        EXExtractor(),
-        WillExtractor(),
-        MoodExtractor(),
-        IMPExtractor(),
-        FoodIMPExtractor(),
+        FreqQuestionExtractor(),
+        TasteQuestionExtractor(),
+        AttractQuestionExtractor(),
+        EXQuestionExtractor(),
+        WillQuestionExtractor(),
+        MoodQuestionExtractor(),
+        IMPQuestionExtractor(),
+        FoodIMPQuestionExtractor(),
         # EMREGExtractor(),
-        GoalsExtractor(),
-        IntentExtractor(),
-        PersonExtractor(),
-        EffectExtractor(),
-        MINDFExtractor(),
-        RESTRExtractor(),
+        GoalsQuestionExtractor(),
+        IntentQuestionExtractor(),
+        PersonQuestionExtractor(),
+        EffectQuestionExtractor(),
+        MINDFQuestionExtractor(),
+        RESTRQuestionExtractor(),
     ]
 
     def column_names(self):
