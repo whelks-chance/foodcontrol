@@ -1,11 +1,12 @@
+import os
 import csv
 import json
 
-import os
 from pathlib import Path
+
+from utils import KeypathDict
 from settings import food_control_path
 from extractors import ExtractorFactory
-from keypathdict import KeypathDict
 
 
 class Extractor:

@@ -33,7 +33,7 @@ class ExtractorFactory:
     question_extractors = [
         FreqQuestionExtractor(),
         TasteQuestionExtractor(),
-        # AttractQuestionExtractor(),
+        AttractQuestionExtractor(),
         # EXQuestionExtractor(),
         # WillQuestionExtractor(),
         # MoodQuestionExtractor(),
