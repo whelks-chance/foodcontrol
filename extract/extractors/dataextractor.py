@@ -18,6 +18,10 @@ class DataExtractor:
     def _fields(self):
         return self.fields
 
+    def clear(self):
+        """Reset common value and calculation stores. Override to to reset type-specific value and calculation stores"""
+        self.values.clear()
+
     @staticmethod
     def session_is_complete(row):
         session_state = 'COMPLETE'
@@ -73,7 +77,12 @@ class DataExtractor:
             for source_column_name, destination_column_name, code_function_name in self.derived_fields:
                 value_derivation_fn = getattr(self, code_function_name)
                 if source_column_name:
-                    value = values[source_column_name]
+                    try:
+                        value = values[source_column_name]
+                    except KeyError as e:
+                        print('\ncalculate_derived_field_values():')
+                        print(e)
+                        print(values)
                 else:
                     value = values
                 derived_value = DataExtractor.empty_cell_value
