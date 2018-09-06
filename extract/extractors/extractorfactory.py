@@ -8,8 +8,8 @@ from .additionalinfo import AdditionalInfoDataExtractor
 from .virtualsupermarket import VirtualSupermarketDataExtractor
 from .tellusmore import FreqQuestionExtractor, TasteQuestionExtractor, AttractQuestionExtractor,\
     EXQuestionExtractor, WillQuestionExtractor, MoodQuestionExtractor, IMPQuestionExtractor,\
-    FoodIMPQuestionExtractor, GoalsQuestionExtractor, IntentQuestionExtractor, PersonQuestionExtractor,\
-    EffectQuestionExtractor, MINDFQuestionExtractor, RESTRQuestionExtractor
+    FoodIMPQuestionExtractor, EMREGQuestionExtractor, GoalsQuestionExtractor, IntentQuestionExtractor,\
+    PersonQuestionExtractor, EffectQuestionExtractor, MINDFQuestionExtractor, RESTRQuestionExtractor
 
 
 class ExtractorFactory:
@@ -34,18 +34,18 @@ class ExtractorFactory:
         FreqQuestionExtractor(),
         TasteQuestionExtractor(),
         AttractQuestionExtractor(),
-        # EXQuestionExtractor(),
+        EXQuestionExtractor(),
         # WillQuestionExtractor(),
         # MoodQuestionExtractor(),
         # IMPQuestionExtractor(),
         # FoodIMPQuestionExtractor(),
-        # # EMREGExtractor(),
+        # EMREGQuestionExtractor(),
         # GoalsQuestionExtractor(),
         # IntentQuestionExtractor(),
         # PersonQuestionExtractor(),
         # EffectQuestionExtractor(),
         # MINDFQuestionExtractor(),
-        # RESTRQuestionExtractor(),
+        RESTRQuestionExtractor(),
     ]
 
     extractors = game_extractors + question_extractors

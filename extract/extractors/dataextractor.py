@@ -68,18 +68,19 @@ class DataExtractor:
             except KeyError as e:
                 print('KeyError', e)
 
-    def calculate_derived_field_values(self, derived_fields, values):
+    def calculate_derived_field_values(self, values):
         """Derive new values from the extracted field values"""
-        print('calculate_derived_field_values():', derived_fields, values)
-        for source_column_name, destination_column_name, code_function_name in derived_fields:
-            print('~~~~~~~~~> {}({}) -> {}'.format(code_function_name, source_column_name, destination_column_name))
-            code_function = getattr(self, code_function_name)
-            value = values[source_column_name]
-            code_value = DataExtractor.empty_cell_value
-            if value and value != DataExtractor.empty_cell_value:
-                code_value = code_function(value)
-            print('~~~~~~~~~> {}'.format(code_value))
-            values[destination_column_name] = code_value
+        if hasattr(self, 'derived_fields'):
+            print('calculate_derived_field_values():', self.derived_fields, values)
+            for source_column_name, destination_column_name, code_function_name in self.derived_fields:
+                print('~~~~~~~~~> {}({}) -> {}'.format(code_function_name, source_column_name, destination_column_name))
+                code_function = getattr(self, code_function_name)
+                value = values[source_column_name]
+                code_value = DataExtractor.empty_cell_value
+                if value and value != DataExtractor.empty_cell_value:
+                    code_value = code_function(value)
+                print('~~~~~~~~~> {}'.format(code_value))
+                values[destination_column_name] = code_value
 
     def check(self, row):
         """Override to perform type-specific row checks"""
@@ -96,7 +97,14 @@ class DataExtractor:
         return [column_name for column_name, _ in self.common_fields()]
 
     def column_names(self):
-        return [column_name for column_name, _ in self._fields()]
+        """Return a list of column names"""
+        # Standard column names
+        column_names = [column_name for column_name, _ in self._fields()]
+        # Derived column names (if any)
+        if hasattr(self, 'derived_fields'):
+            for _, derived_column_name, _ in self.derived_fields:
+                column_names.append(derived_column_name)
+        return column_names
 
     def all_row_values(self):
         return self.common_row_values() + self.row_values()

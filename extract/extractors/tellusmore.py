@@ -19,13 +19,6 @@ class QuestionExtractor(DataExtractor):
             ('TUM Session ID', 'data.TUMsessionID', ),
         ]
 
-    def column_names(self):
-        """Return a list of column names"""
-        column_names = super().column_names()
-        for _, derived_column_name, _ in self.derived_fields:
-            column_names.append(derived_column_name)
-        return column_names
-
     def can_process_row(self, row):
         """Return True if the row type matches the type this data extractor can process"""
         return super().can_process_row(row) and self.can_process_data(row['data'])
@@ -40,6 +33,24 @@ class QuestionExtractor(DataExtractor):
 
     def clear(self):
         pass
+
+    def extract(self, row, data_key=None):
+        """
+        The generic extraction routine for questions with a simple type,
+        i.e. not a major minor or major character type
+        """
+        values = {}
+        self.rows = []
+        data = KeypathDict(row['data'])
+        if data_key:
+            print('QQQQQQQQQQQQQQQQ', data_key, data)
+            data = KeypathDict(data[data_key])
+        else:
+            print('QQQQQQQQQQQQQQQQ', data)
+        self.extract_field_values(self._fields(), data, values)
+        self.calculate_derived_field_values(values)
+        print("WITH DERIVED: ", values)
+        self.rows.append(values)
 
     def calculate(self, row):
         pass
@@ -90,7 +101,7 @@ class MajorMinorQuestionExtractor(QuestionExtractor):
                     print(key, '->', key_data)
                     values = {}
                     self.extract_field_values(self._fields(), key_data, values)
-                    self.calculate_derived_field_values(self.derived_fields, values)
+                    self.calculate_derived_field_values(values)
                     print("WITH DERIVED: ", values)
                     self.rows.append(values)
                 except KeyError as e:
@@ -235,6 +246,8 @@ class AttractQuestionExtractor(MajorMinorQuestionExtractor):
 
 class EXQuestionExtractor(QuestionExtractor):
 
+    prefix = 'EX'
+
     fields = [
         ('EX A Answer', 'EX-A.answers.0.answer', ),
         ('EX A Time On Question', 'EX-A.timeOnQuestion', ),
@@ -270,17 +283,21 @@ class MajorCharacterQuestionExtractor(QuestionExtractor):
     e.g. ['D', 'A', 'S']
     """
 
-    def extract(self, data):
-        """Store the column value for each keypath"""
-        self.clear()
+    def extract(self, row):
+        self.rows = []
+        data = row['data']
         for major in self.major_characters:
             key = '{}{}'.format(self.prefix, major)
             try:
                 key_data = KeypathDict(data[key])
                 print(key, '->', key_data)
-                self.extract_key_data(key_data)
-            except KeyError:
-                pass
+                values = {}
+                self.extract_field_values(self._fields(), key_data, values)
+                self.calculate_derived_field_values(values)
+                print("WITH DERIVED: ", values)
+                self.rows.append(values)
+            except KeyError as e:
+                print(e)
 
 
 class WillQuestionExtractor(MajorCharacterQuestionExtractor):
@@ -463,6 +480,8 @@ class IMPQuestionExtractor(MajorCharacterQuestionExtractor):
 
 class FoodIMPQuestionExtractor(QuestionExtractor):
 
+    prefix = 'FOODIMP'
+
     fields = [
         ('S1', 'answers.S1.answer', ),
         ('S2', 'answers.S2.answer', ),
@@ -480,7 +499,7 @@ class FoodIMPQuestionExtractor(QuestionExtractor):
         ('S14', 'answers.S14.answer', ),
         ('S15', 'answers.S15.answer', ),
         ('S16', 'answers.S16.answer', ),
-        ('Time On Question', 'timeOnQuestion', None, ),
+        ('Time On Question', 'timeOnQuestion', ),
     ]
 
     derived_fields = [
@@ -532,7 +551,7 @@ class FoodIMPQuestionExtractor(QuestionExtractor):
         return self.can_process_data_with_pattern(data, r'FOODIMP')
 
 
-class EMREGExtractor(MajorCharacterQuestionExtractor):
+class EMREGQuestionExtractor(MajorCharacterQuestionExtractor):
 
     prefix = 'EMREG'
     major_characters = ['N', 'G', 'I', 'A', 'S', 'C']
@@ -592,6 +611,8 @@ class EMREGExtractor(MajorCharacterQuestionExtractor):
 
 class GoalsQuestionExtractor(QuestionExtractor):
 
+    prefix = 'GOALS'
+
     fields = [
         ('Ideal Weight Unit 1 Value', 'answers.ideal-weight.answer.unit1_val', ),
         ('Ideal Weight Unit 2 Value', 'answers.ideal-weight.answer.unit2_val', ),
@@ -609,15 +630,12 @@ class GoalsQuestionExtractor(QuestionExtractor):
         return self.can_process_data_with_pattern(data, r'GOALS')
 
     def extract(self, data):
-        """Store the column value for each keypath"""
-        self.clear()
-        key = 'GOALS'
-        key_data = KeypathDict(data[key])
-        print(key, '->', key_data)
-        self.extract_key_data(key_data)
+        super().extract(data, self.prefix)
 
 
 class IntentQuestionExtractor(QuestionExtractor):
+
+    prefix = 'INTENT'
 
     fields = [
         ('Healthy Foods Answer', 'INTENT-H.answers.healthy-foods.answer', ),
@@ -646,7 +664,7 @@ class PersonQuestionExtractor(MajorCharacterQuestionExtractor):
         ('S8', 'answers.S8.answer', ),
         ('S9', 'answers.S9.answer', ),
         ('S10', 'answers.S10.answer', ),
-        ('Time On Question', 'timeOnQuestion', None,),
+        ('Time On Question', 'timeOnQuestion', ),
     ]
 
     derived_fields = [
@@ -690,6 +708,8 @@ class PersonQuestionExtractor(MajorCharacterQuestionExtractor):
 
 class EffectQuestionExtractor(QuestionExtractor):
 
+    prefix = 'EFFECT'
+
     fields = [
         ('H Answer', 'EFFECT-H.answers.healthy.answer', ),
         ('H Time on Question', 'EFFECT-H.timeOnQuestion', ),
@@ -704,6 +724,8 @@ class EffectQuestionExtractor(QuestionExtractor):
 
 
 class MINDFQuestionExtractor(QuestionExtractor):
+
+    prefix = 'MINDF'
 
     fields = [
         ('S1', 'answers.S1.answer', ),
@@ -726,6 +748,10 @@ class MINDFQuestionExtractor(QuestionExtractor):
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'MINDF')
+
+    def extract(self, data):
+        print('EXTRACT', self.prefix)
+        super().extract(data, self.prefix)
 
     def calculate(self, values):
         self.calculate_sum_and_missing_scores(values, number_of_scores=15)
