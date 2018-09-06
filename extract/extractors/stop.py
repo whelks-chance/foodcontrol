@@ -6,7 +6,7 @@ from .dataextractor import DataExtractor
 class AbstractStopDataExtractor(DataExtractor):
 
     fields = [
-        ('Capture Date', 'captureDate', ),
+        ('Capture Date', 'captureDate'),
         # Source of original data - original .json and what cell data can be found in (for later reference)
     ]
 
