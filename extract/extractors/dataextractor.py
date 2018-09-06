@@ -10,7 +10,6 @@ class DataExtractor:
 
     @staticmethod
     def common_fields():
-        print('DataExtractor.common_fields()')
         return [
             ('User ID', 'userID', ),
             ('Session ID', 'sessionId', ),
@@ -69,18 +68,18 @@ class DataExtractor:
                 print('KeyError', e)
 
     def calculate_derived_field_values(self, values):
-        """Derive new values from the extracted field values"""
+        """Derive new values from extracted field values"""
         if hasattr(self, 'derived_fields'):
-            print('calculate_derived_field_values():', self.derived_fields, values)
             for source_column_name, destination_column_name, code_function_name in self.derived_fields:
-                print('~~~~~~~~~> {}({}) -> {}'.format(code_function_name, source_column_name, destination_column_name))
-                code_function = getattr(self, code_function_name)
-                value = values[source_column_name]
-                code_value = DataExtractor.empty_cell_value
+                value_derivation_fn = getattr(self, code_function_name)
+                if source_column_name:
+                    value = values[source_column_name]
+                else:
+                    value = values
+                derived_value = DataExtractor.empty_cell_value
                 if value and value != DataExtractor.empty_cell_value:
-                    code_value = code_function(value)
-                print('~~~~~~~~~> {}'.format(code_value))
-                values[destination_column_name] = code_value
+                    derived_value = value_derivation_fn(value)
+                values[destination_column_name] = derived_value
 
     def check(self, row):
         """Override to perform type-specific row checks"""
@@ -115,12 +114,10 @@ class DataExtractor:
     def row_values(self):
         return self.to_list(self.column_names(), self.values)
 
-    # TODO: Empty cell values should have been handled by now
     @staticmethod
     def to_list(column_names, values):
         """Return a list of column values in the same order as the corresponding column name"""
         values_list = []
-        print('-->VALUES', values)
         for column_name in column_names:
             value = DataExtractor.empty_cell_value
             if column_name in values:

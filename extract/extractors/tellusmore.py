@@ -14,7 +14,6 @@ class QuestionExtractor(DataExtractor):
         return '{}-{}'.format(self.type, self.prefix)
 
     def common_fields(self):
-        print('QuestionExtractor.common_fields()')
         return super().common_fields() + [
             ('TUM Session ID', 'data.TUMsessionID', ),
         ]
@@ -78,6 +77,14 @@ class QuestionExtractor(DataExtractor):
         print(self.column_names())
         return [self.common_row_values() + self.to_list(self.column_names(), row) for row in self.rows]
 
+    @staticmethod
+    def sum_scores(values):
+        return -1
+
+    @staticmethod
+    def missing_scores(values):
+        return -1
+
 
 class MajorMinorQuestionExtractor(QuestionExtractor):
     """
@@ -119,51 +126,51 @@ class FreqQuestionExtractor(MajorMinorQuestionExtractor):
     minor_range = irange(1, 12)
 
     fields = [
-        ('FE', 'answers.FE.answer', ),
-        ('FC Answer', 'answers.FC.answer', ),
-        ('FC Slider Value', 'answers.FC.sliderValue', ),
-        ('ID', 'VsmInfo.id', ),
-        ('Type', 'VsmInfo.type', ),
-        ('Selected', 'VsmInfo.selected', ),
-        ('Time On Question', 'timeOnQuestion', ),
+        ('FE', 'answers.FE.answer'),
+        ('FC Answer', 'answers.FC.answer'),
+        ('FC Slider Value', 'answers.FC.sliderValue'),
+        ('ID', 'VsmInfo.id'),
+        ('Type', 'VsmInfo.type'),
+        ('Selected', 'VsmInfo.selected'),
+        ('Time On Question', 'timeOnQuestion'),
     ]
 
     derived_fields = [
-        ('FE', 'FE Score', 'code_answer', ),
-        ('FC Answer', 'FC Score', 'code_answer', ),
+        ('FE', 'FE Score', 'code_answer'),
+        ('FC Answer', 'FC Score', 'code_answer'),
         ('Type', 'Type Value', 'code_food_type'),
-        ('Selected', 'Selected Value', 'code_food_selected', ),
+        ('Selected', 'Selected Value', 'code_food_selected'),
     ]
 
     @staticmethod
     def code_food_type(food_value):
-        food_type_codes = {
+        coding_scheme = {
             'U': 0,
             'H': 1,
         }
-        return food_type_codes[food_value]
+        return coding_scheme[food_value]
 
     @staticmethod
     def code_food_selected(food_selected_value):
-        food_selected_codes = {
+        coding_scheme = {
             'Selected': 1,
             'MB':       2,
             'upload':   3,
             'random':   4,
             'add':      5,
         }
-        return food_selected_codes[food_selected_value]
+        return coding_scheme[food_selected_value]
 
     @staticmethod
     def code_answer(answer_value):
-        answer_codes = {
+        coding_scheme = {
             'None':      0,
             '1-2 times': 1,
             '3-4 times': 2,
             '5-6 times': 3,
             '7+ times':  4,
         }
-        return answer_codes[answer_value]
+        return coding_scheme[answer_value]
 
 
 class TasteQuestionExtractor(MajorMinorQuestionExtractor):
@@ -173,36 +180,36 @@ class TasteQuestionExtractor(MajorMinorQuestionExtractor):
     minor_range = irange(1, 12)
 
     fields = [
-        ('FE', 'answers.0.answer', ),
-        ('ID', 'VsmInfo.id', ),
-        ('Type', 'VsmInfo.type', ),
-        ('Selected', 'VsmInfo.selected', ),
-        ('Time On Question', 'timeOnQuestion', ),
+        ('FE', 'answers.0.answer'),
+        ('ID', 'VsmInfo.id'),
+        ('Type', 'VsmInfo.type'),
+        ('Selected', 'VsmInfo.selected'),
+        ('Time On Question', 'timeOnQuestion'),
     ]
 
     derived_fields = [
-        ('Type', 'Type Value', 'code_food_type', ),
-        ('Selected', 'Selected Value', 'code_food_selected', ),
+        ('Type', 'Type Value', 'code_food_type'),
+        ('Selected', 'Selected Value', 'code_food_selected'),
     ]
 
     @staticmethod
     def code_food_type(food_value):
-        food_type_codes = {
+        coding_scheme = {
             'U': 0,
             'H': 1,
         }
-        return food_type_codes[food_value]
+        return coding_scheme[food_value]
 
     @staticmethod
     def code_food_selected(food_selected_value):
-        food_selected_codes = {
+        coding_scheme = {
             'Selected': 1,
             'MB':       2,
             'upload':   3,
             'random':   4,
             'add':      5,
         }
-        return food_selected_codes[food_selected_value]
+        return coding_scheme[food_selected_value]
 
 
 class AttractQuestionExtractor(MajorMinorQuestionExtractor):
@@ -212,36 +219,36 @@ class AttractQuestionExtractor(MajorMinorQuestionExtractor):
     minor_range = irange(1, 12)
 
     fields = [
-        ('FE', 'answers.0.answer', ),
-        ('ID', 'VsmInfo.id', ),
-        ('Type', 'VsmInfo.type', ),
-        ('Selected', 'VsmInfo.selected', ),
-        ('Time On Question', 'timeOnQuestion', ),
+        ('FE', 'answers.0.answer'),
+        ('ID', 'VsmInfo.id'),
+        ('Type', 'VsmInfo.type'),
+        ('Selected', 'VsmInfo.selected'),
+        ('Time On Question', 'timeOnQuestion'),
     ]
 
     derived_fields = [
-        ('Type', 'Type Value', 'code_food_type', ),
-        ('Selected', 'Selected Value', 'code_food_selected', ),
+        ('Type', 'Type Value', 'code_food_type'),
+        ('Selected', 'Selected Value', 'code_food_selected'),
     ]
 
     @staticmethod
     def code_food_type(food_value):
-        food_type_codes = {
+        coding_scheme = {
             'U': 0,
             'H': 1,
         }
-        return food_type_codes[food_value]
+        return coding_scheme[food_value]
 
     @staticmethod
     def code_food_selected(food_selected_value):
-        food_selected_codes = {
+        coding_scheme = {
             'Selected': 1,
             'MB':       2,
             'upload':   3,
             'random':   4,
             'add':      5,
         }
-        return food_selected_codes[food_selected_value]
+        return coding_scheme[food_selected_value]
 
 
 class EXQuestionExtractor(QuestionExtractor):
@@ -249,28 +256,28 @@ class EXQuestionExtractor(QuestionExtractor):
     prefix = 'EX'
 
     fields = [
-        ('EX A Answer', 'EX-A.answers.0.answer', ),
-        ('EX A Time On Question', 'EX-A.timeOnQuestion', ),
-        ('EX F Times Moderate', 'EX-F.answers.exercise-times-moderate.answer', ),
-        ('EX F Times Vigorous', 'EX-F.answers.exercise-times-vigorous.answer', ),
-        ('EX F Times Strengthening', 'EX-F.answers.exercise-times-strengthening.answer', ),
-        ('EX F Minutes Moderate', 'EX-F.answers.exercise-minutes-moderate.answer', ),
-        ('EX F Minutes Vigorous', 'EX-F.answers.exercise-minutes-vigorous.answer', ),
-        ('EX F Minutes Strengthening', 'EX-F.answers.exercise-minutes-strengthening.answer', ),
+        ('EX A Answer', 'EX-A.answers.0.answer'),
+        ('EX A Time On Question', 'EX-A.timeOnQuestion'),
+        ('EX F Times Moderate', 'EX-F.answers.exercise-times-moderate.answer'),
+        ('EX F Times Vigorous', 'EX-F.answers.exercise-times-vigorous.answer'),
+        ('EX F Times Strengthening', 'EX-F.answers.exercise-times-strengthening.answer'),
+        ('EX F Minutes Moderate', 'EX-F.answers.exercise-minutes-moderate.answer'),
+        ('EX F Minutes Vigorous', 'EX-F.answers.exercise-minutes-vigorous.answer'),
+        ('EX F Minutes Strengthening', 'EX-F.answers.exercise-minutes-strengthening.answer'),
     ]
 
     derived_fields = [
-        ('EX A Answer', 'EX A Answer Score', 'code_answer', ),
+        ('EX A Answer', 'EX A Answer Score', 'code_answer'),
     ]
 
     @staticmethod
     def code_answer(answer_value):
-        answer_codes = {
+        coding_scheme = {
             'I am inactive':                   0,
             'My activity levels are low':      1,
             'My activity levels are moderate': 2,
         }
-        return answer_codes[answer_value]
+        return coding_scheme[answer_value]
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'EX-[AF]')
@@ -306,12 +313,12 @@ class WillQuestionExtractor(MajorCharacterQuestionExtractor):
     major_characters = ['M', 'T']
 
     fields = [
-        ('S1', 'answers.S1.answer', ),
-        ('S2', 'answers.S2.answer', ),
-        ('S3', 'answers.S3.answer', ),
-        ('S4', 'answers.S4.answer', ),
-        ('S5', 'answers.S5.answer', ),
-        ('S6', 'answers.S6.answer', ),
+        ('S1', 'answers.S1.answer'),
+        ('S2', 'answers.S2.answer'),
+        ('S3', 'answers.S3.answer'),
+        ('S4', 'answers.S4.answer'),
+        ('S5', 'answers.S5.answer'),
+        ('S6', 'answers.S6.answer'),
     ]
 
     derived_fields = [
@@ -321,11 +328,13 @@ class WillQuestionExtractor(MajorCharacterQuestionExtractor):
         ('S4', 'S4 Score', 'code_response'),
         ('S5', 'S5 Score', 'code_response_reversed'),
         ('S6', 'S6 Score', 'code_response'),
+        (None, 'Sum Scores', 'sum_scores'),
+        (None, 'Missing Scores', 'missing_scores'),
     ]
 
     @staticmethod
     def code_response(response_value):
-        response_codes = {
+        coding_scheme = {
             '1': 1,
             '2': 2,
             '3': 3,
@@ -333,11 +342,11 @@ class WillQuestionExtractor(MajorCharacterQuestionExtractor):
             '5': 5,
             '6': 6,
         }
-        return response_codes[response_value]
+        return coding_scheme[response_value]
 
     @staticmethod
     def code_response_reversed(response_value):
-        reversed_response_codes = {
+        coding_scheme = {
             '1': 6,
             '2': 5,
             '3': 4,
@@ -345,16 +354,10 @@ class WillQuestionExtractor(MajorCharacterQuestionExtractor):
             '5': 2,
             '6': 1,
         }
-        return reversed_response_codes[response_value]
+        return coding_scheme[response_value]
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'WILL[MT]')
-
-    def column_names(self):
-        return super().column_names() + ['Scores Sum', 'Num Missing']
-
-    def calculate(self, values):
-        self.calculate_sum_and_missing_scores(values, number_of_scores=6)
 
 
 class MoodQuestionExtractor(MajorCharacterQuestionExtractor):
@@ -363,85 +366,23 @@ class MoodQuestionExtractor(MajorCharacterQuestionExtractor):
     major_characters = ['D', 'A', 'S']
 
     fields = [
-        ('S1',  'answers.S1.answer', ),
-        ('S2',  'answers.S2.answer', ),
-        ('S3',  'answers.S3.answer', ),
-        ('S4',  'answers.S4.answer', ),
-        ('S5',  'answers.S5.answer', ),
-        ('S6',  'answers.S6.answer', ),
-        ('S7',  'answers.S7.answer', ),
-        ('S8',  'answers.S8.answer', ),
-        ('S9',  'answers.S9.answer', ),
-        ('S10', 'answers.S10.answer', ),
-        ('S11', 'answers.S11.answer', ),
-        ('S12', 'answers.S12.answer', ),
-        ('S13', 'answers.S13.answer', ),
-        ('S14', 'answers.S14.answer', ),
-        ('S15', 'answers.S15.answer', ),
-        ('S16', 'answers.S16.answer', ),
-        ('Time On Question', 'timeOnQuestion', ),
-    ]
-
-    derived_fields = [
-        ('S1', 'S1 Score', 'code_response', ),
-        ('S2', 'S2 Score', 'code_response', ),
-        ('S3', 'S3 Score', 'code_response', ),
-        ('S4', 'S4 Score', 'code_response', ),
-        ('S5', 'S5 Score', 'code_response', ),
-        ('S6', 'S6 Score', 'code_response', ),
-        ('S7', 'S7 Score', 'code_response', ),
-        ('S8', 'S8 Score', 'code_response_reversed', ),
-        ('S9', 'S9 Score', 'code_response', ),
-        ('S10', 'S10 Score', 'code_response_reversed', ),
-        ('S11', 'S11 Score', 'code_response', ),
-        ('S12', 'S12 Score', 'code_response_reversed', ),
-        ('S13', 'S13 Score', 'code_response', ),
-        ('S14', 'S14 Score', 'code_response_reversed', ),
-        ('S15', 'S15 Score', 'code_response_reversed', ),
-        ('S16', 'S16 Score', 'code_response_reversed', ),
-    ]
-
-    @staticmethod
-    def code_response(response_value):
-        response_codes = {
-            '1': 1,
-            '0': 0,
-        }
-        return response_codes[response_value]
-
-    @staticmethod
-    def code_response_reversed(response_value):
-        reversed_response_codes = {
-            '1': 0,
-            '0': 1,
-        }
-        return reversed_response_codes[response_value]
-
-    def can_process_data(self, data):
-        return self.can_process_data_with_pattern(data, r'MOOD[DAS]')
-
-    def column_names(self):
-        return super().column_names() + ['Scores Sum', 'Num Missing']
-
-    def calculate(self, values):
-        self.calculate_sum_and_missing_scores(values, number_of_scores=7)
-
-
-# TODO: Handle different scoring systems for different major characters
-class IMPQuestionExtractor(MajorCharacterQuestionExtractor):
-
-    prefix = 'IMP'
-    major_characters = ['A', 'M', 'N']
-
-    fields = [
-        ('S1', 'answers.S1.answer', ),
-        ('S2', 'answers.S2.answer', ),
-        ('S3', 'answers.S3.answer', ),
-        ('S4', 'answers.S4.answer', ),
-        ('S5', 'answers.S5.answer', ),
-        ('S6', 'answers.S6.answer', ),
-        ('S7', 'answers.S7.answer', ),
-        ('Time On Question', 'MOODD.timeOnQuestion', None, ),
+        ('S1',  'answers.S1.answer'),
+        ('S2',  'answers.S2.answer'),
+        ('S3',  'answers.S3.answer'),
+        ('S4',  'answers.S4.answer'),
+        ('S5',  'answers.S5.answer'),
+        ('S6',  'answers.S6.answer'),
+        ('S7',  'answers.S7.answer'),
+        ('S8',  'answers.S8.answer'),
+        ('S9',  'answers.S9.answer'),
+        ('S10', 'answers.S10.answer'),
+        ('S11', 'answers.S11.answer'),
+        ('S12', 'answers.S12.answer'),
+        ('S13', 'answers.S13.answer'),
+        ('S14', 'answers.S14.answer'),
+        ('S15', 'answers.S15.answer'),
+        ('S16', 'answers.S16.answer'),
+        ('Time On Question', 'timeOnQuestion'),
     ]
 
     derived_fields = [
@@ -452,27 +393,87 @@ class IMPQuestionExtractor(MajorCharacterQuestionExtractor):
         ('S5', 'S5 Score', 'code_response'),
         ('S6', 'S6 Score', 'code_response'),
         ('S7', 'S7 Score', 'code_response'),
+        ('S8', 'S8 Score', 'code_response_reversed'),
+        ('S9', 'S9 Score', 'code_response'),
+        ('S10', 'S10 Score', 'code_response_reversed'),
+        ('S11', 'S11 Score', 'code_response'),
+        ('S12', 'S12 Score', 'code_response_reversed'),
+        ('S13', 'S13 Score', 'code_response'),
+        ('S14', 'S14 Score', 'code_response_reversed'),
+        ('S15', 'S15 Score', 'code_response_reversed'),
+        ('S16', 'S16 Score', 'code_response_reversed'),
+        (None, 'Sum Scores', 'sum_scores'),
+        (None, 'Missing Scores', 'missing_scores'),
     ]
 
     @staticmethod
     def code_response(response_value):
-        response_codes = {
+        coding_scheme = {
+            '1': 1,
+            '0': 0,
+        }
+        return coding_scheme[response_value]
+
+    @staticmethod
+    def code_response_reversed(response_value):
+        coding_scheme = {
+            '1': 0,
+            '0': 1,
+        }
+        return coding_scheme[response_value]
+
+    def can_process_data(self, data):
+        return self.can_process_data_with_pattern(data, r'MOOD[DAS]')
+
+
+# TODO: Handle different scoring systems for different major characters
+class IMPQuestionExtractor(MajorCharacterQuestionExtractor):
+
+    prefix = 'IMP'
+    major_characters = ['A', 'M', 'N']
+
+    fields = [
+        ('S1', 'answers.S1.answer'),
+        ('S2', 'answers.S2.answer'),
+        ('S3', 'answers.S3.answer'),
+        ('S4', 'answers.S4.answer'),
+        ('S5', 'answers.S5.answer'),
+        ('S6', 'answers.S6.answer'),
+        ('S7', 'answers.S7.answer'),
+        ('Time On Question', 'MOODD.timeOnQuestion'),
+    ]
+
+    derived_fields = [
+        ('S1', 'S1 Score', 'code_response'),
+        ('S2', 'S2 Score', 'code_response'),
+        ('S3', 'S3 Score', 'code_response'),
+        ('S4', 'S4 Score', 'code_response'),
+        ('S5', 'S5 Score', 'code_response'),
+        ('S6', 'S6 Score', 'code_response'),
+        ('S7', 'S7 Score', 'code_response'),
+        (None, 'Sum Scores', 'sum_scores'),
+        (None, 'Missing Scores', 'missing_scores'),
+    ]
+
+    @staticmethod
+    def code_response(response_value):
+        coding_scheme = {
             '1': 1,
             '2': 2,
             '3': 3,
             '4': 4,
         }
-        return response_codes[response_value]
+        return coding_scheme[response_value]
 
     @staticmethod
     def code_response_reversed(response_value):
-        reversed_response_codes = {
+        coding_scheme = {
             '1': 4,
             '2': 3,
             '3': 2,
             '4': 1,
         }
-        return reversed_response_codes[response_value]
+        return coding_scheme[response_value]
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'IMP[AMN]')
@@ -483,23 +484,23 @@ class FoodIMPQuestionExtractor(QuestionExtractor):
     prefix = 'FOODIMP'
 
     fields = [
-        ('S1', 'answers.S1.answer', ),
-        ('S2', 'answers.S2.answer', ),
-        ('S3', 'answers.S3.answer', ),
-        ('S4', 'answers.S4.answer', ),
-        ('S5', 'answers.S5.answer', ),
-        ('S6', 'answers.S6.answer', ),
-        ('S7', 'answers.S7.answer', ),
-        ('S8', 'answers.S8.answer', ),
-        ('S9', 'answers.S9.answer', ),
-        ('S10', 'answers.S10.answer', ),
-        ('S11', 'answers.S11.answer', ),
-        ('S12', 'answers.S12.answer', ),
-        ('S13', 'answers.S13.answer', ),
-        ('S14', 'answers.S14.answer', ),
-        ('S15', 'answers.S15.answer', ),
-        ('S16', 'answers.S16.answer', ),
-        ('Time On Question', 'timeOnQuestion', ),
+        ('S1', 'answers.S1.answer'),
+        ('S2', 'answers.S2.answer'),
+        ('S3', 'answers.S3.answer'),
+        ('S4', 'answers.S4.answer'),
+        ('S5', 'answers.S5.answer'),
+        ('S6', 'answers.S6.answer'),
+        ('S7', 'answers.S7.answer'),
+        ('S8', 'answers.S8.answer'),
+        ('S9', 'answers.S9.answer'),
+        ('S10', 'answers.S10.answer'),
+        ('S11', 'answers.S11.answer'),
+        ('S12', 'answers.S12.answer'),
+        ('S13', 'answers.S13.answer'),
+        ('S14', 'answers.S14.answer'),
+        ('S15', 'answers.S15.answer'),
+        ('S16', 'answers.S16.answer'),
+        ('Time On Question', 'timeOnQuestion'),
     ]
 
     derived_fields = [
@@ -519,33 +520,35 @@ class FoodIMPQuestionExtractor(QuestionExtractor):
         ('S14', 'S14 Score', 'code_response_multiple'),
         ('S15', 'S15 Score', 'code_response_multiple'),
         ('S16', 'S16 Score', 'code_response_multiple'),
+        (None, 'Sum Scores', 'sum_scores'),
+        (None, 'Missing Scores', 'missing_scores'),
     ]
 
     @staticmethod
     def code_response(response_value):
-        response_codes = {
+        coding_scheme = {
             '1': 1,
             '0': 0,
         }
-        return response_codes[response_value]
+        return coding_scheme[response_value]
 
     @staticmethod
     def code_response_reversed(response_value):
-        reversed_response_codes = {
+        coding_scheme = {
             '1': 0,
             '0': 1,
         }
-        return reversed_response_codes[response_value]
+        return coding_scheme[response_value]
 
     @staticmethod
     def code_response_multiple(response_value):
-        multiple_response_codes = {
+        coding_scheme = {
             '0': 0,
             '1': 0,
             '2': 1,
             '3': 1,
         }
-        return multiple_response_codes[response_value]
+        return coding_scheme[response_value]
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'FOODIMP')
@@ -557,56 +560,54 @@ class EMREGQuestionExtractor(MajorCharacterQuestionExtractor):
     major_characters = ['N', 'G', 'I', 'A', 'S', 'C']
 
     fields = [
-        ('S1', 'answers.S1.answer', ),
-        ('S2', 'answers.S2.answer', ),
-        ('S3', 'answers.S3.answer', ),
-        ('S4', 'answers.S4.answer', ),
-        ('S5', 'answers.S5.answer', ),
-        ('S6', 'answers.S6.answer', ),
-        ('S7', 'answers.S7.answer', ),
-        ('S8', 'answers.S8.answer', ),
-        ('Time on Question', 'timeOnQuestion', ),
+        ('S1', 'answers.S1.answer'),
+        ('S2', 'answers.S2.answer'),
+        ('S3', 'answers.S3.answer'),
+        ('S4', 'answers.S4.answer'),
+        ('S5', 'answers.S5.answer'),
+        ('S6', 'answers.S6.answer'),
+        ('S7', 'answers.S7.answer'),
+        ('S8', 'answers.S8.answer'),
+        ('Time on Question', 'timeOnQuestion'),
     ]
 
     derived_fields = [
-        ('S1', 'S1 Score', 'code_response', ),
-        ('S2', 'S2 Score', 'code_response', ),
-        ('S3', 'S3 Score', 'code_response', ),
-        ('S4', 'S4 Score', 'code_response', ),
-        ('S5', 'S5 Score', 'code_response', ),
-        ('S6', 'S6 Score', 'code_response', ),
-        ('S7', 'S7 Score', 'code_response', ),
-        ('S8', 'S8 Score', 'code_response', ),
+        ('S1', 'S1 Score', 'code_response'),
+        ('S2', 'S2 Score', 'code_response'),
+        ('S3', 'S3 Score', 'code_response'),
+        ('S4', 'S4 Score', 'code_response'),
+        ('S5', 'S5 Score', 'code_response'),
+        ('S6', 'S6 Score', 'code_response'),
+        ('S7', 'S7 Score', 'code_response'),
+        ('S8', 'S8 Score', 'code_response'),
+        (None, 'Sum Scores', 'sum_scores'),
+        (None, 'Missing Scores', 'missing_scores'),
     ]
 
     @staticmethod
     def code_response(response_value):
-        response_codes = {
+        coding_scheme = {
             '1': 1,
             '2': 2,
             '3': 3,
             '4': 4,
             '5': 5,
         }
-        return response_codes[response_value]
+        return coding_scheme[response_value]
 
     @staticmethod
     def code_response_reversed(response_value):
-        reversed_response_codes = {
+        coding_scheme = {
             '1': 5,
             '2': 4,
             '3': 3,
             '4': 2,
             '5': 1,
         }
-        return reversed_response_codes[response_value]
+        return coding_scheme[response_value]
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'EMREG[NGIASC]')
-
-    def calculate(self, values):
-        # self.calculate_sum_and_missing_scores(values, number_of_scores=15)
-        pass
 
 
 class GoalsQuestionExtractor(QuestionExtractor):
@@ -614,16 +615,16 @@ class GoalsQuestionExtractor(QuestionExtractor):
     prefix = 'GOALS'
 
     fields = [
-        ('Ideal Weight Unit 1 Value', 'answers.ideal-weight.answer.unit1_val', ),
-        ('Ideal Weight Unit 2 Value', 'answers.ideal-weight.answer.unit2_val', ),
-        ('Ideal Weight Units', 'answers.ideal-weight.answer.units', ),
-        ('Achievable Weight Unit 1 Value', 'answers.achievable-weight.answer.unit1_val', ),
-        ('Achievable Weight Unit 2 Value', 'answers.achievable-weight.answer.unit2_val', ),
-        ('Achievable Weight Units', 'answers.achievable-weight.answer.units', ),
-        ('Happy Weight Unit 1 Value', 'answers.happy-weight.answer.unit1_val', ),
-        ('Happy Weight Unit 2 Value', 'answers.happy-weight.answer.unit2_val', ),
-        ('Happy Weight Units', 'answers.happy-weight.answer.units', ),
-        ('Time On Question', 'timeOnQuestion', ),
+        ('Ideal Weight Unit 1 Value', 'answers.ideal-weight.answer.unit1_val'),
+        ('Ideal Weight Unit 2 Value', 'answers.ideal-weight.answer.unit2_val'),
+        ('Ideal Weight Units', 'answers.ideal-weight.answer.units'),
+        ('Achievable Weight Unit 1 Value', 'answers.achievable-weight.answer.unit1_val'),
+        ('Achievable Weight Unit 2 Value', 'answers.achievable-weight.answer.unit2_val'),
+        ('Achievable Weight Units', 'answers.achievable-weight.answer.units'),
+        ('Happy Weight Unit 1 Value', 'answers.happy-weight.answer.unit1_val'),
+        ('Happy Weight Unit 2 Value', 'answers.happy-weight.answer.unit2_val'),
+        ('Happy Weight Units', 'answers.happy-weight.answer.units'),
+        ('Time On Question', 'timeOnQuestion'),
     ]
 
     def can_process_data(self, data):
@@ -638,10 +639,10 @@ class IntentQuestionExtractor(QuestionExtractor):
     prefix = 'INTENT'
 
     fields = [
-        ('Healthy Foods Answer', 'INTENT-H.answers.healthy-foods.answer', ),
-        ('Healthy Foods Answer', 'INTENT-H.timeOnQuestion', ),
-        ('Unhealthy Foods Answer', 'INTENT-U.answers.unhealthy-foods.answer', ),
-        ('Unhealthy Foods Answer', 'INTENT-U.timeOnQuestion', ),
+        ('Healthy Foods Answer', 'INTENT-H.answers.healthy-foods.answer'),
+        ('Healthy Foods Answer', 'INTENT-H.timeOnQuestion'),
+        ('Unhealthy Foods Answer', 'INTENT-U.answers.unhealthy-foods.answer'),
+        ('Unhealthy Foods Answer', 'INTENT-U.timeOnQuestion'),
     ]
 
     def can_process_data(self, data):
@@ -654,53 +655,55 @@ class PersonQuestionExtractor(MajorCharacterQuestionExtractor):
     major_characters = ['N', 'E', 'O', 'A', 'C']
 
     fields = [
-        ('S1', 'answers.S1.answer', ),
-        ('S2', 'answers.S2.answer', ),
-        ('S3', 'answers.S3.answer', ),
-        ('S4', 'answers.S4.answer', ),
-        ('S5', 'answers.S5.answer', ),
-        ('S6', 'answers.S6.answer', ),
-        ('S7', 'answers.S7.answer', ),
-        ('S8', 'answers.S8.answer', ),
-        ('S9', 'answers.S9.answer', ),
-        ('S10', 'answers.S10.answer', ),
-        ('Time On Question', 'timeOnQuestion', ),
+        ('S1', 'answers.S1.answer'),
+        ('S2', 'answers.S2.answer'),
+        ('S3', 'answers.S3.answer'),
+        ('S4', 'answers.S4.answer'),
+        ('S5', 'answers.S5.answer'),
+        ('S6', 'answers.S6.answer'),
+        ('S7', 'answers.S7.answer'),
+        ('S8', 'answers.S8.answer'),
+        ('S9', 'answers.S9.answer'),
+        ('S10', 'answers.S10.answer'),
+        ('Time On Question', 'timeOnQuestion'),
     ]
 
     derived_fields = [
-        ('S1', 'S1 Score', 'code_response', ),
-        ('S2', 'S2 Score', 'code_response', ),
-        ('S3', 'S3 Score', 'code_response', ),
-        ('S4', 'S4 Score', 'code_response', ),
-        ('S5', 'S5 Score', 'code_response', ),
-        ('S6', 'S6 Score', 'code_response', ),
-        ('S7', 'S7 Score', 'code_response', ),
-        ('S8', 'S8 Score', 'code_response', ),
-        ('S9', 'S6 Score', 'code_response', ),
-        ('S10', 'S7 Score', 'code_response', ),
+        ('S1', 'S1 Score', 'code_response'),
+        ('S2', 'S2 Score', 'code_response'),
+        ('S3', 'S3 Score', 'code_response'),
+        ('S4', 'S4 Score', 'code_response'),
+        ('S5', 'S5 Score', 'code_response'),
+        ('S6', 'S6 Score', 'code_response'),
+        ('S7', 'S7 Score', 'code_response'),
+        ('S8', 'S8 Score', 'code_response'),
+        ('S9', 'S6 Score', 'code_response'),
+        ('S10', 'S7 Score', 'code_response'),
+        (None, 'Sum Scores', 'sum_scores'),
+        (None, 'Missing Scores', 'missing_scores'),
     ]
 
     @staticmethod
     def code_response(response_value):
-        response_codes = {
+        coding_scheme = {
             '1': 1,
             '2': 2,
             '3': 3,
             '4': 4,
             '5': 5,
         }
-        return response_codes[response_value]
+        return coding_scheme[response_value]
 
     @staticmethod
     def code_response_reversed(response_value):
-        reversed_response_codes = {
+        coding_scheme = {
             '1': 5,
             '2': 4,
             '3': 3,
             '4': 2,
             '5': 1,
         }
-        return reversed_response_codes[response_value]
+        return coding_scheme[response_value]
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'PERSON[NEOAC]')
@@ -711,12 +714,12 @@ class EffectQuestionExtractor(QuestionExtractor):
     prefix = 'EFFECT'
 
     fields = [
-        ('H Answer', 'EFFECT-H.answers.healthy.answer', ),
-        ('H Time on Question', 'EFFECT-H.timeOnQuestion', ),
-        ('U Answer', 'EFFECT-U.answers.unhealthy.answer', ),
-        ('U Time on Question', 'EFFECT-U.timeOnQuestion', ),
-        ('W Answer', 'EFFECT-W.answers.weight.answer', ),
-        ('W Time on Question', 'EFFECT-W.timeOnQuestion', ),
+        ('H Answer', 'EFFECT-H.answers.healthy.answer'),
+        ('H Time on Question', 'EFFECT-H.timeOnQuestion'),
+        ('U Answer', 'EFFECT-U.answers.unhealthy.answer'),
+        ('U Time on Question', 'EFFECT-U.timeOnQuestion'),
+        ('W Answer', 'EFFECT-W.answers.weight.answer'),
+        ('W Time on Question', 'EFFECT-W.timeOnQuestion'),
     ]
 
     def can_process_data(self, data):
@@ -728,22 +731,27 @@ class MINDFQuestionExtractor(QuestionExtractor):
     prefix = 'MINDF'
 
     fields = [
-        ('S1', 'answers.S1.answer', ),
-        ('S2', 'answers.S2.answer', ),
-        ('S3', 'answers.S3.answer', ),
-        ('S4', 'answers.S4.answer', ),
-        ('S5', 'answers.S5.answer', ),
-        ('S6', 'answers.S6.answer', ),
-        ('S7', 'answers.S7.answer', ),
-        ('S8', 'answers.S8.answer', ),
-        ('S9', 'answers.S9.answer', ),
-        ('S10', 'answers.S10.answer', ),
-        ('S11', 'answers.S11.answer', ),
-        ('S12', 'answers.S12.answer', ),
-        ('S13', 'answers.S13.answer', ),
-        ('S14', 'answers.S14.answer', ),
-        ('S15', 'answers.S15.answer', ),
-        ('Time On Question', 'timeOnQuestion', ),
+        ('S1', 'answers.S1.answer'),
+        ('S2', 'answers.S2.answer'),
+        ('S3', 'answers.S3.answer'),
+        ('S4', 'answers.S4.answer'),
+        ('S5', 'answers.S5.answer'),
+        ('S6', 'answers.S6.answer'),
+        ('S7', 'answers.S7.answer'),
+        ('S8', 'answers.S8.answer'),
+        ('S9', 'answers.S9.answer'),
+        ('S10', 'answers.S10.answer'),
+        ('S11', 'answers.S11.answer'),
+        ('S12', 'answers.S12.answer'),
+        ('S13', 'answers.S13.answer'),
+        ('S14', 'answers.S14.answer'),
+        ('S15', 'answers.S15.answer'),
+        ('Time On Question', 'timeOnQuestion'),
+    ]
+
+    derived_fields = [
+        (None, 'Sum Scores', 'sum_scores'),
+        (None, 'Missing Scores', 'missing_scores'),
     ]
 
     def can_process_data(self, data):
@@ -753,9 +761,6 @@ class MINDFQuestionExtractor(QuestionExtractor):
         print('EXTRACT', self.prefix)
         super().extract(data, self.prefix)
 
-    def calculate(self, values):
-        self.calculate_sum_and_missing_scores(values, number_of_scores=15)
-
 
 class RESTRQuestionExtractor(MajorCharacterQuestionExtractor):
 
@@ -763,13 +768,13 @@ class RESTRQuestionExtractor(MajorCharacterQuestionExtractor):
     major_characters = ['C', 'W']
 
     fields = [
-        ('S1', 'answers.S1.answer', ),
-        ('S2', 'answers.S2.answer', ),
-        ('S3', 'answers.S3.answer', ),
-        ('S4', 'answers.S4.answer', ),
-        ('S5', 'answers.S5.answer', ),
-        ('S6', 'answers.S6.answer', ),
-        ('Time on Question', 'timeOnQuestion', ),
+        ('S1', 'answers.S1.answer'),
+        ('S2', 'answers.S2.answer'),
+        ('S3', 'answers.S3.answer'),
+        ('S4', 'answers.S4.answer'),
+        ('S5', 'answers.S5.answer'),
+        ('S6', 'answers.S6.answer'),
+        ('Time on Question', 'timeOnQuestion'),
     ]
 
     def can_process_data(self, data):
