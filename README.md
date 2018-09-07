@@ -1,23 +1,17 @@
-# foodcontrol
+# CUBRIC Food Control
 
-Code to parse/ sanitise and mangle data for Leah's Project
+Code to parse and sanitise data produced by the CUBRIC Food Control app.
 
-### The data per-processor is at: 
+## Design
 
-```
-dataimport/scripts/stop.py
-```
-
-You'll need to change the file location on line 123 to whatever file you're loading in.
-
-## New Development
-
-The ```extract``` branch contains new development in the ```extract``` folder, which is new development and refactoring of the ```dataimport/scripts/stop.py``` script into a set of extractor classes stored in the ```extractors``` folder.
-
-Each ```DataExtractor``` subclass handles the extraction, calculation and checking required to process one type of game.
+The parsing tasks are divided into classes that inherit from ```DataExtractor```.
 
 
-The games are:
+## Games
+
+A ```DataExtractor``` subclass handles the extraction, calculation and checking required to process one type of game.
+
+The game types are:
 
 * Stop
 * Restraint
@@ -32,5 +26,29 @@ The games are:
 * Eligibility
 * AdditionalInfo
 * VirtualSupermarket
+
+## Questions
+
+A ```QuestionDataExtractor``` subclass handles the extraction, calculation and checking required to process one type of question.
+
+The question types are:
+
+* Freq
+* Taste
+* Attract
+* EX
+* Will
+* Mood
+* IMP
+* FoodIMP
+* EMREG
+* Goals
+* Intent
+* Person
+* Effect
+* MINDF
+* RESTR
+
+## Extraction
 
 Extraction is driven by the ```extract.py``` script.
