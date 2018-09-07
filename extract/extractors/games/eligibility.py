@@ -1,7 +1,7 @@
-from ..dataextractor import DataExtractor
+from .gamedataextractor import GameDataExtractor
 
 
-class EligibilityDataExtractor(DataExtractor):
+class EligibilityDataExtractor(GameDataExtractor):
 
     type = 'eligibility'
 

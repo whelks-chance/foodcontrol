@@ -1,7 +1,7 @@
-from ..dataextractor import DataExtractor
+from .gamedataextractor import GameDataExtractor
 
 
-class AdditionalInfoDataExtractor(DataExtractor):
+class AdditionalInfoDataExtractor(GameDataExtractor):
 
     type = 'additional-info'
 

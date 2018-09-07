@@ -1,9 +1,9 @@
 from collections import defaultdict
 
-from ..dataextractor import DataExtractor
+from .gamedataextractor import GameDataExtractor
 
 
-class VirtualSupermarketDataExtractor(DataExtractor):
+class VirtualSupermarketDataExtractor(GameDataExtractor):
 
     type = 'virtual-supermarket-selected'
 

@@ -1,7 +1,7 @@
-from ..dataextractor import DataExtractor
+from .gamedataextractor import GameDataExtractor
 
 
-class MeasuresDataExtractor(DataExtractor):
+class MeasuresDataExtractor(GameDataExtractor):
 
     type = 'measures'
 

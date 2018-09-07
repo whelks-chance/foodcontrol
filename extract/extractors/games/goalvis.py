@@ -1,7 +1,7 @@
-from ..dataextractor import DataExtractor
+from .gamedataextractor import GameDataExtractor
 
 
-class GoalVisDataExtractor(DataExtractor):
+class GoalVisDataExtractor(GameDataExtractor):
 
     type = 'GOALVIS'
 

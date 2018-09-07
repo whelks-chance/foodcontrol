@@ -7,6 +7,7 @@ def irange(start, end):
 
 
 class KeypathDict(dict):
+    """Access nested values with keypaths"""
 
     def get_keypath_value(self, keypath):
         return dpath.util.get(self, keypath, separator='.')

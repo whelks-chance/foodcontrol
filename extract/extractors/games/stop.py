@@ -1,9 +1,9 @@
 from collections import defaultdict
 
-from ..dataextractor import DataExtractor
+from .gamedataextractor import GameDataExtractor
 
 
-class AbstractStopDataExtractor(DataExtractor):
+class AbstractStopDataExtractor(GameDataExtractor):
 
     fields = [
         ('Capture Date', 'captureDate'),

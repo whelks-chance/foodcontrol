@@ -1,7 +1,7 @@
-from ..dataextractor import DataExtractor
+from .gamedataextractor import GameDataExtractor
 
 
-class MCIIDataExtractor(DataExtractor):
+class MCIIDataExtractor(GameDataExtractor):
 
     type = 'MCII'
 
