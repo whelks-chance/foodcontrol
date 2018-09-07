@@ -1,4 +1,9 @@
-from .tellusmore import FreqQuestionExtractor, TasteQuestionExtractor, AttractQuestionExtractor,\
-    EXQuestionExtractor, WillQuestionExtractor, MoodQuestionExtractor, IMPQuestionExtractor,\
-    FoodIMPQuestionExtractor, EMREGQuestionExtractor, GoalsQuestionExtractor, IntentQuestionExtractor,\
-    PersonQuestionExtractor, EffectQuestionExtractor, MINDFQuestionExtractor, RESTRQuestionExtractor
+from .questiondataextractor import EXQuestionDataExtractor, FoodIMPQuestionExtractor,\
+    GoalsQuestionDataExtractor, IntentQuestionDataExtractor, MINDFQuestionDataExtractor
+
+from .majorminorquestiondataextractor import FreqQuestionDataExtractor,\
+    TasteQuestionDataExtractor, AttractQuestionDataExtractor
+
+from .majorcharacterquestiondataextractor import WillQuestionDataExtractor,\
+    MoodQuestionDataExtractor, IMPQuestionDataExtractor, EMREGQuestionDataExtractor,\
+    PersonQuestionDataExtractor, EffectQuestionDataExtractor, RESTRQuestionDataExtractor
