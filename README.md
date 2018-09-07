@@ -12,7 +12,7 @@ Data extraction is divided into two main categories:
 These parsing tasks are divided into class hierarchies that inherit from ```DataExtractor```:
 
 * ```GameDataExtractor``` subclasses handle game data extraction
-* ```QuestionDataExtraction```subclasses handle questionnaire data extraction
+* ```QuestionDataExtractor```subclasses handle questionnaire data extraction
 
 
 ## Games
