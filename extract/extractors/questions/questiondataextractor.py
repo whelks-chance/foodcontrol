@@ -28,6 +28,7 @@ class QuestionDataExtractor(DataExtractor):
         data_keys = data.keys()
         for data_key in data_keys:
             if re.match(pattern, data_key):
+                print('MATCH: {} == {}'.format(data_key, pattern))
                 return True
         return False
 
@@ -44,6 +45,7 @@ class QuestionDataExtractor(DataExtractor):
         data = KeypathDict(row['data'])
         if data_key:
             print('QQQQQQQQQQQQQQQQ', data_key, data)
+            print(row)
             data = KeypathDict(data[data_key])
         else:
             print('QQQQQQQQQQQQQQQQ', data)
@@ -73,18 +75,36 @@ class QuestionDataExtractor(DataExtractor):
         values['Scores Sum'] = scores_sum
         values['Num Missing'] = missing_sum
 
+    @staticmethod
+    def score_column_name_sequence(number_of_scores):
+        return ['S' + str(response) + ' Score' for response in irange(1, number_of_scores)]
+
+    def sum_scores(self, values, number_of_scores):
+        sum_scores = 0
+        for column_name in self.score_column_name_sequence(number_of_scores):
+            score = values[column_name]
+            if score and score != DataExtractor.empty_cell_value:
+                sum_scores += int(score)  # Scores may appear as quoted numbers
+        return sum_scores
+
+    def missing_scores(self, values, number_of_scores):
+        sum_missing = 0
+        for column_name in self.score_column_name_sequence(number_of_scores):
+            value = values[column_name]
+            if value == DataExtractor.empty_cell_value or value is None:
+                sum_missing += 1
+        return sum_missing
+
+    def calculate_sum_scores(self, values):
+        return self.sum_scores(values, self.number_of_scores)
+
+    def calculate_missing_scores(self, values):
+        return self.missing_scores(values, self.number_of_scores)
+
     def extracted_rows(self):
         print('#######', self.rows)
         print(self.column_names())
         return [self.common_row_values() + self.to_list(self.column_names(), row) for row in self.rows]
-
-    @staticmethod
-    def sum_scores(values):
-        return -1
-
-    @staticmethod
-    def missing_scores(values):
-        return -1
 
 
 class EXQuestionDataExtractor(QuestionDataExtractor):
@@ -123,6 +143,8 @@ class FoodIMPQuestionExtractor(QuestionDataExtractor):
 
     prefix = 'FOODIMP'
 
+    number_of_scores = 16
+
     fields = [
         ('S1', 'answers.S1.answer'),
         ('S2', 'answers.S2.answer'),
@@ -160,8 +182,8 @@ class FoodIMPQuestionExtractor(QuestionDataExtractor):
         ('S14', 'S14 Score', 'code_response_multiple'),
         ('S15', 'S15 Score', 'code_response_multiple'),
         ('S16', 'S16 Score', 'code_response_multiple'),
-        (None, 'Sum Scores', 'sum_scores'),
-        (None, 'Missing Scores', 'missing_scores'),
+        (None, 'Sum Scores', 'calculate_sum_scores'),
+        (None, 'Missing Scores', 'calculate_missing_scores'),
     ]
 
     @staticmethod
@@ -192,6 +214,9 @@ class FoodIMPQuestionExtractor(QuestionDataExtractor):
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'FOODIMP')
+
+    def extract(self, data):
+        super().extract(data, self.prefix)
 
 
 class GoalsQuestionDataExtractor(QuestionDataExtractor):
@@ -237,6 +262,8 @@ class MINDFQuestionDataExtractor(QuestionDataExtractor):
 
     prefix = 'MINDF'
 
+    number_of_scores = 15
+
     fields = [
         ('S1', 'answers.S1.answer'),
         ('S2', 'answers.S2.answer'),
@@ -257,8 +284,8 @@ class MINDFQuestionDataExtractor(QuestionDataExtractor):
     ]
 
     derived_fields = [
-        (None, 'Sum Scores', 'sum_scores'),
-        (None, 'Missing Scores', 'missing_scores'),
+        (None, 'Sum Scores', 'calculate_sum_scores'),
+        (None, 'Missing Scores', 'calculate_missing_scores'),
     ]
 
     def can_process_data(self, data):
@@ -266,4 +293,5 @@ class MINDFQuestionDataExtractor(QuestionDataExtractor):
 
     def extract(self, data):
         print('EXTRACT', self.prefix)
-        super().extract(data, self.prefix)
+        print(data)
+        super().extract(data)

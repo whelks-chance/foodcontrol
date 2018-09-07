@@ -32,6 +32,8 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     prefix = 'WILL'
     major_characters = ['M', 'T']
 
+    number_of_scores = 6
+
     fields = [
         ('S1', 'answers.S1.answer'),
         ('S2', 'answers.S2.answer'),
@@ -48,8 +50,8 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         ('S4', 'S4 Score', 'code_response'),
         ('S5', 'S5 Score', 'code_response_reversed'),
         ('S6', 'S6 Score', 'code_response'),
-        (None, 'Sum Scores', 'sum_scores'),
-        (None, 'Missing Scores', 'missing_scores'),
+        (None, 'Sum Scores', 'calculate_sum_scores'),
+        (None, 'Missing Scores', 'calculate_missing_scores'),
     ]
 
     @staticmethod
@@ -84,6 +86,8 @@ class MoodQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
 
     prefix = 'MOOD'
     major_characters = ['D', 'A', 'S']
+
+    number_of_scores = 16
 
     fields = [
         ('S1',  'answers.S1.answer'),
@@ -122,8 +126,8 @@ class MoodQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         ('S14', 'S14 Score', 'code_response_reversed'),
         ('S15', 'S15 Score', 'code_response_reversed'),
         ('S16', 'S16 Score', 'code_response_reversed'),
-        (None, 'Sum Scores', 'sum_scores'),
-        (None, 'Missing Scores', 'missing_scores'),
+        (None, 'Sum Scores', 'calculate_sum_scores'),
+        (None, 'Missing Scores', 'calculate_missing_scores'),
     ]
 
     @staticmethod
@@ -152,6 +156,8 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     prefix = 'IMP'
     major_characters = ['A', 'M', 'N']
 
+    number_of_scores = 7
+
     fields = [
         ('S1', 'answers.S1.answer'),
         ('S2', 'answers.S2.answer'),
@@ -171,8 +177,8 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         ('S5', 'S5 Score', 'code_response'),
         ('S6', 'S6 Score', 'code_response'),
         ('S7', 'S7 Score', 'code_response'),
-        (None, 'Sum Scores', 'sum_scores'),
-        (None, 'Missing Scores', 'missing_scores'),
+        (None, 'Sum Scores', 'calculate_sum_scores'),
+        (None, 'Missing Scores', 'calculate_missing_scores'),
     ]
 
     @staticmethod
@@ -204,6 +210,8 @@ class EMREGQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     prefix = 'EMREG'
     major_characters = ['N', 'G', 'I', 'A', 'S', 'C']
 
+    number_of_scores = 8
+
     fields = [
         ('S1', 'answers.S1.answer'),
         ('S2', 'answers.S2.answer'),
@@ -225,8 +233,8 @@ class EMREGQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         ('S6', 'S6 Score', 'code_response'),
         ('S7', 'S7 Score', 'code_response'),
         ('S8', 'S8 Score', 'code_response'),
-        (None, 'Sum Scores', 'sum_scores'),
-        (None, 'Missing Scores', 'missing_scores'),
+        (None, 'Sum Scores', 'calculate_sum_scores'),
+        (None, 'Missing Scores', 'calculate_missing_scores'),
     ]
 
     @staticmethod
@@ -260,6 +268,8 @@ class PersonQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     prefix = 'PERSON'
     major_characters = ['N', 'E', 'O', 'A', 'C']
 
+    number_of_scores = 10
+
     fields = [
         ('S1', 'answers.S1.answer'),
         ('S2', 'answers.S2.answer'),
@@ -285,8 +295,8 @@ class PersonQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         ('S8', 'S8 Score', 'code_response'),
         ('S9', 'S6 Score', 'code_response'),
         ('S10', 'S7 Score', 'code_response'),
-        (None, 'Sum Scores', 'sum_scores'),
-        (None, 'Missing Scores', 'missing_scores'),
+        (None, 'Sum Scores', 'calculate_sum_scores'),
+        (None, 'Missing Scores', 'calculate_missing_scores'),
     ]
 
     @staticmethod
@@ -337,6 +347,8 @@ class RESTRQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     prefix = 'RESTR-'
     major_characters = ['C', 'W']
 
+    number_of_scores = 6
+
     fields = [
         ('S1', 'answers.S1.answer'),
         ('S2', 'answers.S2.answer'),
@@ -348,8 +360,8 @@ class RESTRQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     ]
 
     derived_fields = [
-        (None, 'Sum Scores', 'sum_scores'),
-        (None, 'Missing Scores', 'missing_scores'),
+        (None, 'Sum Scores', 'calculate_sum_scores'),
+        (None, 'Missing Scores', 'calculate_missing_scores'),
     ]
 
     def can_process_data(self, data):
