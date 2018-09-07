@@ -1,4 +1,4 @@
-from .dataextractor import DataExtractor
+from ..dataextractor import DataExtractor
 
 
 class EligibilityDataExtractor(DataExtractor):

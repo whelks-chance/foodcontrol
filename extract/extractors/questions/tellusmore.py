@@ -1,7 +1,7 @@
 import re
 
 from utils import KeypathDict, irange
-from .dataextractor import DataExtractor
+from extractors.dataextractor import DataExtractor
 
 
 class QuestionExtractor(DataExtractor):

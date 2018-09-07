@@ -1,33 +1,23 @@
-from .stop import StopDataExtractor,RestraintDataExtractor, NAStopDataExtractor, GStopDataExtractor,\
-    GRestraintDataExtractor, NARestraintDataExtractor, DoubleDataExtractor
-from .mcii import MCIIDataExtractor
-from .goalvis import GoalVisDataExtractor
-from .measures import MeasuresDataExtractor
-from .eligibility import EligibilityDataExtractor
-from .additionalinfo import AdditionalInfoDataExtractor
-from .virtualsupermarket import VirtualSupermarketDataExtractor
-from .tellusmore import FreqQuestionExtractor, TasteQuestionExtractor, AttractQuestionExtractor,\
-    EXQuestionExtractor, WillQuestionExtractor, MoodQuestionExtractor, IMPQuestionExtractor,\
-    FoodIMPQuestionExtractor, EMREGQuestionExtractor, GoalsQuestionExtractor, IntentQuestionExtractor,\
-    PersonQuestionExtractor, EffectQuestionExtractor, MINDFQuestionExtractor, RESTRQuestionExtractor
+from .games import *
+from .questions import *
 
 
 class ExtractorFactory:
 
     game_extractors = [
-        # StopDataExtractor(),
-        # RestraintDataExtractor(),
-        # NAStopDataExtractor(),
-        # NARestraintDataExtractor(),
-        # GStopDataExtractor(),
-        # GRestraintDataExtractor(),
-        # DoubleDataExtractor(),
-        # MCIIDataExtractor(),
-        # GoalVisDataExtractor(),
-        # MeasuresDataExtractor(),
-        # EligibilityDataExtractor(),
-        # AdditionalInfoDataExtractor(),
-        # VirtualSupermarketDataExtractor(),
+        StopDataExtractor(),
+        RestraintDataExtractor(),
+        NAStopDataExtractor(),
+        NARestraintDataExtractor(),
+        GStopDataExtractor(),
+        GRestraintDataExtractor(),
+        DoubleDataExtractor(),
+        MCIIDataExtractor(),
+        GoalVisDataExtractor(),
+        MeasuresDataExtractor(),
+        EligibilityDataExtractor(),
+        AdditionalInfoDataExtractor(),
+        VirtualSupermarketDataExtractor(),
     ]
 
     question_extractors = [

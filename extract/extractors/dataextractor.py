@@ -75,6 +75,7 @@ class DataExtractor:
         """Derive new values from extracted field values"""
         if hasattr(self, 'derived_fields'):
             for source_column_name, destination_column_name, code_function_name in self.derived_fields:
+                value = None
                 value_derivation_fn = getattr(self, code_function_name)
                 if source_column_name:
                     try:

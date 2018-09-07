@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from .dataextractor import DataExtractor
+from ..dataextractor import DataExtractor
 
 
 class VirtualSupermarketDataExtractor(DataExtractor):
