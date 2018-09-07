@@ -4,12 +4,20 @@ Code to parse and sanitise data produced by the CUBRIC Food Control app.
 
 ## Design
 
-The parsing tasks are divided into classes that inherit from ```DataExtractor```.
+Data extraction is divided into two main categories:
+
+* Games
+* Questionnaire Questions
+
+These parsing tasks are divided into class hierarchies that inherit from ```DataExtractor```:
+
+* ```GameDataExtractor``` subclasses handle game data extraction
+* ```QuestionDataExtraction```subclasses handle questionnaire data extraction
 
 
 ## Games
 
-A ```DataExtractor``` subclass handles the extraction, calculation and checking required to process one type of game.
+A ```GameDataExtractor``` subclass handles the extraction, calculation and checking required to process one type of game.
 
 The game types are:
 
@@ -27,7 +35,7 @@ The game types are:
 * AdditionalInfo
 * VirtualSupermarket
 
-## Questions
+## Questionnaire Questions
 
 A ```QuestionDataExtractor``` subclass handles the extraction, calculation and checking required to process one type of question.
 
