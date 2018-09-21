@@ -1,4 +1,5 @@
-from utils import KeypathDict, irange
+# from utils import KeypathDict, irange
+from utils import irange
 
 from .questiondataextractor import QuestionDataExtractor
 
@@ -11,25 +12,25 @@ class MajorMinorQuestionDataExtractor(QuestionDataExtractor):
     In the examples seen so far, n = 5 and m = 12
     """
 
-    def extract(self, row):
-        self.rows = []
-        print('------------------------------------->MajorMinorQuestionExtractor.extract()')
-        print(self.major_range, self.minor_range)
-        print(row)
-        data = row['data']
+    def __init__(self):
+        super().__init__()
+        self.major_minor_keypaths = self.create_major_minor_keypaths(self.value_keypaths)
+
+    def create_major_minor_keypaths(self, keypaths):
+        major_minor_keypaths = []
         for major in self.major_range:
             for minor in self.minor_range:
                 key = '{}{}-{}'.format(self.prefix, major, minor)
-                try:
-                    key_data = KeypathDict(data[key])
-                    print(key, '->', key_data)
-                    values = {}
-                    self.extract_field_values(self._fields(), key_data, values)
-                    self.calculate_derived_field_values(values)
-                    print("WITH DERIVED: ", values)
-                    self.rows.append(values)
-                except KeyError as e:
-                    print(e)
+                for keypath in keypaths:
+                    major_keypath = '.'.join(['data', key, keypath[0]])
+                    # print('####', major, keypath[0], major_keypath)
+                    new_keypath = list(keypath)
+                    new_keypath[0] = major_keypath
+                    major_minor_keypaths.append(new_keypath)
+        return major_minor_keypaths
+
+    def get_value_keypaths(self):
+        return self.major_minor_keypaths
 
     def can_process_data(self, data):
         pattern = self.prefix + r'[12345]-1?\d'
@@ -42,16 +43,17 @@ class FreqQuestionDataExtractor(MajorMinorQuestionDataExtractor):
     major_range = irange(1, 5)
     minor_range = irange(1, 12)
 
-    fields = [
-        ('FE', 'answers.FE.answer'),
-        ('FC Answer', 'answers.FC.answer'),
-        ('FC Slider Value', 'answers.FC.sliderValue'),
-        ('ID', 'VsmInfo.id'),
-        ('Type', 'VsmInfo.type'),
-        ('Selected', 'VsmInfo.selected'),
-        ('Time On Question', 'timeOnQuestion'),
+    value_keypaths = [
+        ('answers.FE.answer', 'FE'),
+        ('answers.FC.answer', 'FC Answer'),
+        ('answers.FC.sliderValue', 'FC Slider Value'),
+        ('VsmInfo.id', 'ID'),
+        ('VsmInfo.type', 'Type'),
+        ('VsmInfo.selected', 'Selected'),
+        ('timeOnQuestion', 'Time On Question'),
     ]
 
+    # TODO: Update
     derived_fields = [
         ('FE', 'FE Score', 'code_answer'),
         ('FC Answer', 'FC Score', 'code_answer'),
@@ -96,14 +98,15 @@ class TasteQuestionDataExtractor(MajorMinorQuestionDataExtractor):
     major_range = irange(1, 5)
     minor_range = irange(1, 12)
 
-    fields = [
-        ('FE', 'answers.0.answer'),
-        ('ID', 'VsmInfo.id'),
-        ('Type', 'VsmInfo.type'),
-        ('Selected', 'VsmInfo.selected'),
-        ('Time On Question', 'timeOnQuestion'),
+    value_keypaths = [
+        ('answers.0.answer', 'FE'),
+        ('VsmInfo.id', 'ID'),
+        ('VsmInfo.type', 'Type'),
+        ('VsmInfo.selected', 'Selected'),
+        ('timeOnQuestion', 'Time On Question'),
     ]
 
+    # TODO: Update
     derived_fields = [
         ('Type', 'Type Value', 'code_food_type'),
         ('Selected', 'Selected Value', 'code_food_selected'),
@@ -135,14 +138,15 @@ class AttractQuestionDataExtractor(MajorMinorQuestionDataExtractor):
     major_range = irange(1, 5)
     minor_range = irange(1, 12)
 
-    fields = [
-        ('FE', 'answers.0.answer'),
-        ('ID', 'VsmInfo.id'),
-        ('Type', 'VsmInfo.type'),
-        ('Selected', 'VsmInfo.selected'),
-        ('Time On Question', 'timeOnQuestion'),
+    value_keypaths = [
+        ('answers.0.answer', 'FE'),
+        ('VsmInfo.id', 'ID'),
+        ('VsmInfo.type', 'Type'),
+        ('VsmInfo.selected', 'Selected'),
+        ('timeOnQuestion', 'Time On Question'),
     ]
 
+    # TODO: Update
     derived_fields = [
         ('Type', 'Type Value', 'code_food_type'),
         ('Selected', 'Selected Value', 'code_food_selected'),

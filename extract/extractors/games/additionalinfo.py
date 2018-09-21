@@ -5,36 +5,38 @@ class AdditionalInfoDataExtractor(GameDataExtractor):
 
     type = 'additional-info'
 
-    fields = [
-        ('First Language', 'data.first-language'),
-        ('First Language Other', 'data.first-language-other'),
+    @staticmethod
+    def get_value_keypaths():
+        return [
+            ('data.first-language', 'First Language'),
+            ('data.first-language-other', 'First Language Other'),
 
-        ('Ethnicity', 'data.ethnicity'),
-        ('Ethnicity Other', 'data.ethnicity-other'),
+            ('data.ethnicity', 'Ethnicity'),
+            ('data.ethnicity-other', 'Ethnicity Other'),
 
-        ('Country', 'data.country'),
+            ('data.country', 'Country'),
 
-        ('Hip Unit 1 Value', 'data.hip.unit1_val'),
-        ('Hip Unit 2 Value', 'data.hip.unit2_val'),
-        ('Hip Units', 'data.hip.units'),
+            ('data.hip.unit1_val', 'Hip Unit 1 Value'),
+            ('data.hip.unit2_val', 'Hip Unit 2 Value'),
+            ('data.hip.units', 'Hip Units'),
 
-        ('Waist Unit 1 Value', 'data.waist.unit1_val'),
-        ('Waist Unit 2 Value', 'data.waist.unit2_val'),
-        ('Waist Units', 'data.waist.units'),
+            ('data.waist.unit1_val', 'Waist Unit 1 Value'),
+            ('data.waist.unit2_val', 'Waist Unit 2 Value'),
+            ('data.waist.units', 'Waist Units'),
 
-        ('Health', 'data.health'),
-        ('Health Other', 'data.health-other'),
+            ('data.health', 'Health'),
+            ('data.health-other', 'Health Other'),
 
-        ('Weight Loss', 'data.weight-loss'),
-        ('Weight Loss Other', 'data.weight-loss-other'),
-        ('Weight Loss Success', 'data.weight-loss-success'),
+            ('data.weight-loss', 'Weight Loss'),
+            ('data.weight-loss-other', 'Weight Loss Other'),
+            ('data.weight-loss-success', 'Weight Loss Success'),
 
-        ('Additional Details', 'data.additional-details'),
+            ('data.additional-details', 'Additional Details'),
 
-        ('Smoking Status', 'data.smoking-status'),
-        ('Smoking Status Other', 'data.smoking-status-other'),
+            ('data.smoking-status', 'Smoking Status'),
+            ('data.smoking-status-other', 'Smoking Status Other'),
 
-        ('Weight Loss Success Other', 'data.weight-loss-success-other'),
-        ('Waist CM', 'data.waist_cm'),
-        ('Hip CM', 'data.hip_cm'),
-    ]
+            ('data.weight-loss-success-other', 'Weight Loss Success Other'),
+            ('data.waist_cm', 'Waist CM'),
+            ('data.hip_cm', 'Hip CM'),
+        ]

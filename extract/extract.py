@@ -4,7 +4,7 @@ import json
 
 from pathlib import Path
 
-from utils import KeypathDict
+# from utils import KeypathDict
 from settings import food_control_path
 from extractors import ExtractorFactory
 
@@ -28,12 +28,12 @@ class Extractor:
             print('no rows to extract with: ', extractor.type)
             return
 
-        output_filename = json_csv_path / '{}.csv'.format(extractor.name())
+        output_filename = json_csv_path / '{}.csv'.format(extractor.get_filename())
         with open(output_filename, 'w', encoding='utf-8') as csv_file:
             csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
             for row in json_array:
-                row = KeypathDict(row)
-                if extractor.process(row):
+                # row = KeypathDict(row)
+                if extractor.process_row(row):
                     for extracted_row in extractor.extracted_rows():
                         csv_writer.writerow(extracted_row)
 
@@ -44,7 +44,7 @@ class Extractor:
             file_data = csv_file.read()  # Read the data rows
             csv_file.seek(0, 0)          # Move the file pointer to the beginning
             csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
-            csv_writer.writerow(extractor.all_column_names())  # Write the header row
+            csv_writer.writerow(extractor.get_column_names())  # Write the header row
             csv_file.write(file_data)                          # Write the data rows
 
     @staticmethod

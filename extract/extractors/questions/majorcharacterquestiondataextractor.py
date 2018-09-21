@@ -1,4 +1,4 @@
-from utils import KeypathDict
+# from utils import KeypathDict
 
 from .questiondataextractor import QuestionDataExtractor
 
@@ -10,21 +10,25 @@ class MajorCharacterQuestionDataExtractor(QuestionDataExtractor):
     e.g. ['D', 'A', 'S']
     """
 
-    def extract(self, row):
-        self.rows = []
-        data = row['data']
+    def __init__(self):
+        super().__init__()
+        self.major_keypaths = self.create_major_keypaths(self.value_keypaths)
+        print(self.major_keypaths)
+
+    def create_major_keypaths(self, keypaths):
+        major_keypaths = []
         for major in self.major_characters:
             key = '{}{}'.format(self.prefix, major)
-            try:
-                key_data = KeypathDict(data[key])
-                print(key, '->', key_data)
-                values = {}
-                self.extract_field_values(self._fields(), key_data, values)
-                self.calculate_derived_field_values(values)
-                print("WITH DERIVED: ", values)
-                self.rows.append(values)
-            except KeyError as e:
-                print(e)
+            for keypath in keypaths:
+                major_keypath = '.'.join([key, keypath[0]])
+                # print('####', major, keypath[0], major_keypath)
+                new_keypath = list(keypath)
+                new_keypath[0] = major_keypath
+                major_keypaths.append(new_keypath)
+        return major_keypaths
+
+    def get_value_keypaths(self):
+        return self.major_keypaths
 
 
 class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
@@ -34,15 +38,16 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
 
     number_of_scores = 6
 
-    fields = [
-        ('S1', 'answers.S1.answer'),
-        ('S2', 'answers.S2.answer'),
-        ('S3', 'answers.S3.answer'),
-        ('S4', 'answers.S4.answer'),
-        ('S5', 'answers.S5.answer'),
-        ('S6', 'answers.S6.answer'),
+    value_keypaths = [
+        ('answers.S1.answer', 'S1'),
+        ('answers.S2.answer', 'S2'),
+        ('answers.S3.answer', 'S3'),
+        ('answers.S4.answer', 'S4'),
+        ('answers.S5.answer', 'S5'),
+        ('answers.S6.answer', 'S6'),
     ]
 
+    # TODO: update
     derived_fields = [
         ('S1', 'S1 Score', 'code_response_reversed'),
         ('S2', 'S2 Score', 'code_response_reversed'),
@@ -89,26 +94,27 @@ class MoodQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
 
     number_of_scores = 16
 
-    fields = [
-        ('S1',  'answers.S1.answer'),
-        ('S2',  'answers.S2.answer'),
-        ('S3',  'answers.S3.answer'),
-        ('S4',  'answers.S4.answer'),
-        ('S5',  'answers.S5.answer'),
-        ('S6',  'answers.S6.answer'),
-        ('S7',  'answers.S7.answer'),
-        ('S8',  'answers.S8.answer'),
-        ('S9',  'answers.S9.answer'),
-        ('S10', 'answers.S10.answer'),
-        ('S11', 'answers.S11.answer'),
-        ('S12', 'answers.S12.answer'),
-        ('S13', 'answers.S13.answer'),
-        ('S14', 'answers.S14.answer'),
-        ('S15', 'answers.S15.answer'),
-        ('S16', 'answers.S16.answer'),
-        ('Time On Question', 'timeOnQuestion'),
+    value_keypaths = [
+        ('answers.S1.answer', 'S1'),
+        ('answers.S2.answer', 'S2'),
+        ('answers.S3.answer', 'S3'),
+        ('answers.S4.answer', 'S4'),
+        ('answers.S5.answer', 'S5'),
+        ('answers.S6.answer', 'S6'),
+        ('answers.S7.answer', 'S7'),
+        ('answers.S8.answer', 'S8'),
+        ('answers.S9.answer', 'S9'),
+        ('answers.S10.answer', 'S10'),
+        ('answers.S11.answer', 'S11'),
+        ('answers.S12.answer', 'S12'),
+        ('answers.S13.answer', 'S13'),
+        ('answers.S14.answer', 'S14'),
+        ('answers.S15.answer', 'S15'),
+        ('answers.S16.answer', 'S16'),
+        ('timeOnQuestion', 'Time On Question'),
     ]
 
+    # TODO: update
     derived_fields = [
         ('S1', 'S1 Score', 'code_response'),
         ('S2', 'S2 Score', 'code_response'),
@@ -158,17 +164,18 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
 
     number_of_scores = 7
 
-    fields = [
-        ('S1', 'answers.S1.answer'),
-        ('S2', 'answers.S2.answer'),
-        ('S3', 'answers.S3.answer'),
-        ('S4', 'answers.S4.answer'),
-        ('S5', 'answers.S5.answer'),
-        ('S6', 'answers.S6.answer'),
-        ('S7', 'answers.S7.answer'),
-        ('Time On Question', 'MOODD.timeOnQuestion'),
+    value_keypaths = [
+        ('answers.S1.answer', 'S1'),
+        ('answers.S2.answer', 'S2'),
+        ('answers.S3.answer', 'S3'),
+        ('answers.S4.answer', 'S4'),
+        ('answers.S5.answer', 'S5'),
+        ('answers.S6.answer', 'S6'),
+        ('answers.S7.answer', 'S7'),
+        ('timeOnQuestion', 'Time On Question'),
     ]
 
+    # TODO: update
     derived_fields = [
         ('S1', 'S1 Score', 'code_response'),
         ('S2', 'S2 Score', 'code_response'),
@@ -212,18 +219,19 @@ class EMREGQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
 
     number_of_scores = 8
 
-    fields = [
-        ('S1', 'answers.S1.answer'),
-        ('S2', 'answers.S2.answer'),
-        ('S3', 'answers.S3.answer'),
-        ('S4', 'answers.S4.answer'),
-        ('S5', 'answers.S5.answer'),
-        ('S6', 'answers.S6.answer'),
-        ('S7', 'answers.S7.answer'),
-        ('S8', 'answers.S8.answer'),
-        ('Time on Question', 'timeOnQuestion'),
+    value_keypaths = [
+        ('answers.S1.answer', 'S1'),
+        ('answers.S2.answer', 'S2'),
+        ('answers.S3.answer', 'S3'),
+        ('answers.S4.answer', 'S4'),
+        ('answers.S5.answer', 'S5'),
+        ('answers.S6.answer', 'S6'),
+        ('answers.S7.answer', 'S7'),
+        ('answers.S8.answer', 'S8'),
+        ('timeOnQuestion', 'Time On Question'),
     ]
 
+    # TODO: update
     derived_fields = [
         ('S1', 'S1 Score', 'code_response'),
         ('S2', 'S2 Score', 'code_response'),
@@ -270,20 +278,21 @@ class PersonQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
 
     number_of_scores = 10
 
-    fields = [
-        ('S1', 'answers.S1.answer'),
-        ('S2', 'answers.S2.answer'),
-        ('S3', 'answers.S3.answer'),
-        ('S4', 'answers.S4.answer'),
-        ('S5', 'answers.S5.answer'),
-        ('S6', 'answers.S6.answer'),
-        ('S7', 'answers.S7.answer'),
-        ('S8', 'answers.S8.answer'),
-        ('S9', 'answers.S9.answer'),
-        ('S10', 'answers.S10.answer'),
-        ('Time On Question', 'timeOnQuestion'),
+    value_keypaths = [
+        ('answers.S1.answer', 'S1'),
+        ('answers.S2.answer', 'S2'),
+        ('answers.S3.answer', 'S3'),
+        ('answers.S4.answer', 'S4'),
+        ('answers.S5.answer', 'S5'),
+        ('answers.S6.answer', 'S6'),
+        ('answers.S7.answer', 'S7'),
+        ('answers.S8.answer', 'S8'),
+        ('answers.S9.answer', 'S9'),
+        ('answers.S10.answer', 'S10'),
+        ('timeOnQuestion', 'Time On Question'),
     ]
 
+    # TODO: update
     derived_fields = [
         ('S1', 'S1 Score', 'code_response'),
         ('S2', 'S2 Score', 'code_response'),
@@ -293,8 +302,8 @@ class PersonQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         ('S6', 'S6 Score', 'code_response'),
         ('S7', 'S7 Score', 'code_response'),
         ('S8', 'S8 Score', 'code_response'),
-        ('S9', 'S6 Score', 'code_response'),
-        ('S10', 'S7 Score', 'code_response'),
+        ('S9', 'S9 Score', 'code_response'),
+        ('S10', 'S10 Score', 'code_response'),
         (None, 'Sum Scores', 'calculate_sum_scores'),
         (None, 'Missing Scores', 'calculate_missing_scores'),
     ]
@@ -329,13 +338,14 @@ class EffectQuestionDataExtractor(QuestionDataExtractor):
 
     prefix = 'EFFECT'
 
-    fields = [
-        ('H Answer', 'EFFECT-H.answers.healthy.answer'),
-        ('H Time on Question', 'EFFECT-H.timeOnQuestion'),
-        ('U Answer', 'EFFECT-U.answers.unhealthy.answer'),
-        ('U Time on Question', 'EFFECT-U.timeOnQuestion'),
-        ('W Answer', 'EFFECT-W.answers.weight.answer'),
-        ('W Time on Question', 'EFFECT-W.timeOnQuestion'),
+    def get_value_keypaths(self):
+        return [
+        ('EFFECT-H.answers.healthy.answer', 'H Answer'),
+        ('EFFECT-H.timeOnQuestion', 'H Time on Question'),
+        ('EFFECT-U.answers.unhealthy.answer', 'U Answer'),
+        ('EFFECT-U.timeOnQuestion', 'U Time on Question'),
+        ('EFFECT-W.answers.weight.answer', 'W Answer'),
+        ('EFFECT-W.timeOnQuestion', 'W Time on Question'),
     ]
 
     def can_process_data(self, data):
@@ -349,16 +359,17 @@ class RESTRQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
 
     number_of_scores = 6
 
-    fields = [
-        ('S1', 'answers.S1.answer'),
-        ('S2', 'answers.S2.answer'),
-        ('S3', 'answers.S3.answer'),
-        ('S4', 'answers.S4.answer'),
-        ('S5', 'answers.S5.answer'),
-        ('S6', 'answers.S6.answer'),
-        ('Time on Question', 'timeOnQuestion'),
+    value_keypaths = [
+        ('answers.S1.answer', 'S1'),
+        ('answers.S2.answer', 'S2'),
+        ('answers.S3.answer', 'S3'),
+        ('answers.S4.answer', 'S4'),
+        ('answers.S5.answer', 'S5'),
+        ('answers.S6.answer', 'S6'),
+        ('timeOnQuestion', 'Time On Question'),
     ]
 
+    # TODO: update
     derived_fields = [
         (None, 'Sum Scores', 'calculate_sum_scores'),
         (None, 'Missing Scores', 'calculate_missing_scores'),

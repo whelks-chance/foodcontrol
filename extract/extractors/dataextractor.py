@@ -1,143 +1,139 @@
+import dpath
+from keypath_extractor import KeypathExtractor
+
+
 class DataExtractor:
+    """The abstract base class for all game and question data extractors"""
 
-    empty_cell_value = '[]'
+    # This value is used to represent any kind of missing, blank or null value
+    EMPTY_CELL_VALUE = '[]'
 
-    common_values = {}
-    values = {}
-
-    def name(self):
+    def get_extractor_type(self):
+        """Return the type of game or question this extractor can process"""
         return self.type
 
-    @staticmethod
-    def common_fields():
+    def get_filename(self):
+        return self.get_extractor_type()
+
+    def get_common_keypaths(self):
+        """Return a list of keypaths that are common to all rows"""
         return [
-            ('User ID', 'userID', ),
-            ('Session ID', 'sessionId', ),
+            ('userID', 'User ID'),
+            ('sessionId', 'Session ID'),
         ]
 
-    def _fields(self):
-        return self.fields
+    def get_value_keypaths(self):
+        """Return a list of keypaths specific to this data extractor"""
+        return []
 
-    def clear(self):
-        """Reset common value and calculation stores. Override to to reset type-specific value and calculation stores"""
-        self.values.clear()
+    def get_derived_value_keypaths(self):
+        """Return a list of keypaths that derive values from values extracted by this data extractor"""
+        return []
+
+    def get_all_column_keypaths(self):
+        """
+        Return a list that combines the common, value and
+        derived value keypaths for this data extractor
+        """
+        return\
+            self.get_common_keypaths() + \
+            self.get_value_keypaths_for_naming_columns() + \
+            self.get_derived_value_keypaths()
+
+    def get_value_keypaths_for_naming_columns(self):
+        """
+        Subclasses may generate multiple versions of their value keypaths so they
+        must override this method to return one set of keypaths for naming columns
+        """
+        return self.get_value_keypaths()
+
+    def get_column_names(self):
+        """
+        Return a combined list of column names for the common,
+        value and derived value keypaths for this data extractor
+        """
+        # A keypath is a 3-element tuple: (source keypath, destination keypath, transformer function)
+        # The destination keypath is used as the column name
+        return [keypath[1] for keypath in self.get_all_column_keypaths()]
+
+    def get_row_values(self, values):
+        return self.listify_values(self.get_column_names(), values)
 
     @staticmethod
-    def session_is_complete(row):
-        session_state = 'COMPLETE'
-        # Handle inconsistently formatted data structures between games:
-        # data -> object vs data -> [ object ]
-        try:
-            session_state = row.get_keypath_value('data.0.sessionState')
-        except KeyError:
-            try:
-                session_state = row.get_keypath_value('data.sessionState')
-            except KeyError:
-                # There is no sessionState for this row so it is implicitly complete
-                pass
-        finally:
-            return session_state == 'COMPLETE'
+    def listify_values(column_names, values):
+        """Return a list of column values in the same order as the corresponding column name"""
+        values_list = []
+        for column_name in column_names:
+            value = DataExtractor.EMPTY_CELL_VALUE
+            if column_name in values:
+                value = values[column_name]
+                if not value:
+                    value = DataExtractor.EMPTY_CELL_VALUE
+            values_list.append(value)
+        return values_list
 
-    def process(self, row):
+    def process_row(self, row):
+        """
+        Attempt to process a row. Return True if this data extractor can
+        process this type of row and the row represents a completed session
+        """
         if self.can_process_row(row):
             if self.session_is_complete(row):
-                self.extract_common_field_values(row)
-                self.extract(row)
-                self.check(row)
-                self.calculate(row)
+                print('A:', row)
+                self.extract_row_data(row)
                 return True
         else:
             return False
 
     def can_process_row(self, row):
         """Return True if the row type matches the type this data extractor can process"""
-        return row['type'] == self.__class__.type
+        return row['type'] == self.get_extractor_type()
 
-    def extract(self, row):
-        self.values = {}
-        self.extract_field_values(self._fields(), row, self.values)
+    def session_is_complete(self, row):
+        """Return True if the row represents a completed session; False otherwise"""
 
-    def extract_common_field_values(self, row):
-        self.common_values = {}
-        print(self.common_fields())
-        self.extract_field_values(self.common_fields(), row, self.common_values)
-
-    @staticmethod
-    def extract_field_values(fields, row, values):
-        for column_name, keypath in fields:
+        def get_session_state(row):
+            """
+            Handle inconsistently formatted data structures:
+            data -> object vs data -> [ object ]
+            """
+            session_state = 'COMPLETE'
             try:
-                value = row.get_keypath_value(keypath)
-                values[column_name] = value
-            except KeyError as e:
-                print('KeyError', e)
+                session_state = self.get_keypath_value(row, 'data.0.sessionState')
+            except KeyError:
+                try:
+                    session_state = self.get_keypath_value(row, 'data.sessionState')
+                except KeyError:
+                    # There is no sessionState key for this row it is implicitly complete
+                    pass
+            finally:
+                return session_state
 
-    def calculate_derived_field_values(self, values):
-        """Derive new values from extracted field values"""
-        if hasattr(self, 'derived_fields'):
-            for source_column_name, destination_column_name, code_function_name in self.derived_fields:
-                value = None
-                value_derivation_fn = getattr(self, code_function_name)
-                if source_column_name:
-                    try:
-                        value = values[source_column_name]
-                    except KeyError as e:
-                        print('\ncalculate_derived_field_values():')
-                        print(e)
-                        print(values)
-                else:
-                    value = values
-                derived_value = DataExtractor.empty_cell_value
-                if value and value != DataExtractor.empty_cell_value:
-                    derived_value = value_derivation_fn(value)
-                values[destination_column_name] = derived_value
+        return get_session_state(row) == 'COMPLETE'
 
-    def check(self, row):
-        """Override to perform type-specific row checks"""
+    def extract_row_data(self, row):
+        """Override to perform extractor-specific extraction"""
         pass
 
-    def calculate(self, row):
-        """Override to perform type-specific row calculations"""
-        pass
-
-    def all_column_names(self):
-        return self.common_column_names() + self.column_names()
-
-    def common_column_names(self):
-        return [column_name for column_name, _ in self.common_fields()]
-
-    def column_names(self):
-        """Return a list of column names"""
-        # Standard column names
-        column_names = [column_name for column_name, _ in self._fields()]
-        # Derived column names (if any)
-        if hasattr(self, 'derived_fields'):
-            for _, derived_column_name, _ in self.derived_fields:
-                column_names.append(derived_column_name)
-        return column_names
-
-    def all_row_values(self):
-        return self.common_row_values() + self.row_values()
-
-    def common_row_values(self):
-        return self.to_list(self.common_column_names(), self.common_values)
-
-    def row_values(self):
-        return self.to_list(self.column_names(), self.values)
-
-    @staticmethod
-    def to_list(column_names, values):
-        """Return a list of column values in the same order as the corresponding column name"""
-        values_list = []
-        for column_name in column_names:
-            value = DataExtractor.empty_cell_value
-            if column_name in values:
-                value = values[column_name]
-                if value is None:
-                    value = DataExtractor.empty_cell_value
-            values_list.append(value)
-        return values_list
+    def extract_values(self, data):
+        """Extract values from a data dictionary using the keypaths of this data extractor"""
+        value_keypaths = self.get_common_keypaths() + self.get_value_keypaths()
+        print(value_keypaths)
+        values = {}
+        try:
+            values = KeypathExtractor(value_keypaths).extract(data)
+            print(values)
+            values = KeypathExtractor(self.get_derived_value_keypaths()).extract(data, values)
+        except KeyError as e:
+            print(e)
+        finally:
+            return values
 
     def extracted_rows(self):
-        return [self.all_row_values()]
+        """Return a list of one (games) or more (questions) rows of data for output to CSV"""
+        return []
 
-
+    @staticmethod
+    def get_keypath_value(dictionary, keypath):
+        """Return the value of a dictionary at a keypath"""
+        return dpath.util.get(dictionary, keypath, separator='.')

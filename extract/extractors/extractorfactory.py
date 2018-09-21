@@ -21,21 +21,23 @@ class ExtractorFactory:
     ]
 
     question_extractors = [
+        # EXQuestionDataExtractor(),
+        # FoodIMPQuestionExtractor(),
+        # GoalsQuestionDataExtractor(),
+        # IntentQuestionDataExtractor(),
+        # MINDFQuestionDataExtractor(),
+        # Major Minor
         FreqQuestionDataExtractor(),
-        TasteQuestionDataExtractor(),
-        AttractQuestionDataExtractor(),
-        EXQuestionDataExtractor(),
-        WillQuestionDataExtractor(),
-        MoodQuestionDataExtractor(),
-        IMPQuestionDataExtractor(),
-        FoodIMPQuestionExtractor(),
-        EMREGQuestionDataExtractor(),
-        GoalsQuestionDataExtractor(),
-        IntentQuestionDataExtractor(),
-        PersonQuestionDataExtractor(),
-        EffectQuestionDataExtractor(),
-        MINDFQuestionDataExtractor(),
-        RESTRQuestionDataExtractor(),
+        # TasteQuestionDataExtractor(),
+        # AttractQuestionDataExtractor(),
+        # Major
+        # WillQuestionDataExtractor(),
+        # MoodQuestionDataExtractor(),
+        # IMPQuestionDataExtractor(),
+        # EMREGQuestionDataExtractor(),
+        # PersonQuestionDataExtractor(),
+        # EffectQuestionDataExtractor(),
+        # RESTRQuestionDataExtractor(),
     ]
 
     extractors = game_extractors + question_extractors

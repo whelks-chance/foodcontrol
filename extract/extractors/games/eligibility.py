@@ -5,28 +5,29 @@ class EligibilityDataExtractor(GameDataExtractor):
 
     type = 'eligibility'
 
-    fields = [
-        ('Gender', 'data.gender'),
-        ('Gender Other', 'data.gender-other'),
-        ('DOB', 'data.dob'),
+    @staticmethod
+    def get_value_keypaths():
+        return [
+            ('data.gender', 'Gender'),
+            ('data.gender-other', 'Gender Other'),
+            ('data.dob', 'DOB'),
 
-        ('Height Unit 1 Value', 'data.height.unit1_val'),
-        ('Height Unit 2 Value', 'data.height.unit2_val'),
-        ('Height Units', 'data.height.units'),
+            ('data.height.unit1_val', 'Height Unit 1 Value'),
+            ('data.height.unit2_val', 'Height Unit 2 Value'),
+            ('data.height.units', 'Height Units'),
 
-        ('Weight Unit 1 Value', 'data.weight.unit1_val'),
-        ('Weight Unit 2 Value', 'data.weight.unit2_val'),
-        ('Weight Units', 'data.weight.units'),
+            ('data.weight.unit1_val', 'Weight Unit 1 Value'),
+            ('data.weight.unit2_val', 'Weight Unit 2 Value'),
+            ('data.weight.units', 'Weight Units'),
 
-        ('Allergies', 'data.allergies'),
-        ('Allergies Other', 'data.allergies-other'),
+            ('data.allergies', 'Allergies'),
+            ('data.allergies-other', 'Allergies Other'),
+            ('data.eating-disorder', 'Allergies'),
+            ('data.eating-disorder-other', 'Allergies Other'),
 
-        ('Allergies', 'data.eating-disorder'),
-        ('Allergies Other', 'data.eating-disorder-other'),
-
-        ('BMI', 'data.bmi'),
-        ('Age', 'data.age'),
-        ('Eligible', 'data.eligible'),
-        ('Height CM', 'data.height_cm'),
-        ('Weight KGs', 'data.weight_kgs'),
-    ]
+            ('data.bmi', 'BMI'),
+            ('data.age', 'Age'),
+            ('data.eligible', 'Eligible'),
+            ('data.height_cm', 'Height CM'),
+            ('data.weight_kgs', 'Weight KGs'),
+        ]
