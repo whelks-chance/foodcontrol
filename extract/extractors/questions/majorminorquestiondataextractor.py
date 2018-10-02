@@ -1,4 +1,3 @@
-# from utils import KeypathDict, irange
 from utils import irange
 
 from .questiondataextractor import QuestionDataExtractor
@@ -25,7 +24,6 @@ class MajorMinorQuestionDataExtractor(QuestionDataExtractor):
                 major_minor_keypaths.append(key_keypaths)
                 for keypath in keypaths:
                     major_keypath = '.'.join(['data', key, keypath[0]])
-                    print('####', major, keypath[0], major_keypath)
                     new_keypath = list(keypath)
                     new_keypath[0] = major_keypath
                     key_keypaths.append(new_keypath)
@@ -57,10 +55,10 @@ class FreqQuestionDataExtractor(MajorMinorQuestionDataExtractor):
 
     def get_derived_value_keypaths(self):
         return [
-            ('FE', 'FE Score', 'code_answer'),
-            ('FC Answer', 'FC Score', 'code_answer'),
-            ('Type', 'Type Value', 'code_food_type'),
-            ('Selected', 'Selected Value', 'code_food_selected'),
+            ('FE', 'FE Score', self.code_answer),
+            ('FC Answer', 'FC Score', self.code_answer),
+            ('Type', 'Type Value', self.code_food_type),
+            ('Selected', 'Selected Value', self.code_food_selected),
         ]
 
     @staticmethod
@@ -110,8 +108,8 @@ class TasteQuestionDataExtractor(MajorMinorQuestionDataExtractor):
 
     def get_derived_value_keypaths(self):
         return [
-            ('Type', 'Type Value', 'code_food_type'),
-            ('Selected', 'Selected Value', 'code_food_selected'),
+            ('Type', 'Type Value', self.code_food_type),
+            ('Selected', 'Selected Value', self.code_food_selected),
         ]
 
     @staticmethod
@@ -150,8 +148,8 @@ class AttractQuestionDataExtractor(MajorMinorQuestionDataExtractor):
 
     def get_derived_value_keypaths(self):
         return [
-            ('Type', 'Type Value', 'code_food_type'),
-            ('Selected', 'Selected Value', 'code_food_selected'),
+            ('Type', 'Type Value', self.code_food_type),
+            ('Selected', 'Selected Value', self.code_food_selected),
         ]
 
     @staticmethod

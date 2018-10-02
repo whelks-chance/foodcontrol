@@ -1,6 +1,5 @@
 import re
 
-# from utils import KeypathDict, irange
 from utils import irange
 
 from extractors.dataextractor import DataExtractor
@@ -37,7 +36,7 @@ class QuestionDataExtractor(DataExtractor):
         data_keys = data.keys()
         for data_key in data_keys:
             if re.match(pattern, data_key):
-                print('MATCH: {} == {}'.format(data_key, pattern))
+                print('QUESTION: ', data_key)
                 return True
         return False
 
@@ -60,7 +59,6 @@ class QuestionDataExtractor(DataExtractor):
 
     def extract_row_data(self, row):
         self.csv_rows = self.extract_values(row)
-        print('------>', self.csv_rows)
 
     def calculate(self, row):
         pass
@@ -128,7 +126,7 @@ class EXQuestionDataExtractor(QuestionDataExtractor):
 
     def get_derived_value_keypaths(self):
         return [
-            ('EX A Answer', 'EX A Answer Score', 'code_answer'),
+            ('EX A Answer', 'EX A Answer Score', self.code_answer),
         ]
 
     @staticmethod

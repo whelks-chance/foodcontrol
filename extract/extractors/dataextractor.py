@@ -32,8 +32,8 @@ class DataExtractor:
 
     def get_all_column_keypaths(self):
         """
-        Return a list that combines the common, value and
-        derived value keypaths for this data extractor
+        Return a list that combines the column names of the common,
+        value and derived value keypaths for this data extractor
         """
         return\
             self.get_common_keypaths() + \
@@ -42,8 +42,8 @@ class DataExtractor:
 
     def get_value_keypaths_for_naming_columns(self):
         """
-        Subclasses may generate multiple versions of their value keypaths so they
-        must override this method to return one set of keypaths for naming columns
+        Subclasses may generate multiple CSV rows per JSON row but
+        we only need the column names for the first set of keypaths.
         """
         keypaths = self.get_value_keypaths()
         if self.keypaths_are_nested(keypaths):
@@ -74,7 +74,7 @@ class DataExtractor:
             value = DataExtractor.EMPTY_CELL_VALUE
             if column_name in values:
                 value = values[column_name]
-                if not value:
+                if value == '' or value is None:
                     value = DataExtractor.EMPTY_CELL_VALUE
             values_list.append(value)
         return values_list
@@ -86,7 +86,6 @@ class DataExtractor:
         """
         if self.can_process_row(row):
             if self.session_is_complete(row):
-                print('A:', row)
                 self.extract_row_data(row)
                 return True
         else:
@@ -132,16 +131,15 @@ class DataExtractor:
     @staticmethod
     def extract_values_with_keypaths(value_keypaths, derived_value_keypaths, data):
         """Extract values from a data dictionary using the keypaths of this data extractor"""
-        print("value_keypaths:", value_keypaths)
-        print('ABC')
         values = {}
         try:
             values = KeypathExtractor(value_keypaths).extract(data)
-            print('values after KPE:', values)
-            values = KeypathExtractor(derived_value_keypaths).extract(data, values)
-        except KeyError as e:
-            # print("Error: ", e)
+            values = KeypathExtractor(derived_value_keypaths).extract(values, values)
+        except KeyError:
+            # There are cases where generated keypaths do not occur so ignore this exception
             pass
+        except ValueError as e:
+            print("ValueError: ", e)
         finally:
             return values
 
