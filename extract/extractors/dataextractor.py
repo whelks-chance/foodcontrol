@@ -154,7 +154,8 @@ class DataExtractor:
 
     @staticmethod
     def row_contains_all_empty_values(row):
-        for item in row:
+        # The
+        for item in row[:-2]:
             if item is not DataExtractor.EMPTY_CELL_VALUE:
                 return False
         return True

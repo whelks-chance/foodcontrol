@@ -32,7 +32,7 @@ class QuestionDataExtractor(DataExtractor):
         return super().can_process_row(row) and self.can_process_data(row['data'])
 
     def get_column_names(self):
-        return super().get_column_names() + ['Prefix']
+        return super().get_column_names() + ['Prefix', 'Sub Prefix']
 
     @staticmethod
     def can_process_data_with_pattern(data, pattern):
@@ -54,10 +54,23 @@ class QuestionDataExtractor(DataExtractor):
         derived_value_keypaths = self.get_derived_value_keypaths()
         for value_keypaths in nested_value_keypaths:
             all_value_keypaths = common_keypaths + value_keypaths
+            # print(value_keypaths)
             values = self.extract_values_with_keypaths(all_value_keypaths, derived_value_keypaths, data)
-            values['Prefix'] = self.prefix
+            prefixes = self.get_prefixes(value_keypaths[0])
+            values['Prefix'] = prefixes[0]
+            values['Sub Prefix'] = prefixes[1]
             rows.append(values)
         return rows
+
+    def get_prefixes(self, keypath):
+        # print(keypath)
+        paths = keypath[0].split('.')
+        type = paths[1]
+        if '-' in type:
+            parts = type.split('-')
+            return parts
+        else:
+            return (type[:-1], type[-1:])
 
     def extract_row_data(self, row):
         self.csv_rows = self.extract_values(row)
