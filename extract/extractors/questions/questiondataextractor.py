@@ -31,6 +31,9 @@ class QuestionDataExtractor(DataExtractor):
     def can_process_row(self, row):
         return super().can_process_row(row) and self.can_process_data(row['data'])
 
+    def get_column_names(self):
+        return super().get_column_names() + ['Prefix']
+
     @staticmethod
     def can_process_data_with_pattern(data, pattern):
         data_keys = data.keys()
@@ -52,6 +55,7 @@ class QuestionDataExtractor(DataExtractor):
         for value_keypaths in nested_value_keypaths:
             all_value_keypaths = common_keypaths + value_keypaths
             values = self.extract_values_with_keypaths(all_value_keypaths, derived_value_keypaths, data)
+            values['Prefix'] = self.prefix
             rows.append(values)
         return rows
 
@@ -218,8 +222,8 @@ class FoodIMPQuestionExtractor(QuestionDataExtractor):
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'FOODIMP')
 
-    def extract(self, data):
-        super().extract(data, self.prefix)
+    # def extract(self, data):
+    #     super().extract(data, self.prefix)
 
 
 class GoalsQuestionDataExtractor(QuestionDataExtractor):
@@ -243,8 +247,8 @@ class GoalsQuestionDataExtractor(QuestionDataExtractor):
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'GOALS')
 
-    def extract(self, data):
-        super().extract(data, self.prefix)
+    # def extract(self, data):
+    #     super().extract(data, self.prefix)
 
 
 class IntentQuestionDataExtractor(QuestionDataExtractor):
@@ -298,7 +302,7 @@ class MINDFQuestionDataExtractor(QuestionDataExtractor):
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'MINDF')
 
-    def extract(self, data):
-        print('EXTRACT', self.prefix)
-        print(data)
-        super().extract(data)
+    # def extract(self, data):
+    #     print('EXTRACT', self.prefix)
+    #     print(data)
+    #     super().extract(data)

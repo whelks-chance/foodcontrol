@@ -5,8 +5,7 @@ class AdditionalInfoDataExtractor(GameDataExtractor):
 
     type = 'additional-info'
 
-    @staticmethod
-    def get_value_keypaths():
+    def get_value_keypaths(self):
         return [
             ('data.first-language', 'First Language'),
             ('data.first-language-other', 'First Language Other'),

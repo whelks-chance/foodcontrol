@@ -9,7 +9,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
     @staticmethod
     def get_value_keypaths():
         return [
-            ('captureDate', 'Capture Date'),
+            ('data.captureDate', 'Capture Date'),
         ]
 
     durations = defaultdict(list)

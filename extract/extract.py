@@ -44,7 +44,8 @@ class Extractor:
             file_data = csv_file.read()  # Read the data rows
             csv_file.seek(0, 0)          # Move the file pointer to the beginning
             csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
-            csv_writer.writerow(extractor.get_column_names())  # Write the header row
+            column_names = extractor.get_column_names()
+            csv_writer.writerow(column_names)  # Write the header row
             csv_file.write(file_data)                          # Write the data rows
 
     @staticmethod

@@ -131,8 +131,8 @@ class MoodQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
             ('S14', 'S14 Score', self.code_response_reversed),
             ('S15', 'S15 Score', self.code_response_reversed),
             ('S16', 'S16 Score', self.code_response_reversed),
-            (None, 'Sum Scores', self.calculate_sum_scores),
-            (None, 'Missing Scores', self.calculate_missing_scores),
+            # (None, 'Sum Scores', self.calculate_sum_scores),
+            # (None, 'Missing Scores', self.calculate_missing_scores),
         ]
 
     @staticmethod
