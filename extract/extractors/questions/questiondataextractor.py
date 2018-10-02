@@ -169,24 +169,24 @@ class FoodIMPQuestionExtractor(QuestionDataExtractor):
 
     def get_derived_value_keypaths(self):
         return [
-            ('S1',  'S1 Score', 'code_response'),
-            ('S2',  'S2 Score', 'code_response'),
-            ('S3',  'S3 Score', 'code_response'),
-            ('S4',  'S4 Score', 'code_response'),
-            ('S5',  'S5 Score', 'code_response'),
-            ('S6',  'S6 Score', 'code_response'),
-            ('S7',  'S7 Score', 'code_response'),
-            ('S8',  'S8 Score', 'code_response_reversed'),
-            ('S9',  'S9 Score', 'code_response'),
-            ('S10', 'S10 Score', 'code_response_reversed'),
-            ('S11', 'S11 Score', 'code_response'),
-            ('S12', 'S12 Score', 'code_response_reversed'),
-            ('S13', 'S13 Score', 'code_response'),
-            ('S14', 'S14 Score', 'code_response_multiple'),
-            ('S15', 'S15 Score', 'code_response_multiple'),
-            ('S16', 'S16 Score', 'code_response_multiple'),
-            (None, 'Sum Scores', 'calculate_sum_scores'),
-            (None, 'Missing Scores', 'calculate_missing_scores'),
+            ('S1',  'S1 Score', self.code_response),
+            ('S2',  'S2 Score', self.code_response),
+            ('S3',  'S3 Score', self.code_response),
+            ('S4',  'S4 Score', self.code_response),
+            ('S5',  'S5 Score', self.code_response),
+            ('S6',  'S6 Score', self.code_response),
+            ('S7',  'S7 Score', self.code_response),
+            ('S8',  'S8 Score', self.code_response_reversed),
+            ('S9',  'S9 Score', self.code_response),
+            ('S10', 'S10 Score', self.code_response_reversed),
+            ('S11', 'S11 Score', self.code_response),
+            ('S12', 'S12 Score', self.code_response_reversed),
+            ('S13', 'S13 Score', self.code_response),
+            ('S14', 'S14 Score', self.code_response_multiple),
+            ('S15', 'S15 Score', self.code_response_multiple),
+            ('S16', 'S16 Score', self.code_response_multiple),
+            (None, 'Sum Scores', self.calculate_sum_scores),
+            (None, 'Missing Scores', self.calculate_missing_scores),
         ]
 
     @staticmethod
@@ -291,8 +291,8 @@ class MINDFQuestionDataExtractor(QuestionDataExtractor):
 
     def get_derived_value_keypaths(self):
         return [
-            (None, 'Sum Scores', 'calculate_sum_scores'),
-            (None, 'Missing Scores', 'calculate_missing_scores'),
+            (None, 'Sum Scores', self.calculate_sum_scores),
+            (None, 'Missing Scores', self.calculate_missing_scores),
         ]
 
     def can_process_data(self, data):

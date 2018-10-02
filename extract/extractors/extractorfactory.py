@@ -22,7 +22,7 @@ class ExtractorFactory:
 
     question_extractors = [
         EXQuestionDataExtractor(),
-        # FoodIMPQuestionExtractor(),
+        FoodIMPQuestionExtractor(),
         # GoalsQuestionDataExtractor(),
         # IntentQuestionDataExtractor(),
         # MINDFQuestionDataExtractor(),
