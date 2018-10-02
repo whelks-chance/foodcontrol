@@ -21,12 +21,14 @@ class MajorMinorQuestionDataExtractor(QuestionDataExtractor):
         for major in self.major_range:
             for minor in self.minor_range:
                 key = '{}{}-{}'.format(self.prefix, major, minor)
+                key_keypaths = []
+                major_minor_keypaths.append(key_keypaths)
                 for keypath in keypaths:
                     major_keypath = '.'.join(['data', key, keypath[0]])
-                    # print('####', major, keypath[0], major_keypath)
+                    print('####', major, keypath[0], major_keypath)
                     new_keypath = list(keypath)
                     new_keypath[0] = major_keypath
-                    major_minor_keypaths.append(new_keypath)
+                    key_keypaths.append(new_keypath)
         return major_minor_keypaths
 
     def get_value_keypaths(self):
@@ -53,13 +55,13 @@ class FreqQuestionDataExtractor(MajorMinorQuestionDataExtractor):
         ('timeOnQuestion', 'Time On Question'),
     ]
 
-    # TODO: Update
-    derived_fields = [
-        ('FE', 'FE Score', 'code_answer'),
-        ('FC Answer', 'FC Score', 'code_answer'),
-        ('Type', 'Type Value', 'code_food_type'),
-        ('Selected', 'Selected Value', 'code_food_selected'),
-    ]
+    def get_derived_value_keypaths(self):
+        return [
+            ('FE', 'FE Score', 'code_answer'),
+            ('FC Answer', 'FC Score', 'code_answer'),
+            ('Type', 'Type Value', 'code_food_type'),
+            ('Selected', 'Selected Value', 'code_food_selected'),
+        ]
 
     @staticmethod
     def code_food_type(food_value):
@@ -106,11 +108,11 @@ class TasteQuestionDataExtractor(MajorMinorQuestionDataExtractor):
         ('timeOnQuestion', 'Time On Question'),
     ]
 
-    # TODO: Update
-    derived_fields = [
-        ('Type', 'Type Value', 'code_food_type'),
-        ('Selected', 'Selected Value', 'code_food_selected'),
-    ]
+    def get_derived_value_keypaths(self):
+        return [
+            ('Type', 'Type Value', 'code_food_type'),
+            ('Selected', 'Selected Value', 'code_food_selected'),
+        ]
 
     @staticmethod
     def code_food_type(food_value):
@@ -146,11 +148,11 @@ class AttractQuestionDataExtractor(MajorMinorQuestionDataExtractor):
         ('timeOnQuestion', 'Time On Question'),
     ]
 
-    # TODO: Update
-    derived_fields = [
-        ('Type', 'Type Value', 'code_food_type'),
-        ('Selected', 'Selected Value', 'code_food_selected'),
-    ]
+    def get_derived_value_keypaths(self):
+        return [
+            ('Type', 'Type Value', 'code_food_type'),
+            ('Selected', 'Selected Value', 'code_food_selected'),
+        ]
 
     @staticmethod
     def code_food_type(food_value):

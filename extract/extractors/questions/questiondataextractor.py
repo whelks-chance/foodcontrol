@@ -13,7 +13,7 @@ class QuestionDataExtractor(DataExtractor):
 
     def __init__(self):
         super().__init__()
-        self.rows = []
+        self.csv_rows = []
 
     def get_filename(self):
         return '{}-{}'.format(self.type, self.prefix)
@@ -27,7 +27,7 @@ class QuestionDataExtractor(DataExtractor):
         if hasattr(self, 'value_keypaths'):
             return self.value_keypaths
         else:
-            return super().get_value_keypaths()
+            return self.get_value_keypaths()
 
     def can_process_row(self, row):
         return super().can_process_row(row) and self.can_process_data(row['data'])
@@ -41,19 +41,26 @@ class QuestionDataExtractor(DataExtractor):
                 return True
         return False
 
-    def extract_row_data(self, row):
-        print('B:', row)
-        values = self.extract_values(row)
-        print('------>', values)
+    def extract_values(self, data):
+        value_keypaths = self.get_value_keypaths()
+        if not self.keypaths_are_nested(value_keypaths):
+            return super().extract_values(data)
 
-    # # TODO: now extract_row()
-    # def extract_row(self, row):
-    #     """
-    #     The generic extraction routine for questions with a simple type,
-    #     i.e. not a major minor or major character type
-    #     """
-    #     values = self.extract_values(row)
-    #     print('------>', values)
+        rows = []
+        common_keypaths = self.get_common_keypaths()
+        nested_value_keypaths = value_keypaths
+        derived_value_keypaths = self.get_derived_value_keypaths()
+
+        for value_keypaths in nested_value_keypaths:
+            all_value_keypaths = common_keypaths + value_keypaths
+            values = self.extract_values_with_keypaths(all_value_keypaths, derived_value_keypaths, data)
+            rows.append(values)
+
+        return rows
+
+    def extract_row_data(self, row):
+        self.csv_rows = self.extract_values(row)
+        print('------>', self.csv_rows)
 
     def calculate(self, row):
         pass
@@ -102,12 +109,6 @@ class QuestionDataExtractor(DataExtractor):
     def calculate_missing_scores(self, values):
         return self.missing_scores(values, self.number_of_scores)
 
-    def extracted_rows(self):
-        column_names = self.get_column_names()
-        print('#######', self.rows)
-        print(column_names)
-        return [self.listify_values(column_names, row) for row in self.rows]
-
 
 class EXQuestionDataExtractor(QuestionDataExtractor):
 
@@ -115,20 +116,20 @@ class EXQuestionDataExtractor(QuestionDataExtractor):
 
     def get_value_keypaths(self):
         return [
-            ('EX-A.answers.0.answer', 'EX A Answer'),
-            ('EX-A.timeOnQuestion', 'EX A Time On Question'),
-            ('EX-F.answers.exercise-times-moderate.answer', 'EX F Times Moderate'),
-            ('EX-F.answers.exercise-times-vigorous.answer', 'EX F Times Vigorous'),
-            ('EX-F.answers.exercise-times-strengthening.answer', 'EX F Times Strengthening'),
-            ('EX-F.answers.exercise-minutes-moderate.answer', 'EX F Minutes Moderate'),
-            ('EX-F.answers.exercise-minutes-vigorous.answer', 'EX F Minutes Vigorous'),
-            ('EX-F.answers.exercise-minutes-strengthening.answer', 'EX F Minutes Strengthening'),
+            ('data.EX-A.answers.0.answer', 'EX A Answer'),
+            ('data.EX-A.timeOnQuestion', 'EX A Time On Question'),
+            ('data.EX-F.answers.exercise-times-moderate.answer', 'EX F Times Moderate'),
+            ('data.EX-F.answers.exercise-times-vigorous.answer', 'EX F Times Vigorous'),
+            ('data.EX-F.answers.exercise-times-strengthening.answer', 'EX F Times Strengthening'),
+            ('data.EX-F.answers.exercise-minutes-moderate.answer', 'EX F Minutes Moderate'),
+            ('data.EX-F.answers.exercise-minutes-vigorous.answer', 'EX F Minutes Vigorous'),
+            ('data.EX-F.answers.exercise-minutes-strengthening.answer', 'EX F Minutes Strengthening'),
         ]
 
-    # TODO: Update
-    derived_fields = [
-        ('EX A Answer', 'EX A Answer Score', 'code_answer'),
-    ]
+    def get_derived_value_keypaths(self):
+        return [
+            ('EX A Answer', 'EX A Answer Score', 'code_answer'),
+        ]
 
     @staticmethod
     def code_answer(answer_value):
@@ -151,46 +152,46 @@ class FoodIMPQuestionExtractor(QuestionDataExtractor):
 
     def get_value_keypaths(self):
         return [
-            ('answers.S1.answer', 'S1'),
-            ('answers.S2.answer', 'S2'),
-            ('answers.S3.answer', 'S3'),
-            ('answers.S4.answer', 'S4'),
-            ('answers.S5.answer', 'S5'),
-            ('answers.S6.answer', 'S6'),
-            ('answers.S7.answer', 'S7'),
-            ('answers.S8.answer', 'S8'),
-            ('answers.S9.answer', 'S9'),
-            ('answers.S10.answer', 'S10'),
-            ('answers.S11.answer', 'S11'),
-            ('answers.S12.answer', 'S12'),
-            ('answers.S13.answer', 'S13'),
-            ('answers.S14.answer', 'S14'),
-            ('answers.S15.answer', 'S15'),
-            ('answers.S16.answer', 'S16'),
-            ('timeOnQuestion', 'Time On Question'),
+            ('data.FOODIMP.answers.S1.answer', 'S1'),
+            ('data.FOODIMP.answers.S2.answer', 'S2'),
+            ('data.FOODIMP.answers.S3.answer', 'S3'),
+            ('data.FOODIMP.answers.S4.answer', 'S4'),
+            ('data.FOODIMP.answers.S5.answer', 'S5'),
+            ('data.FOODIMP.answers.S6.answer', 'S6'),
+            ('data.FOODIMP.answers.S7.answer', 'S7'),
+            ('data.FOODIMP.answers.S8.answer', 'S8'),
+            ('data.FOODIMP.answers.S9.answer', 'S9'),
+            ('data.FOODIMP.answers.S10.answer', 'S10'),
+            ('data.FOODIMP.answers.S11.answer', 'S11'),
+            ('data.FOODIMP.answers.S12.answer', 'S12'),
+            ('data.FOODIMP.answers.S13.answer', 'S13'),
+            ('data.FOODIMP.answers.S14.answer', 'S14'),
+            ('data.FOODIMP.answers.S15.answer', 'S15'),
+            ('data.FOODIMP.answers.S16.answer', 'S16'),
+            ('data.FOODIMP.timeOnQuestion', 'Time On Question'),
         ]
 
-    # TODO: Update
-    derived_fields = [
-        ('S1',  'S1 Score', 'code_response'),
-        ('S2',  'S2 Score', 'code_response'),
-        ('S3',  'S3 Score', 'code_response'),
-        ('S4',  'S4 Score', 'code_response'),
-        ('S5',  'S5 Score', 'code_response'),
-        ('S6',  'S6 Score', 'code_response'),
-        ('S7',  'S7 Score', 'code_response'),
-        ('S8',  'S8 Score', 'code_response_reversed'),
-        ('S9',  'S9 Score', 'code_response'),
-        ('S10', 'S10 Score', 'code_response_reversed'),
-        ('S11', 'S11 Score', 'code_response'),
-        ('S12', 'S12 Score', 'code_response_reversed'),
-        ('S13', 'S13 Score', 'code_response'),
-        ('S14', 'S14 Score', 'code_response_multiple'),
-        ('S15', 'S15 Score', 'code_response_multiple'),
-        ('S16', 'S16 Score', 'code_response_multiple'),
-        (None, 'Sum Scores', 'calculate_sum_scores'),
-        (None, 'Missing Scores', 'calculate_missing_scores'),
-    ]
+    def get_derived_value_keypaths(self):
+        return [
+            ('S1',  'S1 Score', 'code_response'),
+            ('S2',  'S2 Score', 'code_response'),
+            ('S3',  'S3 Score', 'code_response'),
+            ('S4',  'S4 Score', 'code_response'),
+            ('S5',  'S5 Score', 'code_response'),
+            ('S6',  'S6 Score', 'code_response'),
+            ('S7',  'S7 Score', 'code_response'),
+            ('S8',  'S8 Score', 'code_response_reversed'),
+            ('S9',  'S9 Score', 'code_response'),
+            ('S10', 'S10 Score', 'code_response_reversed'),
+            ('S11', 'S11 Score', 'code_response'),
+            ('S12', 'S12 Score', 'code_response_reversed'),
+            ('S13', 'S13 Score', 'code_response'),
+            ('S14', 'S14 Score', 'code_response_multiple'),
+            ('S15', 'S15 Score', 'code_response_multiple'),
+            ('S16', 'S16 Score', 'code_response_multiple'),
+            (None, 'Sum Scores', 'calculate_sum_scores'),
+            (None, 'Missing Scores', 'calculate_missing_scores'),
+        ]
 
     @staticmethod
     def code_response(response_value):
@@ -231,16 +232,16 @@ class GoalsQuestionDataExtractor(QuestionDataExtractor):
 
     def get_value_keypaths(self):
         return [
-            ('answers.ideal-weight.answer.unit1_val', 'Ideal Weight Unit 1 Value'),
-            ('answers.ideal-weight.answer.unit2_val', 'Ideal Weight Unit 2 Value'),
-            ('answers.ideal-weight.answer.units', 'Ideal Weight Units'),
-            ('answers.achievable-weight.answer.unit1_val', 'Achievable Weight Unit 1 Value'),
-            ('answers.achievable-weight.answer.unit2_val', 'Achievable Weight Unit 2 Value'),
-            ('answers.achievable-weight.answer.units', 'Achievable Weight Units'),
-            ('answers.happy-weight.answer.unit1_val', 'Happy Weight Unit 1 Value'),
-            ('answers.happy-weight.answer.unit2_val', 'Happy Weight Unit 2 Value'),
-            ('answers.happy-weight.answer.units', 'Happy Weight Units'),
-            ('timeOnQuestion', 'Time On Question'),
+            ('data.GOALS.answers.ideal-weight.answer.unit1_val', 'Ideal Weight Unit 1 Value'),
+            ('data.GOALS.answers.ideal-weight.answer.unit2_val', 'Ideal Weight Unit 2 Value'),
+            ('data.GOALS.answers.ideal-weight.answer.units', 'Ideal Weight Units'),
+            ('data.GOALS.answers.achievable-weight.answer.unit1_val', 'Achievable Weight Unit 1 Value'),
+            ('data.GOALS.answers.achievable-weight.answer.unit2_val', 'Achievable Weight Unit 2 Value'),
+            ('data.GOALS.answers.achievable-weight.answer.units', 'Achievable Weight Units'),
+            ('data.GOALS.answers.happy-weight.answer.unit1_val', 'Happy Weight Unit 1 Value'),
+            ('data.GOALS.answers.happy-weight.answer.unit2_val', 'Happy Weight Unit 2 Value'),
+            ('data.GOALS.answers.happy-weight.answer.units', 'Happy Weight Units'),
+            ('data.GOALS.timeOnQuestion', 'Time On Question'),
         ]
 
     def can_process_data(self, data):
@@ -256,10 +257,10 @@ class IntentQuestionDataExtractor(QuestionDataExtractor):
 
     def get_value_keypaths(self):
         return [
-            ('INTENT-H.answers.healthy-foods.answer', 'Healthy Foods Answer'),
-            ('INTENT-H.timeOnQuestion', 'Healthy Foods Answer'),
-            ('INTENT-U.answers.unhealthy-foods.answer', 'Unhealthy Foods Answer'),
-            ('INTENT-U.timeOnQuestion', 'Unhealthy Foods Answer'),
+            ('data.INTENT-H.answers.healthy-foods.answer', 'Healthy Foods Answer'),
+            ('data.INTENT-H.timeOnQuestion', 'Healthy Foods Answer'),
+            ('data.INTENT-U.answers.unhealthy-foods.answer', 'Unhealthy Foods Answer'),
+            ('data.INTENT-U.timeOnQuestion', 'Unhealthy Foods Answer'),
         ]
 
     def can_process_data(self, data):
@@ -274,29 +275,29 @@ class MINDFQuestionDataExtractor(QuestionDataExtractor):
 
     def get_value_keypaths(self):
         return [
-            ('answers.S1.answer', 'S1'),
-            ('answers.S2.answer', 'S2'),
-            ('answers.S3.answer', 'S3'),
-            ('answers.S4.answer', 'S4'),
-            ('answers.S5.answer', 'S5'),
-            ('answers.S6.answer', 'S6'),
-            ('answers.S7.answer', 'S7'),
-            ('answers.S8.answer', 'S8'),
-            ('answers.S9.answer', 'S9'),
-            ('answers.S10.answer', 'S10'),
-            ('answers.S11.answer', 'S11'),
-            ('answers.S12.answer', 'S12'),
-            ('answers.S13.answer', 'S13'),
-            ('answers.S14.answer', 'S14'),
-            ('answers.S15.answer', 'S15'),
-            ('timeOnQuestion', 'Time On Question'),
+            ('data.MINDF.answers.S1.answer', 'S1'),
+            ('data.MINDF.answers.S2.answer', 'S2'),
+            ('data.MINDF.answers.S3.answer', 'S3'),
+            ('data.MINDF.answers.S4.answer', 'S4'),
+            ('data.MINDF.answers.S5.answer', 'S5'),
+            ('data.MINDF.answers.S6.answer', 'S6'),
+            ('data.MINDF.answers.S7.answer', 'S7'),
+            ('data.MINDF.answers.S8.answer', 'S8'),
+            ('data.MINDF.answers.S9.answer', 'S9'),
+            ('data.MINDF.answers.S10.answer', 'S10'),
+            ('data.MINDF.answers.S11.answer', 'S11'),
+            ('data.MINDF.answers.S12.answer', 'S12'),
+            ('data.MINDF.answers.S13.answer', 'S13'),
+            ('data.MINDF.answers.S14.answer', 'S14'),
+            ('data.MINDF.answers.S15.answer', 'S15'),
+            ('data.MINDF.timeOnQuestion', 'Time On Question'),
         ]
 
-    # TODO: Update
-    derived_fields = [
-        (None, 'Sum Scores', 'calculate_sum_scores'),
-        (None, 'Missing Scores', 'calculate_missing_scores'),
-    ]
+    def get_derived_value_keypaths(self):
+        return [
+            (None, 'Sum Scores', 'calculate_sum_scores'),
+            (None, 'Missing Scores', 'calculate_missing_scores'),
+        ]
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'MINDF')

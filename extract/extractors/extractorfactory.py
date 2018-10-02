@@ -5,23 +5,23 @@ from .questions import *
 class ExtractorFactory:
 
     game_extractors = [
-        StopDataExtractor(),
-        RestraintDataExtractor(),
-        NAStopDataExtractor(),
-        NARestraintDataExtractor(),
-        GStopDataExtractor(),
-        GRestraintDataExtractor(),
-        DoubleDataExtractor(),
+        # StopDataExtractor(),
+        # RestraintDataExtractor(),
+        # NAStopDataExtractor(),
+        # NARestraintDataExtractor(),
+        # GStopDataExtractor(),
+        # GRestraintDataExtractor(),
+        # DoubleDataExtractor(),
         MCIIDataExtractor(),
         GoalVisDataExtractor(),
         MeasuresDataExtractor(),
-        EligibilityDataExtractor(),
-        AdditionalInfoDataExtractor(),
-        VirtualSupermarketDataExtractor(),
+        # EligibilityDataExtractor(),
+        # AdditionalInfoDataExtractor(),
+        # VirtualSupermarketDataExtractor(),
     ]
 
     question_extractors = [
-        # EXQuestionDataExtractor(),
+        EXQuestionDataExtractor(),
         # FoodIMPQuestionExtractor(),
         # GoalsQuestionDataExtractor(),
         # IntentQuestionDataExtractor(),
@@ -31,7 +31,7 @@ class ExtractorFactory:
         # TasteQuestionDataExtractor(),
         # AttractQuestionDataExtractor(),
         # Major
-        # WillQuestionDataExtractor(),
+        WillQuestionDataExtractor(),
         # MoodQuestionDataExtractor(),
         # IMPQuestionDataExtractor(),
         # EMREGQuestionDataExtractor(),

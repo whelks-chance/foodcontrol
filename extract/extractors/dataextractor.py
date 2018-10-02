@@ -45,7 +45,14 @@ class DataExtractor:
         Subclasses may generate multiple versions of their value keypaths so they
         must override this method to return one set of keypaths for naming columns
         """
-        return self.get_value_keypaths()
+        keypaths = self.get_value_keypaths()
+        if self.keypaths_are_nested(keypaths):
+            keypaths = keypaths[0]
+        return keypaths
+
+    @staticmethod
+    def keypaths_are_nested(keypaths):
+        return type(keypaths[0]) is list
 
     def get_column_names(self):
         """
@@ -56,7 +63,7 @@ class DataExtractor:
         # The destination keypath is used as the column name
         return [keypath[1] for keypath in self.get_all_column_keypaths()]
 
-    def get_row_values(self, values):
+    def get_csv_row_values(self, values):
         return self.listify_values(self.get_column_names(), values)
 
     @staticmethod
@@ -118,20 +125,41 @@ class DataExtractor:
     def extract_values(self, data):
         """Extract values from a data dictionary using the keypaths of this data extractor"""
         value_keypaths = self.get_common_keypaths() + self.get_value_keypaths()
-        print(value_keypaths)
+        derived_value_keypaths = self.get_derived_value_keypaths()
+        values = self.extract_values_with_keypaths(value_keypaths, derived_value_keypaths, data)
+        return [values]
+
+    @staticmethod
+    def extract_values_with_keypaths(value_keypaths, derived_value_keypaths, data):
+        """Extract values from a data dictionary using the keypaths of this data extractor"""
+        print("value_keypaths:", value_keypaths)
+        print('ABC')
         values = {}
         try:
             values = KeypathExtractor(value_keypaths).extract(data)
-            print(values)
-            values = KeypathExtractor(self.get_derived_value_keypaths()).extract(data, values)
+            print('values after KPE:', values)
+            values = KeypathExtractor(derived_value_keypaths).extract(data, values)
         except KeyError as e:
-            print(e)
+            # print("Error: ", e)
+            pass
         finally:
             return values
 
     def extracted_rows(self):
         """Return a list of one (games) or more (questions) rows of data for output to CSV"""
-        return []
+        rows = []
+        for rv in self.csv_rows:
+            row = self.listify_values(self.get_column_names(), rv)
+            if not self.row_contains_all_empty_values(row):
+                rows.append(row)
+        return rows
+
+    @staticmethod
+    def row_contains_all_empty_values(row):
+        for item in row:
+            if item is not DataExtractor.EMPTY_CELL_VALUE:
+                return False
+        return True
 
     @staticmethod
     def get_keypath_value(dictionary, keypath):
