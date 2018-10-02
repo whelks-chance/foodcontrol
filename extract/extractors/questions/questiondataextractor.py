@@ -6,7 +6,7 @@ from extractors.dataextractor import DataExtractor
 
 
 class QuestionDataExtractor(DataExtractor):
-    """The abstract base class for all questionnair data extractors"""
+    """The abstract base class for all questionnaire data extractors"""
 
     type = 'tellusmore'
 
@@ -49,12 +49,10 @@ class QuestionDataExtractor(DataExtractor):
         common_keypaths = self.get_common_keypaths()
         nested_value_keypaths = value_keypaths
         derived_value_keypaths = self.get_derived_value_keypaths()
-
         for value_keypaths in nested_value_keypaths:
             all_value_keypaths = common_keypaths + value_keypaths
             values = self.extract_values_with_keypaths(all_value_keypaths, derived_value_keypaths, data)
             rows.append(values)
-
         return rows
 
     def extract_row_data(self, row):
