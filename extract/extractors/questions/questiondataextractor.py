@@ -46,7 +46,11 @@ class QuestionDataExtractor(DataExtractor):
     def extract_values(self, data):
         value_keypaths = self.get_value_keypaths()
         if not self.keypaths_are_nested(value_keypaths):
-            return super().extract_values(data)
+            values = super().extract_values(data)
+            prefixes = self.get_prefixes(value_keypaths[0][0])
+            values[0]['Prefix'] = prefixes[0]
+            values[0]['Sub Prefix'] = prefixes[1]
+            return values
 
         rows = []
         common_keypaths = self.get_common_keypaths()
@@ -54,23 +58,21 @@ class QuestionDataExtractor(DataExtractor):
         derived_value_keypaths = self.get_derived_value_keypaths()
         for value_keypaths in nested_value_keypaths:
             all_value_keypaths = common_keypaths + value_keypaths
-            # print(value_keypaths)
             values = self.extract_values_with_keypaths(all_value_keypaths, derived_value_keypaths, data)
-            prefixes = self.get_prefixes(value_keypaths[0])
+            prefixes = self.get_prefixes(value_keypaths[0][0])
             values['Prefix'] = prefixes[0]
             values['Sub Prefix'] = prefixes[1]
             rows.append(values)
         return rows
 
     def get_prefixes(self, keypath):
-        # print(keypath)
-        paths = keypath[0].split('.')
-        type = paths[1]
-        if '-' in type:
-            parts = type.split('-')
+        paths = keypath.split('.')
+        question_type = paths[1]
+        if '-' in question_type:
+            parts = question_type.split('-')
             return parts
         else:
-            return (type[:-1], type[-1:])
+            return question_type[:-1], question_type[-1:]
 
     def extract_row_data(self, row):
         self.csv_rows = self.extract_values(row)
@@ -235,9 +237,6 @@ class FoodIMPQuestionExtractor(QuestionDataExtractor):
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'FOODIMP')
 
-    # def extract(self, data):
-    #     super().extract(data, self.prefix)
-
 
 class GoalsQuestionDataExtractor(QuestionDataExtractor):
 
@@ -259,9 +258,6 @@ class GoalsQuestionDataExtractor(QuestionDataExtractor):
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'GOALS')
-
-    # def extract(self, data):
-    #     super().extract(data, self.prefix)
 
 
 class IntentQuestionDataExtractor(QuestionDataExtractor):
@@ -314,8 +310,3 @@ class MINDFQuestionDataExtractor(QuestionDataExtractor):
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'MINDF')
-
-    # def extract(self, data):
-    #     print('EXTRACT', self.prefix)
-    #     print(data)
-    #     super().extract(data)
