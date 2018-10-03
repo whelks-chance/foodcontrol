@@ -12,32 +12,32 @@ class ExtractorFactory:
         # GStopDataExtractor(),
         # GRestraintDataExtractor(),
         # DoubleDataExtractor(),
-        MCIIDataExtractor(),
-        GoalVisDataExtractor(),
-        MeasuresDataExtractor(),
+        # MCIIDataExtractor(),
+        # GoalVisDataExtractor(),
+        # MeasuresDataExtractor(),
         # EligibilityDataExtractor(),
         # AdditionalInfoDataExtractor(),
         # VirtualSupermarketDataExtractor(),
     ]
 
     question_extractors = [
-        EXQuestionDataExtractor(),
-        FoodIMPQuestionExtractor(),
+        # EXQuestionDataExtractor(),
+        # FoodIMPQuestionExtractor(),
         GoalsQuestionDataExtractor(),
         IntentQuestionDataExtractor(),
-        MINDFQuestionDataExtractor(),
-        # Major Minor
-        FreqQuestionDataExtractor(),
-        TasteQuestionDataExtractor(),
-        AttractQuestionDataExtractor(),
-        # Major
-        WillQuestionDataExtractor(),
-        MoodQuestionDataExtractor(),
-        IMPQuestionDataExtractor(),
-        EMREGQuestionDataExtractor(),
-        PersonQuestionDataExtractor(),
         EffectQuestionDataExtractor(),
-        RESTRQuestionDataExtractor(),
+        # MINDFQuestionDataExtractor(),
+        # Major Minor
+        # FreqQuestionDataExtractor(),
+        # TasteQuestionDataExtractor(),
+        # AttractQuestionDataExtractor(),
+        # Major
+        # WillQuestionDataExtractor(),
+        # MoodQuestionDataExtractor(),
+        # IMPQuestionDataExtractor(),
+        # EMREGQuestionDataExtractor(),
+        # PersonQuestionDataExtractor(),
+        # RESTRQuestionDataExtractor(),
     ]
 
     extractors = game_extractors + question_extractors

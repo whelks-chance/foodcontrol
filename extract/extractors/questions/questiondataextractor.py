@@ -32,7 +32,7 @@ class QuestionDataExtractor(DataExtractor):
         return super().can_process_row(row) and self.can_process_data(row['data'])
 
     def get_column_names(self):
-        return super().get_column_names() + ['Prefix', 'Sub Prefix']
+        return super().get_column_names() + self.get_prefix_column_names()
 
     @staticmethod
     def can_process_data_with_pattern(data, pattern):
@@ -48,8 +48,7 @@ class QuestionDataExtractor(DataExtractor):
         if not self.keypaths_are_nested(value_keypaths):
             values = super().extract_values(data)
             prefixes = self.get_prefixes(value_keypaths[0][0])
-            values[0]['Prefix'] = prefixes[0]
-            values[0]['Sub Prefix'] = prefixes[1]
+            values = self.add_prefixes(values, prefixes)
             return values
 
         rows = []
@@ -60,14 +59,30 @@ class QuestionDataExtractor(DataExtractor):
             all_value_keypaths = common_keypaths + value_keypaths
             values = self.extract_values_with_keypaths(all_value_keypaths, derived_value_keypaths, data)
             prefixes = self.get_prefixes(value_keypaths[0][0])
-            values['Prefix'] = prefixes[0]
-            values['Sub Prefix'] = prefixes[1]
+            values = self.add_prefixes(values, prefixes)
             rows.append(values)
         return rows
+
+    def has_subtype(self):
+        return not hasattr(self, 'no_subtype')
+
+    def get_prefix_column_names(self):
+        column_names = ['Type']
+        if self.has_subtype():
+            column_names += ['Sub Type']
+        return column_names
+
+    def add_prefixes(self, values, prefixes):
+        values[0]['Type'] = prefixes[0]
+        if self.has_subtype():
+            values[0]['Sub Type'] = prefixes[1]
+        return values
 
     def get_prefixes(self, keypath):
         paths = keypath.split('.')
         question_type = paths[1]
+        if not self.has_subtype():
+            return question_type, None
         if '-' in question_type:
             parts = question_type.split('-')
             return parts
@@ -241,6 +256,7 @@ class FoodIMPQuestionExtractor(QuestionDataExtractor):
 class GoalsQuestionDataExtractor(QuestionDataExtractor):
 
     prefix = 'GOALS'
+    no_subtype = True
 
     def get_value_keypaths(self):
         return [
@@ -274,6 +290,24 @@ class IntentQuestionDataExtractor(QuestionDataExtractor):
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'INTENT-[UH]')
+
+
+class EffectQuestionDataExtractor(QuestionDataExtractor):
+
+    prefix = 'EFFECT'
+
+    def get_value_keypaths(self):
+        return [
+            ('data.EFFECT-H.answers.healthy.answer', 'H Answer'),
+            ('data.EFFECT-H.timeOnQuestion', 'H Time on Question'),
+            ('data.EFFECT-U.answers.unhealthy.answer', 'U Answer'),
+            ('data.EFFECT-U.timeOnQuestion', 'U Time on Question'),
+            ('data.EFFECT-W.answers.weight.answer', 'W Answer'),
+            ('data.EFFECT-W.timeOnQuestion', 'W Time on Question'),
+        ]
+
+    def can_process_data(self, data):
+        return self.can_process_data_with_pattern(data, r'EFFECT-[HUW]')
 
 
 class MINDFQuestionDataExtractor(QuestionDataExtractor):

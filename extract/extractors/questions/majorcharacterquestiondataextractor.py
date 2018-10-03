@@ -101,38 +101,13 @@ class MoodQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         ('answers.S5.answer', 'S5'),
         ('answers.S6.answer', 'S6'),
         ('answers.S7.answer', 'S7'),
-        ('answers.S8.answer', 'S8'),
-        ('answers.S9.answer', 'S9'),
-        ('answers.S10.answer', 'S10'),
-        ('answers.S11.answer', 'S11'),
-        ('answers.S12.answer', 'S12'),
-        ('answers.S13.answer', 'S13'),
-        ('answers.S14.answer', 'S14'),
-        ('answers.S15.answer', 'S15'),
-        ('answers.S16.answer', 'S16'),
         ('timeOnQuestion', 'Time On Question'),
     ]
 
     def get_derived_value_keypaths(self):
         return [
-            ('S1', 'S1 Score', self.code_response),
-            ('S2', 'S2 Score', self.code_response),
-            ('S3', 'S3 Score', self.code_response),
-            ('S4', 'S4 Score', self.code_response),
-            ('S5', 'S5 Score', self.code_response),
-            ('S6', 'S6 Score', self.code_response),
-            ('S7', 'S7 Score', self.code_response),
-            ('S8', 'S8 Score', self.code_response_reversed),
-            ('S9', 'S9 Score', self.code_response),
-            ('S10', 'S10 Score', self.code_response_reversed),
-            ('S11', 'S11 Score', self.code_response),
-            ('S12', 'S12 Score', self.code_response_reversed),
-            ('S13', 'S13 Score', self.code_response),
-            ('S14', 'S14 Score', self.code_response_reversed),
-            ('S15', 'S15 Score', self.code_response_reversed),
-            ('S16', 'S16 Score', self.code_response_reversed),
-            # (None, 'Sum Scores', self.calculate_sum_scores),
-            # (None, 'Missing Scores', self.calculate_missing_scores),
+            (None, 'Sum Scores', self.calculate_sum_scores),
+            (None, 'Missing Scores', self.calculate_missing_scores),
         ]
 
     @staticmethod
@@ -186,6 +161,8 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
             (None, 'Sum Scores', self.calculate_sum_scores),
             (None, 'Missing Scores', self.calculate_missing_scores),
         ]
+
+    # TODO: Handle different coding for different major characters
 
     @staticmethod
     def code_response(response_value):
@@ -331,24 +308,6 @@ class PersonQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'PERSON[NEOAC]')
-
-
-class EffectQuestionDataExtractor(QuestionDataExtractor):
-
-    prefix = 'EFFECT'
-
-    def get_value_keypaths(self):
-        return [
-            ('EFFECT-H.answers.healthy.answer', 'H Answer'),
-            ('EFFECT-H.timeOnQuestion', 'H Time on Question'),
-            ('EFFECT-U.answers.unhealthy.answer', 'U Answer'),
-            ('EFFECT-U.timeOnQuestion', 'U Time on Question'),
-            ('EFFECT-W.answers.weight.answer', 'W Answer'),
-            ('EFFECT-W.timeOnQuestion', 'W Time on Question'),
-        ]
-
-    def can_process_data(self, data):
-        return self.can_process_data_with_pattern(data, r'EFFECT-[HUW]')
 
 
 class RESTRQuestionDataExtractor(MajorCharacterQuestionDataExtractor):

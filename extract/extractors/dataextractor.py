@@ -135,7 +135,8 @@ class DataExtractor:
         try:
             values = KeypathExtractor(value_keypaths).extract(data)
             values = KeypathExtractor(derived_value_keypaths).extract(values, values)
-        except KeyError:
+        except KeyError as e:
+            # print("KeyError: ", e)
             # There are cases where generated keypaths do not occur so ignore this exception
             pass
         except ValueError as e:
