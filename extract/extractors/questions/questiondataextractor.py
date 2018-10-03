@@ -32,7 +32,7 @@ class QuestionDataExtractor(DataExtractor):
         return super().can_process_row(row) and self.can_process_data(row['data'])
 
     def get_column_names(self):
-        return super().get_column_names() + self.get_prefix_column_names()
+        return super().get_column_names() + self.get_question_type_column_names()
 
     @staticmethod
     def can_process_data_with_pattern(data, pattern):
@@ -47,8 +47,8 @@ class QuestionDataExtractor(DataExtractor):
         value_keypaths = self.get_value_keypaths()
         if not self.keypaths_are_nested(value_keypaths):
             values = super().extract_values(data)
-            prefixes = self.get_prefixes(value_keypaths[0][0])
-            values = self.add_prefixes(values, prefixes)
+            prefixes = self.get_question_type_prefixes(value_keypaths[0][0])
+            values = self.add_question_type_column_names(values, prefixes)
             return values
 
         rows = []
@@ -58,21 +58,21 @@ class QuestionDataExtractor(DataExtractor):
         for value_keypaths in nested_value_keypaths:
             all_value_keypaths = common_keypaths + value_keypaths
             values = self.extract_values_with_keypaths(all_value_keypaths, derived_value_keypaths, data)
-            prefixes = self.get_prefixes(value_keypaths[0][0])
-            values = self.add_prefixes(values, prefixes)
+            prefixes = self.get_question_type_prefixes(value_keypaths[0][0])
+            values = self.add_question_type_column_names(values, prefixes)
             rows.append(values)
         return rows
 
     def has_subtype(self):
         return not hasattr(self, 'no_subtype')
 
-    def get_prefix_column_names(self):
+    def get_question_type_column_names(self):
         column_names = ['QType']
         if self.has_subtype():
             column_names += ['Sub QType']
         return column_names
 
-    def get_prefixes(self, keypath):
+    def get_question_type_prefixes(self, keypath):
         paths = keypath.split('.')
         question_type = paths[1]
         if '-' in question_type:
@@ -85,7 +85,7 @@ class QuestionDataExtractor(DataExtractor):
             # e.g. PERSONN -> 'PERSON', 'N'
             return question_type[:-1], question_type[-1:]
 
-    def add_prefixes(self, values, prefixes):
+    def add_question_type_column_names(self, values, prefixes):
         if type(values) is list:
             values[0]['QType'] = prefixes[0]
             if self.has_subtype():
