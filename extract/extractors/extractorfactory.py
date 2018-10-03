@@ -21,12 +21,12 @@ class ExtractorFactory:
     ]
 
     question_extractors = [
-        # EXQuestionDataExtractor(),
-        # FoodIMPQuestionExtractor(),
+        EXQuestionDataExtractor(),
+        FoodIMPQuestionExtractor(),
         GoalsQuestionDataExtractor(),
         IntentQuestionDataExtractor(),
         EffectQuestionDataExtractor(),
-        # MINDFQuestionDataExtractor(),
+        MINDFQuestionDataExtractor(),
         # Major Minor
         # FreqQuestionDataExtractor(),
         # TasteQuestionDataExtractor(),

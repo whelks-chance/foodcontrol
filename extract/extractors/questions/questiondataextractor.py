@@ -72,22 +72,21 @@ class QuestionDataExtractor(DataExtractor):
             column_names += ['Sub Type']
         return column_names
 
+    def get_prefixes(self, keypath):
+        paths = keypath.split('.')
+        question_type = paths[1]
+        if '-' in question_type:
+            return question_type.split('-')
+        elif not self.has_subtype():
+            return question_type, None
+        else:
+            return question_type[:-1], question_type[-1:]
+
     def add_prefixes(self, values, prefixes):
         values[0]['Type'] = prefixes[0]
         if self.has_subtype():
             values[0]['Sub Type'] = prefixes[1]
         return values
-
-    def get_prefixes(self, keypath):
-        paths = keypath.split('.')
-        question_type = paths[1]
-        if not self.has_subtype():
-            return question_type, None
-        if '-' in question_type:
-            parts = question_type.split('-')
-            return parts
-        else:
-            return question_type[:-1], question_type[-1:]
 
     def extract_row_data(self, row):
         self.csv_rows = self.extract_values(row)
@@ -143,6 +142,7 @@ class QuestionDataExtractor(DataExtractor):
 class EXQuestionDataExtractor(QuestionDataExtractor):
 
     prefix = 'EX'
+    no_subtype = True
 
     def get_value_keypaths(self):
         return [
@@ -177,6 +177,7 @@ class EXQuestionDataExtractor(QuestionDataExtractor):
 class FoodIMPQuestionExtractor(QuestionDataExtractor):
 
     prefix = 'FOODIMP'
+    no_subtype = True
 
     number_of_scores = 16
 
@@ -279,6 +280,7 @@ class GoalsQuestionDataExtractor(QuestionDataExtractor):
 class IntentQuestionDataExtractor(QuestionDataExtractor):
 
     prefix = 'INTENT'
+    no_subtype = True
 
     def get_value_keypaths(self):
         return [
@@ -295,6 +297,7 @@ class IntentQuestionDataExtractor(QuestionDataExtractor):
 class EffectQuestionDataExtractor(QuestionDataExtractor):
 
     prefix = 'EFFECT'
+    no_subtype = True
 
     def get_value_keypaths(self):
         return [
@@ -313,6 +316,7 @@ class EffectQuestionDataExtractor(QuestionDataExtractor):
 class MINDFQuestionDataExtractor(QuestionDataExtractor):
 
     prefix = 'MINDF'
+    no_subtype = True
 
     number_of_scores = 15
 
