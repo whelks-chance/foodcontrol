@@ -75,7 +75,7 @@ if __name__ == '__main__':
         base_filename, _ = os.path.splitext(os.path.basename(json_filename))
         return base_filename
 
-    csv_path = Path('./csv')
+    csv_path = Path('./CSV')
     create_folder(csv_path)
     for json_filename in json_filenames:
         json_csv_path = csv_path / filename_without_extension(json_filename)
