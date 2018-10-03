@@ -5,19 +5,19 @@ from .questions import *
 class ExtractorFactory:
 
     game_extractors = [
-        # StopDataExtractor(),
-        # RestraintDataExtractor(),
-        # NAStopDataExtractor(),
-        # NARestraintDataExtractor(),
-        # GStopDataExtractor(),
-        # GRestraintDataExtractor(),
-        # DoubleDataExtractor(),
-        # MCIIDataExtractor(),
-        # GoalVisDataExtractor(),
-        # MeasuresDataExtractor(),
-        # EligibilityDataExtractor(),
-        # AdditionalInfoDataExtractor(),
-        # VirtualSupermarketDataExtractor(),
+        StopDataExtractor(),
+        RestraintDataExtractor(),
+        NAStopDataExtractor(),
+        NARestraintDataExtractor(),
+        GStopDataExtractor(),
+        GRestraintDataExtractor(),
+        DoubleDataExtractor(),
+        MCIIDataExtractor(),
+        GoalVisDataExtractor(),
+        MeasuresDataExtractor(),
+        EligibilityDataExtractor(),
+        AdditionalInfoDataExtractor(),
+        VirtualSupermarketDataExtractor(),
     ]
 
     question_extractors = [
@@ -43,7 +43,7 @@ class ExtractorFactory:
     extractors = game_extractors + question_extractors
 
     def __init__(self):
-        self.extractors_by_type = {extractor.type:extractor for extractor in self.extractors}
+        self.extractors_by_type = {extractor.type: extractor for extractor in self.extractors}
 
     def extractor_for_row_type(self, row_type):
         if row_type in self.extractors_by_type:

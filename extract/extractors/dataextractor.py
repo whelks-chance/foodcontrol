@@ -18,7 +18,7 @@ class DataExtractor:
     def get_common_keypaths(self):
         """Return a list of keypaths that are common to all rows"""
         return [
-            ('userID', 'User ID'),
+            ('userId', 'User ID'),
             ('sessionId', 'Session ID'),
         ]
 
