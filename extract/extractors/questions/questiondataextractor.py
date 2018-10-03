@@ -67,9 +67,9 @@ class QuestionDataExtractor(DataExtractor):
         return not hasattr(self, 'no_subtype')
 
     def get_prefix_column_names(self):
-        column_names = ['Type']
+        column_names = ['QType']
         if self.has_subtype():
-            column_names += ['Sub Type']
+            column_names += ['Sub QType']
         return column_names
 
     def get_prefixes(self, keypath):
@@ -83,10 +83,16 @@ class QuestionDataExtractor(DataExtractor):
             return question_type[:-1], question_type[-1:]
 
     def add_prefixes(self, values, prefixes):
-        values[0]['Type'] = prefixes[0]
-        if self.has_subtype():
-            values[0]['Sub Type'] = prefixes[1]
-        return values
+        if type(values) is list:
+            values[0]['QType'] = prefixes[0]
+            if self.has_subtype():
+                values[0]['Sub QType'] = prefixes[1]
+            return values
+        else:
+            values['QType'] = prefixes[0]
+            if self.has_subtype():
+                values['Sub QType'] = prefixes[1]
+            return values
 
     def extract_row_data(self, row):
         self.csv_rows = self.extract_values(row)

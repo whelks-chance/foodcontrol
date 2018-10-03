@@ -28,16 +28,16 @@ class ExtractorFactory:
         EffectQuestionDataExtractor(),
         MINDFQuestionDataExtractor(),
         # Major Minor
-        # FreqQuestionDataExtractor(),
-        # TasteQuestionDataExtractor(),
-        # AttractQuestionDataExtractor(),
+        FreqQuestionDataExtractor(),
+        TasteQuestionDataExtractor(),
+        AttractQuestionDataExtractor(),
         # Major
-        # WillQuestionDataExtractor(),
-        # MoodQuestionDataExtractor(),
-        # IMPQuestionDataExtractor(),
-        # EMREGQuestionDataExtractor(),
-        # PersonQuestionDataExtractor(),
-        # RESTRQuestionDataExtractor(),
+        WillQuestionDataExtractor(),
+        MoodQuestionDataExtractor(),
+        IMPQuestionDataExtractor(),
+        EMREGQuestionDataExtractor(),
+        PersonQuestionDataExtractor(),
+        RESTRQuestionDataExtractor(),
     ]
 
     extractors = game_extractors + question_extractors
