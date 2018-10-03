@@ -76,10 +76,13 @@ class QuestionDataExtractor(DataExtractor):
         paths = keypath.split('.')
         question_type = paths[1]
         if '-' in question_type:
+            # e.g. EFFECT-A -> 'EFFECT', 'A'
             return question_type.split('-')
         elif not self.has_subtype():
+            # GOALS -> 'GOALS', None
             return question_type, None
         else:
+            # e.g. PERSONN -> 'PERSON', 'N'
             return question_type[:-1], question_type[-1:]
 
     def add_prefixes(self, values, prefixes):

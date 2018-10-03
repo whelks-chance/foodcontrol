@@ -16,7 +16,7 @@ class DataExtractor:
         return self.get_extractor_type()
 
     def get_common_keypaths(self):
-        """Return a list of keypaths that are common to all rows"""
+        """Return a list of keypaths common to all rows"""
         return [
             ('userId', 'User ID'),
             ('sessionId', 'Session ID'),
@@ -74,6 +74,7 @@ class DataExtractor:
             value = DataExtractor.EMPTY_CELL_VALUE
             if column_name in values:
                 value = values[column_name]
+                # Need to be careful to include 0, which is a valid value
                 if value == '' or value is None:
                     value = DataExtractor.EMPTY_CELL_VALUE
             values_list.append(value)
@@ -136,8 +137,8 @@ class DataExtractor:
             values = KeypathExtractor(value_keypaths).extract(data)
             values = KeypathExtractor(derived_value_keypaths).extract(values, values)
         except KeyError as e:
-            # print("KeyError: ", e)
             # There are cases where generated keypaths do not occur so ignore this exception
+            # print("KeyError: ", e)
             pass
         except ValueError as e:
             print("ValueError: ", e)
