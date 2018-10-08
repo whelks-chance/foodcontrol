@@ -2,9 +2,7 @@ import os
 import csv
 import json
 
-from pathlib import Path
-
-from settings import food_control_path
+from settings import JSON_PATH, CSV_PATH
 from extractors import ExtractorFactory
 
 
@@ -76,10 +74,9 @@ if __name__ == '__main__':
         base_filename, _ = os.path.splitext(os.path.basename(json_filename))
         return base_filename
 
-    csv_path = Path('./CSV')
-    create_folder(csv_path)
+    create_folder(CSV_PATH)
     for json_filename in json_filenames:
-        json_csv_path = csv_path / filename_without_extension(json_filename)
+        json_csv_path = CSV_PATH / filename_without_extension(json_filename)
         create_folder(json_csv_path)
-        filename = food_control_path / json_filename
+        filename = JSON_PATH / json_filename
         extractor.extract_from_json_filename(filename, json_csv_path)

@@ -1,107 +1,69 @@
 import os
-import csv
 import json
 import pprint
-from urllib.request import urlopen, Request
-from urllib.error import HTTPError
+import requests
 
-from pathlib import Path
-
-from settings import CKAN_API_URL, CKAN_API_KEY
-
-csv_path = Path('./CSV')
-# csv_path = csv_path / '200818'
+from settings import CKAN_API_URL, CKAN_API_KEY, CSV_PATH
 
 
-def create_ckan_resource(resource_path, resource_name):
-    print('\tCREATE CKAN RESOURCE: {}'.format(resource_path))
-    with open(resource_path, 'r', encoding='utf-8') as csv_file:
-        csv_reader = csv.reader(csv_file)
-        csv_content = list(csv_reader)
-    print(csv_content)
-
-
-def create_ckan_dataset(dataset_path, dataset_name):
-    print('CREATE CKAN DATASET: {}'.format(dataset_path))
-    csv_filenames = os.listdir(dataset_path)
-    for csv_filename in csv_filenames:
-        create_ckan_resource(dataset_path / csv_filename, csv_filename)
-
-
-# filenames = os.listdir(csv_path)
-# for filename in filenames:
-#     create_ckan_dataset(csv_path / filename, filename)
-
-
-headers = {
-    'Authorization': CKAN_API_KEY,
-    'content-type': 'application/json',
-}
-url = CKAN_API_URL + '/action/organization_list'
-request = Request(url, headers=headers)
-response = urlopen(request)
-assert response.code == 200
-response_dict = json.loads(response.read())
-assert response_dict['success'] is True
-pprint.pprint(response_dict)
-
-
-def create_or_update_dataset(dataset_dict):
+def create_or_update_ckan_dataset(dataset_dict):
+    url = CKAN_API_URL + '/action/package_create'
     data = json.dumps(dataset_dict).encode('utf-8')
     headers = {
         'Authorization': CKAN_API_KEY,
         'content-type': 'application/json',
     }
-    try:
-        url = CKAN_API_URL + '/action/package_create'
-        request = Request(url, data=data, headers=headers)
-        response = urlopen(request)
-    except HTTPError as e:
-        if e.reason == 'CONFLICT':
+    response = requests.post(url, data=data, headers=headers)
+    response_dict = response.json()
+    if response_dict['success'] is False:
+        if response.reason == 'CONFLICT':
             url = CKAN_API_URL + '/action/package_update'
-            request = Request(url, data=data, headers=headers)
-            response = urlopen(request)
-    finally:
-        assert response.code == 200
-        response_dict = json.loads(response.read())
-        assert response_dict['success'] is True
-        created_dataset = response_dict['result']
-        return created_dataset
+            response = requests.post(url, data=data, headers=headers)
+            response_dict = response.json()
+    assert response.status_code == 200
+    assert response_dict['success'] is True
+    created_dataset = response_dict['result']
+    return created_dataset
 
 
-dataset_name = 'my-dataset-1'
-description = 'The description for {}'.format(dataset_name)
-owner_organization = 'cubric-food-control'
-dataset_dict = {
-    'name': dataset_name,
-    'notes': description,
-    'owner_org': owner_organization,
-}
-created_dataset = create_or_update_dataset(dataset_dict)
-pprint.pprint(created_dataset)
-
-
-def add_resource(resource_dict, resource_path):
-    data = json.dumps(resource_dict).encode('utf-8')
+def add_ckan_resource(dataset_name, resource_name, resource_path):
+    resource_dict = {
+        'name': resource_name,
+        'package_id': dataset_name,
+        'mimetype': 'text/csv',
+    }
+    url = CKAN_API_URL + '/action/resource_create'
+    data = resource_dict
     headers = {
         'Authorization': CKAN_API_KEY,
-        'content-type': 'application/json',
     }
-    try:
-        url = CKAN_API_URL + '/action/resource_create'
-        files = [('upload', open(resource_path, 'r', encoding='utf-8'))]
-        request = Request(url, data=data, headers=headers, files=files)
-        response = urlopen(request)
-    except HTTPError as e:
-        print(e)
+    files = [('upload', open(resource_path, 'r', encoding='utf-8'))]
+    response = requests.post(url, data=data, headers=headers, files=files)
+    response_dict = response.json()
+    created_resource = response_dict['result']
+    return created_resource
 
-# resource_name = 'MCII Game'
-# resource_path = csv_path / Path('200818') / 'MCII.csv'
-# resource_dict = {
-#     'name': resource_name,
-#     'package_id': dataset_name,
-#     'mimetype': 'text/csv',
-# }
-# pprint.pprint(resource_dict)
-# print(resource_path)
-# add_resource(resource_dict, resource_path)
+
+def create_dataset(dataset_path, dataset_name):
+    print('CREATE CKAN DATASET: {}'.format(dataset_path))
+    dataset_name = dataset_name
+    description = 'The description for {}'.format(dataset_name)
+    owner_organization = 'cubric-food-control'
+    dataset_dict = {
+        'name': dataset_name,
+        'notes': description,
+        'owner_org': owner_organization,
+    }
+    created_dataset = create_or_update_ckan_dataset(dataset_dict)
+    # pprint.pprint(created_dataset)
+    csv_filenames = os.listdir(dataset_path)
+    for csv_filename in csv_filenames:
+        resource_path = dataset_path / csv_filename
+        print('\tADD CKAN RESOURCE: {}'.format(resource_path))
+        resource_name = csv_filename.split('.')[0]
+        add_ckan_resource(dataset_name, resource_name, resource_path)
+
+
+filenames = os.listdir(CSV_PATH)
+for filename in filenames:
+    create_dataset(CSV_PATH / filename, filename)
