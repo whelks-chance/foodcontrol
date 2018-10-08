@@ -46,7 +46,6 @@ def add_ckan_resource(dataset_name, resource_name, resource_path):
 
 def create_dataset(dataset_path, dataset_name):
     print('CREATE CKAN DATASET: {}'.format(dataset_path))
-    dataset_name = dataset_name
     description = 'The description for {}'.format(dataset_name)
     owner_organization = 'cubric-food-control'
     dataset_dict = {
