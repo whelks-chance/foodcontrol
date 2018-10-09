@@ -15,7 +15,7 @@ class QuestionDataExtractor(DataExtractor):
         self.csv_rows = []
 
     def get_filename(self):
-        return '{}-{}'.format(self.type, self.prefix)
+        return 'Q-{}'.format(self.prefix)
 
     def get_common_keypaths(self):
         return super().get_common_keypaths() + [

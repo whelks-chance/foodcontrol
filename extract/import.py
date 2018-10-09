@@ -1,7 +1,10 @@
 import os
+import re
+import csv
 import json
 import pprint
 import requests
+import datetime
 
 from settings import CKAN_API_URL, CKAN_API_KEY, CSV_PATH
 
@@ -27,8 +30,10 @@ def create_or_update_ckan_dataset(dataset_dict):
 
 
 def add_ckan_resource(dataset_name, resource_name, resource_path):
+    resource_title = resource_name.upper()
     resource_dict = {
         'name': resource_name,
+        'title': resource_title,
         'package_id': dataset_name,
         'mimetype': 'text/csv',
     }
@@ -44,12 +49,33 @@ def add_ckan_resource(dataset_name, resource_name, resource_path):
     return created_resource
 
 
+def get_user_id_from_csv_resource(resource_path):
+    """The user ID is in the first column of the first line after the header"""
+    with open(resource_path, 'r', encoding='utf-8') as csv_file:
+        csv_reader = csv.reader(csv_file)
+        next(csv_reader)  # ignore header
+        first_line = next(csv_reader)
+        user_id = first_line[0]
+        return user_id
+
+
+def get_formatted_date(dataset_title):
+    date_digits = dataset_title.split('-')[0]
+    ddmmyy_list = re.findall('..', date_digits)
+    dashed_ddmmyy = '-'.join(ddmmyy_list)
+    formatted_date = datetime.datetime.strptime(dashed_ddmmyy, "%d-%m-%y").strftime("%d %B %Y")
+    return formatted_date
+
+
 def create_dataset(dataset_path, dataset_name):
     print('CREATE CKAN DATASET: {}'.format(dataset_path))
-    description = 'The description for {}'.format(dataset_name)
+    dataset_title = dataset_name.upper()
+    dataset_date = get_formatted_date(dataset_title)
+    description = 'The Food Control app data for user ID {} on {}.'.format(dataset_title, dataset_date)
     owner_organization = 'cubric-food-control'
     dataset_dict = {
         'name': dataset_name,
+        'title': dataset_title,
         'notes': description,
         'owner_org': owner_organization,
     }
@@ -58,6 +84,7 @@ def create_dataset(dataset_path, dataset_name):
     csv_filenames = os.listdir(dataset_path)
     for csv_filename in csv_filenames:
         resource_path = dataset_path / csv_filename
+        user_id = get_user_id_from_csv_resource(resource_path)
         print('\tADD CKAN RESOURCE: {}'.format(resource_path))
         resource_name = csv_filename.split('.')[0]
         add_ckan_resource(dataset_name, resource_name, resource_path)

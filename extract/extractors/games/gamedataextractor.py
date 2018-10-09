@@ -8,6 +8,9 @@ class GameDataExtractor(DataExtractor):
         super().__init__()
         self.csv_rows = []
 
+    def get_filename(self):
+        return 'G-{}'.format(super().get_filename())
+
     def extract_row_data(self, row):
         self.csv_rows = self.extract_values(row)
         self.check(row)

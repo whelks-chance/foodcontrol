@@ -10,13 +10,14 @@ class Extractor:
 
     extractor_factory = ExtractorFactory()
 
-    def extract_from_json_filename(self, json_filename, json_csv_path):
-        with open(json_filename, 'r', encoding='utf-8') as json_file:
-            json_array = json.load(json_file)
-        self.extract_from_json(json_array, json_csv_path)
+    # def extract_from_json_filename(self, json_filename, json_csv_path):
+    #     with open(json_filename, 'r', encoding='utf-8') as json_file:
+    #         json_array = json.load(json_file)
+    #     user_id = json_array[0]['userId']
+    #     print(user_id)
+    #     self.extract_from_json(json_array, json_csv_path)
 
     def extract_from_json(self, json_array, json_csv_path):
-        print('extract_from_json')
         for extractor in self.extractor_factory.extractors:
             print('\nEXTRACTOR: {}'.format(extractor.type))
             self.extract_row_type(json_array, extractor, json_csv_path)
@@ -26,7 +27,7 @@ class Extractor:
             print('no rows to extract with: ', extractor.type)
             return
 
-        output_filename = json_csv_path / '{}.csv'.format(extractor.get_filename())
+        output_filename = json_csv_path / '{}.csv'.format(extractor.get_filename().upper())
         with open(output_filename, 'w', encoding='utf-8') as csv_file:
             csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
             for row in json_array:
@@ -76,7 +77,10 @@ if __name__ == '__main__':
 
     create_folder(CSV_PATH)
     for json_filename in json_filenames:
-        json_csv_path = CSV_PATH / filename_without_extension(json_filename)
+        json_path = JSON_PATH / json_filename
+        with open(json_path, 'r', encoding='utf-8') as json_file:
+            json_array = json.load(json_file)
+        user_id = json_array[0]['userId'].lower()
+        json_csv_path = CSV_PATH / '{}-{}'.format(filename_without_extension(json_filename), user_id)
         create_folder(json_csv_path)
-        filename = JSON_PATH / json_filename
-        extractor.extract_from_json_filename(filename, json_csv_path)
+        extractor.extract_from_json(json_array, json_csv_path)
