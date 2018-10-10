@@ -10,13 +10,6 @@ class Extractor:
 
     extractor_factory = ExtractorFactory()
 
-    # def extract_from_json_filename(self, json_filename, json_csv_path):
-    #     with open(json_filename, 'r', encoding='utf-8') as json_file:
-    #         json_array = json.load(json_file)
-    #     user_id = json_array[0]['userId']
-    #     print(user_id)
-    #     self.extract_from_json(json_array, json_csv_path)
-
     def extract_from_json(self, json_array, json_csv_path):
         for extractor in self.extractor_factory.extractors:
             print('\nEXTRACTOR: {}'.format(extractor.type))
