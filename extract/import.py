@@ -53,7 +53,7 @@ def get_formatted_date(dataset_title):
     ddmmyy_list = re.findall('..', date_digits)  # ['20', '08', '18']
     dashed_ddmmyy = '-'.join(ddmmyy_list)        # '20-08-18'
     formatted_date = datetime.datetime.strptime(dashed_ddmmyy, "%d-%m-%y").strftime("%d %B %Y")
-    return formatted_date
+    return formatted_date                        # '20 August 2018'
 
 
 def create_dataset(dataset_path, dataset_name):
