@@ -2,10 +2,6 @@ from collections import defaultdict
 
 from .gamedataextractor import GameDataExtractor
 
-# from utils import irange
-
-import pprint
-
 
 class VirtualSupermarketDataExtractor(GameDataExtractor):
 
@@ -36,19 +32,14 @@ class VirtualSupermarketDataExtractor(GameDataExtractor):
         return rows
 
     def extract_values(self, data):
-        # print('VIRTUAL SUPERMARKET')
         common_values = self.extract_values_with_keypaths(self.get_common_keypaths(), [], data)
-        # pprint.pprint(common_values)
         rows = []
         for shop_number in ['shop1', 'shop2']:
             shop_data = data['data'][shop_number]
             shop_data['shop'] = shop_number
             common_shop_values = self.extract_values_with_keypaths(self.common_shop_keypaths, [], shop_data)
-            # pprint.pprint(common_shop_values)
             shop_rows = self.extract_shop_rows(common_values, common_shop_values, shop_data)
-            # print('\t{}'.format(shop_number), shop_rows)
             rows += shop_rows
-            # pprint.pprint(rows)
         return rows
 
     selected_value_count = defaultdict(int)
