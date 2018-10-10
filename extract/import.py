@@ -49,9 +49,9 @@ def add_ckan_resource(dataset_name, resource_name, resource_path):
 
 
 def get_formatted_date(dataset_title):
-    date_digits = dataset_title.split('-')[0]
-    ddmmyy_list = re.findall('..', date_digits)
-    dashed_ddmmyy = '-'.join(ddmmyy_list)
+    date_digits = dataset_title.split('-')[0]    # '200818'
+    ddmmyy_list = re.findall('..', date_digits)  # ['20', '08', '18']
+    dashed_ddmmyy = '-'.join(ddmmyy_list)        # '20-08-18'
     formatted_date = datetime.datetime.strptime(dashed_ddmmyy, "%d-%m-%y").strftime("%d %B %Y")
     return formatted_date
 
