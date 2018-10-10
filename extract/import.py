@@ -49,14 +49,14 @@ def add_ckan_resource(dataset_name, resource_name, resource_path):
     return created_resource
 
 
-def get_user_id_from_csv_resource(resource_path):
-    """The user ID is in the first column of the first line after the header"""
-    with open(resource_path, 'r', encoding='utf-8') as csv_file:
-        csv_reader = csv.reader(csv_file)
-        next(csv_reader)  # ignore header
-        first_line = next(csv_reader)
-        user_id = first_line[0]
-        return user_id
+# def get_user_id_from_csv_resource(resource_path):
+#     """The user ID is in the first column of the first line after the header"""
+#     with open(resource_path, 'r', encoding='utf-8') as csv_file:
+#         csv_reader = csv.reader(csv_file)
+#         next(csv_reader)  # ignore header
+#         first_line = next(csv_reader)
+#         user_id = first_line[0]
+#         return user_id
 
 
 def get_formatted_date(dataset_title):
@@ -84,7 +84,7 @@ def create_dataset(dataset_path, dataset_name):
     csv_filenames = os.listdir(dataset_path)
     for csv_filename in csv_filenames:
         resource_path = dataset_path / csv_filename
-        user_id = get_user_id_from_csv_resource(resource_path)
+        # user_id = get_user_id_from_csv_resource(resource_path)
         print('\tADD CKAN RESOURCE: {}'.format(resource_path))
         resource_name = csv_filename.split('.')[0]
         add_ckan_resource(dataset_name, resource_name, resource_path)
