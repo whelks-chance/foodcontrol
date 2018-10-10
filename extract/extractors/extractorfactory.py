@@ -5,18 +5,18 @@ from .questions import *
 class ExtractorFactory:
 
     game_extractors = [
-        # StopDataExtractor(),
-        # RestraintDataExtractor(),
-        # NAStopDataExtractor(),
-        # NARestraintDataExtractor(),
-        # GStopDataExtractor(),
-        # GRestraintDataExtractor(),
-        # DoubleDataExtractor(),
-        # MCIIDataExtractor(),
-        # GoalVisDataExtractor(),
-        # MeasuresDataExtractor(),
-        # EligibilityDataExtractor(),
-        # AdditionalInfoDataExtractor(),
+        StopDataExtractor(),
+        RestraintDataExtractor(),
+        NAStopDataExtractor(),
+        NARestraintDataExtractor(),
+        GStopDataExtractor(),
+        GRestraintDataExtractor(),
+        DoubleDataExtractor(),
+        MCIIDataExtractor(),
+        GoalVisDataExtractor(),
+        MeasuresDataExtractor(),
+        EligibilityDataExtractor(),
+        AdditionalInfoDataExtractor(),
         VirtualSupermarketDataExtractor(),
     ]
 
