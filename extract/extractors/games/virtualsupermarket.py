@@ -25,10 +25,10 @@ class VirtualSupermarketDataExtractor(GameDataExtractor):
     def extract_shop_rows(self, common_values, common_shop_values, shop_data):
         rows = []
         for item in shop_data['items']:
-            show_values = self.extract_values_with_keypaths(self.item_keypaths, [], item)
-            show_values.update(common_shop_values)
-            show_values.update(common_values)
-            rows.append(show_values)
+            shop_values = self.extract_values_with_keypaths(self.item_keypaths, [], item)
+            shop_values.update(common_shop_values)
+            shop_values.update(common_values)
+            rows.append(shop_values)
         return rows
 
     def extract_values(self, data):
