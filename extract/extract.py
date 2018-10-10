@@ -65,7 +65,7 @@ if __name__ == '__main__':
         # '070618.json',
 
         '200818.json',
-        # '040918.json'
+        '040918.json'
     ]
 
     def create_folder(path):

@@ -32,9 +32,10 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
         def check_trials_count():
             number_of_rounds = 4
-            number_of_trials = 48
+            old_number_of_trials = 48
+            new_number_of_trials = 24
             session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
-            assert len(session_events) == number_of_rounds * number_of_trials
+            assert len(session_events) == (number_of_rounds * old_number_of_trials) or (number_of_rounds * new_number_of_trials)
 
         def check_trial_numbers():
             pass
