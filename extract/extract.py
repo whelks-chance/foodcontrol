@@ -81,6 +81,7 @@ if __name__ == '__main__':
         with open(json_path, 'r', encoding='utf-8') as json_file:
             json_array = json.load(json_file)
         user_id = json_array[0]['userId'].lower()
-        json_csv_path = CSV_PATH / '{}-{}'.format(filename_without_extension(json_filename), user_id)
+        session_id = json_array[0]['sessionId']
+        json_csv_path = CSV_PATH / '{}-{}-{}'.format(filename_without_extension(json_filename), user_id, session_id)
         create_folder(json_csv_path)
         extractor.extract_from_json(json_array, json_csv_path)
