@@ -81,8 +81,6 @@ class QuestionDataExtractor(DataExtractor):
             if values:
                 sum_scores = self.calculate_sum_scores(values, self.number_of_scores)
                 missing_scores = self.calculate_missing_scores(values, self.number_of_scores)
-                print('sum_scores=', sum_scores)
-                print('missing_scores=', missing_scores)
             values['Sum Scores'] = sum_scores
             values['Missing Scores'] = missing_scores
         return values
@@ -127,58 +125,27 @@ class QuestionDataExtractor(DataExtractor):
     def extract_row_data(self, row):
         self.csv_rows = self.extract_values(row)
 
-    def calculate(self, row):
-        pass
-
-    # @staticmethod
-    # def calculate_sum_and_missing_scores(values, number_of_scores):
-    #     print(values)
-    #     scores_sum = 0
-    #     missing_sum = 0
-    #     # S1, S2, ...
-    #     column_names = ['S' + str(response) for response in irange(1, number_of_scores)]
-    #     for column_name in column_names:
-    #         value = values[column_name]
-    #         if value == DataExtractor.EMPTY_CELL_VALUE or value is None:
-    #             missing_sum += 1
-    #         else:
-    #             print('column_name:', column_name)
-    #             print('      value:', values[column_name])
-    #             scores_sum += int(values[column_name])
-    #     values['Scores Sum'] = scores_sum
-    #     values['Num Missing'] = missing_sum
-
     @staticmethod
     def score_column_name_sequence(number_of_scores):
         return ['S' + str(response) for response in irange(1, number_of_scores)]
 
-    def sum_scores(self, values, number_of_scores):
+    def calculate_sum_scores(self, values, number_of_scores):
         assert type(values) is not list
-        print('V:', values)
         sum_scores = 0
         column_names_to_count = self.score_column_name_sequence(number_of_scores)
-        print(column_names_to_count)
         for column_name in column_names_to_count:
             score = values[column_name]
             if score and score != DataExtractor.EMPTY_CELL_VALUE:
                 sum_scores += int(score)  # Scores may appear as quoted numbers
         return sum_scores
 
-    def missing_scores(self, values, number_of_scores):
+    def calculate_missing_scores(self, values, number_of_scores):
         sum_missing = 0
         for column_name in self.score_column_name_sequence(number_of_scores):
             value = values[column_name]
             if value == DataExtractor.EMPTY_CELL_VALUE or value is None:
                 sum_missing += 1
         return sum_missing
-
-    def calculate_sum_scores(self, values, number_of_scores):
-        print('calculate_sum_scores: ', values)
-        return self.sum_scores(values, number_of_scores)
-
-    def calculate_missing_scores(self, values, number_of_scores):
-        print('calculate_missing_scores: ', values)
-        return self.missing_scores(values, number_of_scores)
 
 
 class EXQuestionDataExtractor(QuestionDataExtractor):

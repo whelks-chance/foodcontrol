@@ -24,8 +24,6 @@ class MajorCharacterQuestionDataExtractor(QuestionDataExtractor):
                 new_keypath = list(keypath)
                 new_keypath[0] = major_keypath
                 key_keypaths.append(new_keypath)
-        import pprint
-        pprint.pprint(major_keypaths)
         return major_keypaths
 
     def get_value_keypaths(self):
@@ -172,8 +170,6 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
                 ('S9', 'S9 Score', self.blank),
                 ('S10', 'S10 Score', self.blank),
                 ('S11', 'S11 Score', self.blank),
-                (None, 'Sum Scores', self.calculate_sum_scores),
-                (None, 'Missing Scores', self.calculate_missing_scores),
             ]
         if row_type == 'M':
             # print('M derived value keypaths')
@@ -189,8 +185,6 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
                 ('S9', 'S9 Score', self.code_response),
                 ('S10', 'S10 Score', self.code_response),
                 ('S11', 'S11 Score', self.code_response_reversed),
-                (None, 'Sum Scores', self.calculate_sum_scores),
-                (None, 'Missing Scores', self.calculate_missing_scores),
             ]
         if row_type is None or row_type == 'N':
             # print('N derived value keypaths')
@@ -206,8 +200,6 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
                 ('S9', 'S9 Score', self.code_response),
                 ('S10', 'S10 Score', self.code_response),
                 ('S11', 'S11 Score', self.code_response_reversed),
-                (None, 'Sum Scores', self.calculate_sum_scores),
-                (None, 'Missing Scores', self.calculate_missing_scores),
             ]
 
     @staticmethod
