@@ -32,9 +32,9 @@ class ExtractorFactory:
         TasteQuestionDataExtractor(),
         AttractQuestionDataExtractor(),
         # Major
+        IMPQuestionDataExtractor(),
         WillQuestionDataExtractor(),
         MoodQuestionDataExtractor(),
-        IMPQuestionDataExtractor(),
         EMREGQuestionDataExtractor(),
         PersonQuestionDataExtractor(),
         RESTRQuestionDataExtractor(),

@@ -61,6 +61,7 @@ class DataExtractor:
         """
         # A keypath is a 3-element tuple: (source keypath, destination keypath, transformer function)
         # The destination keypath is used as the column name
+        print(self.get_all_column_keypaths())
         return [keypath[1] for keypath in self.get_all_column_keypaths()]
 
     def get_csv_row_values(self, values):

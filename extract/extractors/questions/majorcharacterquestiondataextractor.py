@@ -48,14 +48,34 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     ]
 
     def get_derived_value_keypaths(self, row=None):
-        return [
-            ('S1', 'S1 Score', self.code_response_reversed),
-            ('S2', 'S2 Score', self.code_response_reversed),
-            ('S3', 'S3 Score', self.code_response),
-            ('S4', 'S4 Score', self.code_response),
-            ('S5', 'S5 Score', self.code_response_reversed),
-            ('S6', 'S6 Score', self.code_response),
-        ]
+        row_type = None
+        if row:
+            if 'WILLM' in row['data']:
+                row_type = 'M'
+            elif 'WILLT' in row['data']:
+                row_type = 'T'
+        if row_type == 'M':
+            print('WILLM derived value keypaths')
+            return [
+                ('S1', 'S1 Score', self.code_response_reversed),
+                ('S2', 'S2 Score', self.code_response_reversed),
+                ('S3', 'S3 Score', self.code_response),
+                ('S4', 'S4 Score', self.code_response),
+                ('S5', 'S5 Score', self.code_response_reversed),
+                ('S6', 'S6 Score', self.code_response),
+            ]
+        if row_type == 'T':
+            print('WILLT derived value keypaths')
+            return [
+                ('S1', 'S1 Score', self.code_response_reversed),
+                ('S2', 'S2 Score', self.code_response_reversed),
+                ('S3', 'S3 Score', self.code_response),
+                ('S4', 'S4 Score', self.code_response_reversed),
+                ('S5', 'S5 Score', self.code_response),
+                ('S6', 'S6 Score', self.code_response),
+            ]
+        print('WILL', row_type)
+        print(row)
 
     @staticmethod
     def code_response(response_value):
@@ -157,7 +177,7 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
             elif 'IMPA' in row['data']:
                 row_type = 'M'
         if row_type == 'A':
-            # print('A derived value keypaths')
+            # print('IMPA derived value keypaths')
             return [
                 ('S1', 'S1 Score', self.code_response),
                 ('S2', 'S2 Score', self.code_response),
@@ -172,7 +192,7 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
                 ('S11', 'S11 Score', self.blank),
             ]
         if row_type == 'M':
-            # print('M derived value keypaths')
+            # print('IMPM derived value keypaths')
             return [
                 ('S1', 'S1 Score', self.code_response),
                 ('S2', 'S2 Score', self.code_response),
@@ -187,7 +207,7 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
                 ('S11', 'S11 Score', self.code_response_reversed),
             ]
         if row_type is None or row_type == 'N':
-            # print('N derived value keypaths')
+            # print('IMPN derived value keypaths')
             return [
                 ('S1', 'S1 Score', self.code_response_reversed),
                 ('S2', 'S2 Score', self.code_response_reversed),

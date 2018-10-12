@@ -75,7 +75,6 @@ class QuestionDataExtractor(DataExtractor):
 
     def add_calculations(self, values):
         if self.should_add_sum_scores_and_missing_scores_columns():
-            # print('add_calculations():', values)
             sum_scores = DataExtractor.EMPTY_CELL_VALUE
             missing_scores = DataExtractor.EMPTY_CELL_VALUE
             if values:
