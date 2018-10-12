@@ -24,9 +24,17 @@ class QuestionDataExtractor(DataExtractor):
 
     def get_value_keypaths_for_naming_columns(self):
         if hasattr(self, 'value_keypaths'):
-            return self.value_keypaths
+            keypaths = self.value_keypaths
         else:
-            return self.get_value_keypaths()
+            keypaths = self.get_value_keypaths()
+        if self.should_add_sum_scores_and_missing_scores_columns():
+            return keypaths + [
+                # A source keypath of None is not a problem here because we're
+                # only using the destination keypath to get the column name
+                (None, 'Sum Scores'),
+                (None, 'Missing Scores'),
+            ]
+        return keypaths
 
     def can_process_row(self, row):
         return super().can_process_row(row) and self.can_process_data(row['data'])
@@ -47,6 +55,7 @@ class QuestionDataExtractor(DataExtractor):
         value_keypaths = self.get_value_keypaths()
         if not self.keypaths_are_nested(value_keypaths):
             values = super().extract_values(data)
+            values = [self.add_calculations(values[0])]
             prefixes = self.get_question_type_prefixes(value_keypaths[0][0])
             values = self.add_question_type_column_names(values, prefixes)
             return values
@@ -54,14 +63,32 @@ class QuestionDataExtractor(DataExtractor):
         rows = []
         common_keypaths = self.get_common_keypaths()
         nested_value_keypaths = value_keypaths
-        derived_value_keypaths = self.get_derived_value_keypaths()
+        derived_value_keypaths = self.get_derived_value_keypaths(data)
         for value_keypaths in nested_value_keypaths:
             all_value_keypaths = common_keypaths + value_keypaths
             values = self.extract_values_with_keypaths(all_value_keypaths, derived_value_keypaths, data)
+            values = self.add_calculations(values)
             prefixes = self.get_question_type_prefixes(value_keypaths[0][0])
             values = self.add_question_type_column_names(values, prefixes)
             rows.append(values)
         return rows
+
+    def add_calculations(self, values):
+        if self.should_add_sum_scores_and_missing_scores_columns():
+            # print('add_calculations():', values)
+            sum_scores = DataExtractor.EMPTY_CELL_VALUE
+            missing_scores = DataExtractor.EMPTY_CELL_VALUE
+            if values:
+                sum_scores = self.calculate_sum_scores(values, self.number_of_scores)
+                missing_scores = self.calculate_missing_scores(values, self.number_of_scores)
+                print('sum_scores=', sum_scores)
+                print('missing_scores=', missing_scores)
+            values['Sum Scores'] = sum_scores
+            values['Missing Scores'] = missing_scores
+        return values
+
+    def should_add_sum_scores_and_missing_scores_columns(self):
+        return hasattr(self, 'add_sum_scores_and_missing_scores_columns') and self.add_sum_scores_and_missing_scores_columns
 
     def has_subtype(self):
         return not hasattr(self, 'no_subtype')
@@ -103,31 +130,35 @@ class QuestionDataExtractor(DataExtractor):
     def calculate(self, row):
         pass
 
-    @staticmethod
-    def calculate_sum_and_missing_scores(values, number_of_scores):
-        print(values)
-        scores_sum = 0
-        missing_sum = 0
-        # S1, S2, ...
-        column_names = ['S' + str(response) for response in irange(1, number_of_scores)]
-        for column_name in column_names:
-            value = values[column_name]
-            if value == DataExtractor.EMPTY_CELL_VALUE or value is None:
-                missing_sum += 1
-            else:
-                print('column_name:', column_name)
-                print('      value:', values[column_name])
-                scores_sum += int(values[column_name])
-        values['Scores Sum'] = scores_sum
-        values['Num Missing'] = missing_sum
+    # @staticmethod
+    # def calculate_sum_and_missing_scores(values, number_of_scores):
+    #     print(values)
+    #     scores_sum = 0
+    #     missing_sum = 0
+    #     # S1, S2, ...
+    #     column_names = ['S' + str(response) for response in irange(1, number_of_scores)]
+    #     for column_name in column_names:
+    #         value = values[column_name]
+    #         if value == DataExtractor.EMPTY_CELL_VALUE or value is None:
+    #             missing_sum += 1
+    #         else:
+    #             print('column_name:', column_name)
+    #             print('      value:', values[column_name])
+    #             scores_sum += int(values[column_name])
+    #     values['Scores Sum'] = scores_sum
+    #     values['Num Missing'] = missing_sum
 
     @staticmethod
     def score_column_name_sequence(number_of_scores):
-        return ['S' + str(response) + ' Score' for response in irange(1, number_of_scores)]
+        return ['S' + str(response) for response in irange(1, number_of_scores)]
 
     def sum_scores(self, values, number_of_scores):
+        assert type(values) is not list
+        print('V:', values)
         sum_scores = 0
-        for column_name in self.score_column_name_sequence(number_of_scores):
+        column_names_to_count = self.score_column_name_sequence(number_of_scores)
+        print(column_names_to_count)
+        for column_name in column_names_to_count:
             score = values[column_name]
             if score and score != DataExtractor.EMPTY_CELL_VALUE:
                 sum_scores += int(score)  # Scores may appear as quoted numbers
@@ -141,11 +172,13 @@ class QuestionDataExtractor(DataExtractor):
                 sum_missing += 1
         return sum_missing
 
-    def calculate_sum_scores(self, values):
-        return self.sum_scores(values, self.number_of_scores)
+    def calculate_sum_scores(self, values, number_of_scores):
+        print('calculate_sum_scores: ', values)
+        return self.sum_scores(values, number_of_scores)
 
-    def calculate_missing_scores(self, values):
-        return self.missing_scores(values, self.number_of_scores)
+    def calculate_missing_scores(self, values, number_of_scores):
+        print('calculate_missing_scores: ', values)
+        return self.missing_scores(values, number_of_scores)
 
 
 class EXQuestionDataExtractor(QuestionDataExtractor):
@@ -165,7 +198,7 @@ class EXQuestionDataExtractor(QuestionDataExtractor):
             ('data.EX-F.answers.exercise-minutes-strengthening.answer', 'EX F Minutes Strengthening'),
         ]
 
-    def get_derived_value_keypaths(self):
+    def get_derived_value_keypaths(self, row=None):
         return [
             ('EX A Answer', 'EX A Answer Score', self.code_answer),
         ]
@@ -189,6 +222,7 @@ class FoodIMPQuestionExtractor(QuestionDataExtractor):
     no_subtype = True
 
     number_of_scores = 16
+    add_sum_scores_and_missing_scores_columns = True
 
     def get_value_keypaths(self):
         return [
@@ -211,7 +245,7 @@ class FoodIMPQuestionExtractor(QuestionDataExtractor):
             ('data.FOODIMP.timeOnQuestion', 'Time On Question'),
         ]
 
-    def get_derived_value_keypaths(self):
+    def get_derived_value_keypaths(self, row=None):
         return [
             ('S1',  'S1 Score', self.code_response),
             ('S2',  'S2 Score', self.code_response),
@@ -229,8 +263,6 @@ class FoodIMPQuestionExtractor(QuestionDataExtractor):
             ('S14', 'S14 Score', self.code_response_multiple),
             ('S15', 'S15 Score', self.code_response_multiple),
             ('S16', 'S16 Score', self.code_response_multiple),
-            (None, 'Sum Scores', self.calculate_sum_scores),
-            (None, 'Missing Scores', self.calculate_missing_scores),
         ]
 
     @staticmethod
@@ -328,6 +360,7 @@ class MINDFQuestionDataExtractor(QuestionDataExtractor):
     no_subtype = True
 
     number_of_scores = 15
+    add_sum_scores_and_missing_scores_columns = True
 
     def get_value_keypaths(self):
         return [
@@ -347,12 +380,6 @@ class MINDFQuestionDataExtractor(QuestionDataExtractor):
             ('data.MINDF.answers.S14.answer', 'S14'),
             ('data.MINDF.answers.S15.answer', 'S15'),
             ('data.MINDF.timeOnQuestion', 'Time On Question'),
-        ]
-
-    def get_derived_value_keypaths(self):
-        return [
-            (None, 'Sum Scores', self.calculate_sum_scores),
-            (None, 'Missing Scores', self.calculate_missing_scores),
         ]
 
     def can_process_data(self, data):

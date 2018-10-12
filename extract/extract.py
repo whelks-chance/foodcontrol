@@ -20,7 +20,10 @@ class Extractor:
             print('no rows to extract with: ', extractor.type)
             return
 
-        output_filename = json_csv_path / '{}.csv'.format(extractor.get_filename().upper())
+        csv_filename = extractor.get_filename()
+        if csv_filename.endswith('-'):
+            csv_filename = csv_filename[:-1]
+        output_filename = json_csv_path / '{}.csv'.format(csv_filename.upper())
         with open(output_filename, 'w', encoding='utf-8') as csv_file:
             csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
             for row in json_array:
@@ -53,13 +56,13 @@ if __name__ == '__main__':
     extractor = Extractor()
 
     json_filenames = [
-        '020518.json',
-        '060618.json',
-        '070618.json',
+        # '020518.json',
+        # '060618.json',
+        # '070618.json',
         '200818.json',
-        '040918.json',
-        '260918.json',
-        '010618_to_040918.json',
+        # '040918.json',
+        # '260918.json',
+        # '010618_to_040918.json',
     ]
 
     def create_folder(path):

@@ -26,7 +26,7 @@ class DataExtractor:
         """Return a list of keypaths specific to this data extractor"""
         return []
 
-    def get_derived_value_keypaths(self):
+    def get_derived_value_keypaths(self, row=None):
         """Return a list of keypaths that derive values from values extracted by this data extractor"""
         return []
 
@@ -134,7 +134,9 @@ class DataExtractor:
         """Extract values from a data dictionary using the keypaths of this data extractor"""
         values = {}
         try:
-            values = KeypathExtractor(value_keypaths).extract(data)
+            value_keypath_extractor = KeypathExtractor(value_keypaths)
+            # value_keypath_extractor.raise_on_non_existent_keypath = False
+            values = value_keypath_extractor.extract(data)
             values = KeypathExtractor(derived_value_keypaths).extract(values, values)
         except KeyError as e:
             # There are cases where generated keypaths do not occur so ignore this exception

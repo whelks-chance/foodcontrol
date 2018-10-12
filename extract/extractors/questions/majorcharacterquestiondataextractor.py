@@ -24,6 +24,8 @@ class MajorCharacterQuestionDataExtractor(QuestionDataExtractor):
                 new_keypath = list(keypath)
                 new_keypath[0] = major_keypath
                 key_keypaths.append(new_keypath)
+        import pprint
+        pprint.pprint(major_keypaths)
         return major_keypaths
 
     def get_value_keypaths(self):
@@ -36,6 +38,7 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     major_characters = ['M', 'T']
 
     number_of_scores = 6
+    add_sum_scores_and_missing_scores_columns = True
 
     value_keypaths = [
         ('answers.S1.answer', 'S1'),
@@ -46,7 +49,7 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         ('answers.S6.answer', 'S6'),
     ]
 
-    def get_derived_value_keypaths(self):
+    def get_derived_value_keypaths(self, row=None):
         return [
             ('S1', 'S1 Score', self.code_response_reversed),
             ('S2', 'S2 Score', self.code_response_reversed),
@@ -54,8 +57,6 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
             ('S4', 'S4 Score', self.code_response),
             ('S5', 'S5 Score', self.code_response_reversed),
             ('S6', 'S6 Score', self.code_response),
-            (None, 'Sum Scores', self.calculate_sum_scores),
-            (None, 'Missing Scores', self.calculate_missing_scores),
         ]
 
     @staticmethod
@@ -91,7 +92,8 @@ class MoodQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     prefix = 'MOOD'
     major_characters = ['D', 'A', 'S']
 
-    number_of_scores = 16
+    number_of_scores = 7
+    add_sum_scores_and_missing_scores_columns = True
 
     value_keypaths = [
         ('answers.S1.answer', 'S1'),
@@ -103,12 +105,6 @@ class MoodQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         ('answers.S7.answer', 'S7'),
         ('timeOnQuestion', 'Time On Question'),
     ]
-
-    def get_derived_value_keypaths(self):
-        return [
-            (None, 'Sum Scores', self.calculate_sum_scores),
-            (None, 'Missing Scores', self.calculate_missing_scores),
-        ]
 
     @staticmethod
     def code_response(response_value):
@@ -130,13 +126,13 @@ class MoodQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         return self.can_process_data_with_pattern(data, r'MOOD[DAS]')
 
 
-# TODO: Handle different scoring systems for different major characters
 class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
 
     prefix = 'IMP'
     major_characters = ['A', 'M', 'N']
 
-    number_of_scores = 7
+    number_of_scores = 11
+    add_sum_scores_and_missing_scores_columns = True
 
     value_keypaths = [
         ('answers.S1.answer', 'S1'),
@@ -146,23 +142,73 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         ('answers.S5.answer', 'S5'),
         ('answers.S6.answer', 'S6'),
         ('answers.S7.answer', 'S7'),
+        ('answers.S8.answer', 'S8'),
+        ('answers.S9.answer', 'S9'),
+        ('answers.S10.answer', 'S10'),
+        ('answers.S11.answer', 'S11'),
         ('timeOnQuestion', 'Time On Question'),
     ]
 
-    def get_derived_value_keypaths(self):
-        return [
-            ('S1', 'S1 Score', self.code_response),
-            ('S2', 'S2 Score', self.code_response),
-            ('S3', 'S3 Score', self.code_response),
-            ('S4', 'S4 Score', self.code_response),
-            ('S5', 'S5 Score', self.code_response),
-            ('S6', 'S6 Score', self.code_response),
-            ('S7', 'S7 Score', self.code_response),
-            (None, 'Sum Scores', self.calculate_sum_scores),
-            (None, 'Missing Scores', self.calculate_missing_scores),
-        ]
-
-    # TODO: Handle different coding for different major characters
+    def get_derived_value_keypaths(self, row=None):
+        row_type = None
+        if row:
+            if 'IMPN' in row['data']:
+                row_type = 'N'
+            elif 'IMPM' in row['data']:
+                row_type = 'M'
+            elif 'IMPA' in row['data']:
+                row_type = 'M'
+        if row_type == 'A':
+            # print('A derived value keypaths')
+            return [
+                ('S1', 'S1 Score', self.code_response),
+                ('S2', 'S2 Score', self.code_response),
+                ('S3', 'S3 Score', self.code_response_reversed),
+                ('S4', 'S4 Score', self.code_response),
+                ('S5', 'S5 Score', self.code_response_reversed),
+                ('S6', 'S6 Score', self.code_response),
+                ('S7', 'S7 Score', self.code_response),
+                ('S8', 'S8 Score', self.code_response),
+                ('S9', 'S9 Score', self.blank),
+                ('S10', 'S10 Score', self.blank),
+                ('S11', 'S11 Score', self.blank),
+                (None, 'Sum Scores', self.calculate_sum_scores),
+                (None, 'Missing Scores', self.calculate_missing_scores),
+            ]
+        if row_type == 'M':
+            # print('M derived value keypaths')
+            return [
+                ('S1', 'S1 Score', self.code_response),
+                ('S2', 'S2 Score', self.code_response),
+                ('S3', 'S3 Score', self.code_response),
+                ('S4', 'S4 Score', self.code_response),
+                ('S5', 'S5 Score', self.code_response),
+                ('S6', 'S6 Score', self.code_response),
+                ('S7', 'S7 Score', self.code_response),
+                ('S8', 'S8 Score', self.code_response),
+                ('S9', 'S9 Score', self.code_response),
+                ('S10', 'S10 Score', self.code_response),
+                ('S11', 'S11 Score', self.code_response_reversed),
+                (None, 'Sum Scores', self.calculate_sum_scores),
+                (None, 'Missing Scores', self.calculate_missing_scores),
+            ]
+        if row_type is None or row_type == 'N':
+            # print('N derived value keypaths')
+            return [
+                ('S1', 'S1 Score', self.code_response_reversed),
+                ('S2', 'S2 Score', self.code_response_reversed),
+                ('S3', 'S3 Score', self.code_response_reversed),
+                ('S4', 'S4 Score', self.code_response_reversed),
+                ('S5', 'S5 Score', self.code_response_reversed),
+                ('S6', 'S6 Score', self.code_response_reversed),
+                ('S7', 'S7 Score', self.code_response),
+                ('S8', 'S8 Score', self.code_response_reversed),
+                ('S9', 'S9 Score', self.code_response),
+                ('S10', 'S10 Score', self.code_response),
+                ('S11', 'S11 Score', self.code_response_reversed),
+                (None, 'Sum Scores', self.calculate_sum_scores),
+                (None, 'Missing Scores', self.calculate_missing_scores),
+            ]
 
     @staticmethod
     def code_response(response_value):
@@ -184,6 +230,10 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         }
         return coding_scheme[response_value]
 
+    @staticmethod
+    def blank(response_value):
+        return None
+
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'IMP[AMN]')
 
@@ -194,6 +244,7 @@ class EMREGQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     major_characters = ['N', 'G', 'I', 'A', 'S', 'C']
 
     number_of_scores = 8
+    add_sum_scores_and_missing_scores_columns = True
 
     value_keypaths = [
         ('answers.S1.answer', 'S1'),
@@ -207,7 +258,7 @@ class EMREGQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         ('timeOnQuestion', 'Time On Question'),
     ]
 
-    def get_derived_value_keypaths(self):
+    def get_derived_value_keypaths(self, row=None):
         return [
             ('S1', 'S1 Score', self.code_response),
             ('S2', 'S2 Score', self.code_response),
@@ -217,8 +268,6 @@ class EMREGQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
             ('S6', 'S6 Score', self.code_response),
             ('S7', 'S7 Score', self.code_response),
             ('S8', 'S8 Score', self.code_response),
-            (None, 'Sum Scores', self.calculate_sum_scores),
-            (None, 'Missing Scores', self.calculate_missing_scores),
         ]
 
     @staticmethod
@@ -253,6 +302,7 @@ class PersonQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     major_characters = ['N', 'E', 'O', 'A', 'C']
 
     number_of_scores = 10
+    add_sum_scores_and_missing_scores_columns = True
 
     value_keypaths = [
         ('answers.S1.answer', 'S1'),
@@ -268,7 +318,7 @@ class PersonQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         ('timeOnQuestion', 'Time On Question'),
     ]
 
-    def get_derived_value_keypaths(self):
+    def get_derived_value_keypaths(self, row=None):
         return [
             ('S1', 'S1 Score', self.code_response),
             ('S2', 'S2 Score', self.code_response),
@@ -280,8 +330,6 @@ class PersonQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
             ('S8', 'S8 Score', self.code_response),
             ('S9', 'S9 Score', self.code_response),
             ('S10', 'S10 Score', self.code_response),
-            (None, 'Sum Scores', self.calculate_sum_scores),
-            (None, 'Missing Scores', self.calculate_missing_scores),
         ]
 
     @staticmethod
@@ -316,6 +364,7 @@ class RESTRQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     major_characters = ['C', 'W']
 
     number_of_scores = 6
+    add_sum_scores_and_missing_scores_columns = True
 
     value_keypaths = [
         ('answers.S1.answer', 'S1'),
@@ -326,12 +375,6 @@ class RESTRQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         ('answers.S6.answer', 'S6'),
         ('timeOnQuestion', 'Time On Question'),
     ]
-
-    def get_derived_value_keypaths(self):
-        return [
-            (None, 'Sum Scores', self.calculate_sum_scores),
-            (None, 'Missing Scores', self.calculate_missing_scores),
-        ]
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'RESTR-[CW]')

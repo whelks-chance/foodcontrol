@@ -53,7 +53,7 @@ class FreqQuestionDataExtractor(MajorMinorQuestionDataExtractor):
         ('timeOnQuestion', 'Time On Question'),
     ]
 
-    def get_derived_value_keypaths(self):
+    def get_derived_value_keypaths(self, row=None):
         return [
             ('FE', 'FE Score', self.code_answer),
             ('FC Answer', 'FC Score', self.code_answer),
@@ -106,7 +106,7 @@ class TasteQuestionDataExtractor(MajorMinorQuestionDataExtractor):
         ('timeOnQuestion', 'Time On Question'),
     ]
 
-    def get_derived_value_keypaths(self):
+    def get_derived_value_keypaths(self, row=None):
         return [
             ('Type', 'Type Value', self.code_food_type),
             ('Selected', 'Selected Value', self.code_food_selected),
@@ -146,7 +146,7 @@ class AttractQuestionDataExtractor(MajorMinorQuestionDataExtractor):
         ('timeOnQuestion', 'Time On Question'),
     ]
 
-    def get_derived_value_keypaths(self):
+    def get_derived_value_keypaths(self, row=None):
         return [
             ('Type', 'Type Value', self.code_food_type),
             ('Selected', 'Selected Value', self.code_food_selected),
