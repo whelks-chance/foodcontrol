@@ -2,6 +2,8 @@ from utils import irange
 
 from .questiondataextractor import QuestionDataExtractor
 
+from keypath_extractor import Keypath
+
 
 class MajorMinorQuestionDataExtractor(QuestionDataExtractor):
     """
@@ -23,9 +25,11 @@ class MajorMinorQuestionDataExtractor(QuestionDataExtractor):
                 key_keypaths = []
                 major_minor_keypaths.append(key_keypaths)
                 for keypath in keypaths:
-                    major_keypath = '.'.join(['data', key, keypath[0]])
-                    new_keypath = list(keypath)
-                    new_keypath[0] = major_keypath
+                    major_keypath = '.'.join(['data', key, keypath.source_keypath])
+                    new_keypath = Keypath(major_keypath, keypath.destination_keypath, is_optional=keypath.is_optional,
+                                          transformer_fn=keypath.transformer_fn)
+                    # new_keypath = list(keypath)
+                    # new_keypath[0] = major_keypath
                     key_keypaths.append(new_keypath)
         return major_minor_keypaths
 
@@ -44,26 +48,27 @@ class FreqQuestionDataExtractor(MajorMinorQuestionDataExtractor):
     minor_range = irange(1, 12)
 
     value_keypaths = [
-        ('answers.FE.answer', 'FE'),
-        ('answers.FC.answer', 'FC Answer'),
-        ('answers.FC.sliderValue', 'FC Slider Value'),
-        ('VsmInfo.id', 'ID'),
-        ('VsmInfo.type', 'Type'),
-        ('VsmInfo.selected', 'Selected'),
-        ('timeOnQuestion', 'Time On Question'),
+        Keypath('answers.FE.answer', 'FE'),
+        Keypath('answers.FC.answer', 'FC Answer'),
+        Keypath('answers.FC.sliderValue', 'FC Slider Value'),
+        Keypath('VsmInfo.id', 'ID'),
+        Keypath('VsmInfo.type', 'Type'),
+        Keypath('VsmInfo.selected', 'Selected'),
+        Keypath('timeOnQuestion', 'Time On Question'),
     ]
 
     def get_derived_value_keypaths(self, row=None):
         return [
-            ('FE', 'FE Score', self.code_answer),
-            ('FC Answer', 'FC Score', self.code_answer),
-            ('Type', 'Type Value', self.code_food_type),
-            ('Selected', 'Selected Value', self.code_food_selected),
+            Keypath('FE', 'FE Score', self.code_answer),
+            Keypath('FC Answer', 'FC Score', self.code_answer),
+            Keypath('Type', 'Type Value', self.code_food_type),
+            Keypath('Selected', 'Selected Value', self.code_food_selected),
         ]
 
     @staticmethod
     def code_food_type(food_value):
         coding_scheme = {
+            None: None,
             'U': 0,
             'H': 1,
         }
@@ -72,6 +77,7 @@ class FreqQuestionDataExtractor(MajorMinorQuestionDataExtractor):
     @staticmethod
     def code_food_selected(food_selected_value):
         coding_scheme = {
+            None: None,
             'Selected': 1,
             'MB':       2,
             'upload':   3,
@@ -83,6 +89,7 @@ class FreqQuestionDataExtractor(MajorMinorQuestionDataExtractor):
     @staticmethod
     def code_answer(answer_value):
         coding_scheme = {
+            None: None,
             'None':      0,
             '1-2 times': 1,
             '3-4 times': 2,
@@ -99,22 +106,23 @@ class TasteQuestionDataExtractor(MajorMinorQuestionDataExtractor):
     minor_range = irange(1, 12)
 
     value_keypaths = [
-        ('answers.0.answer', 'FE'),
-        ('VsmInfo.id', 'ID'),
-        ('VsmInfo.type', 'Type'),
-        ('VsmInfo.selected', 'Selected'),
-        ('timeOnQuestion', 'Time On Question'),
+        Keypath('answers.0.answer', 'FE'),
+        Keypath('VsmInfo.id', 'ID'),
+        Keypath('VsmInfo.type', 'Type'),
+        Keypath('VsmInfo.selected', 'Selected'),
+        Keypath('timeOnQuestion', 'Time On Question'),
     ]
 
     def get_derived_value_keypaths(self, row=None):
         return [
-            ('Type', 'Type Value', self.code_food_type),
-            ('Selected', 'Selected Value', self.code_food_selected),
+            Keypath('Type', 'Type Value', self.code_food_type),
+            Keypath('Selected', 'Selected Value', self.code_food_selected),
         ]
 
     @staticmethod
     def code_food_type(food_value):
         coding_scheme = {
+            None: None,
             'U': 0,
             'H': 1,
         }
@@ -123,6 +131,7 @@ class TasteQuestionDataExtractor(MajorMinorQuestionDataExtractor):
     @staticmethod
     def code_food_selected(food_selected_value):
         coding_scheme = {
+            None: None,
             'Selected': 1,
             'MB':       2,
             'upload':   3,
@@ -139,22 +148,23 @@ class AttractQuestionDataExtractor(MajorMinorQuestionDataExtractor):
     minor_range = irange(1, 12)
 
     value_keypaths = [
-        ('answers.0.answer', 'FE'),
-        ('VsmInfo.id', 'ID'),
-        ('VsmInfo.type', 'Type'),
-        ('VsmInfo.selected', 'Selected'),
-        ('timeOnQuestion', 'Time On Question'),
+        Keypath('answers.0.answer', 'FE'),
+        Keypath('VsmInfo.id', 'ID'),
+        Keypath('VsmInfo.type', 'Type'),
+        Keypath('VsmInfo.selected', 'Selected'),
+        Keypath('timeOnQuestion', 'Time On Question'),
     ]
 
     def get_derived_value_keypaths(self, row=None):
         return [
-            ('Type', 'Type Value', self.code_food_type),
-            ('Selected', 'Selected Value', self.code_food_selected),
+            Keypath('Type', 'Type Value', self.code_food_type),
+            Keypath('Selected', 'Selected Value', self.code_food_selected),
         ]
 
     @staticmethod
     def code_food_type(food_value):
         coding_scheme = {
+            None: None,
             'U': 0,
             'H': 1,
         }
@@ -163,6 +173,7 @@ class AttractQuestionDataExtractor(MajorMinorQuestionDataExtractor):
     @staticmethod
     def code_food_selected(food_selected_value):
         coding_scheme = {
+            None: None,
             'Selected': 1,
             'MB':       2,
             'upload':   3,

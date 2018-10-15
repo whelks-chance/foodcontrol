@@ -23,7 +23,8 @@ class MajorCharacterQuestionDataExtractor(QuestionDataExtractor):
             major_keypaths.append(key_keypaths)
             for keypath in keypaths:
                 major_keypath = '.'.join(['data', key, keypath.source_keypath])
-                new_keypath = Keypath(major_keypath, keypath.destination_keypath, is_optional=keypath.is_optional, transformer_fn=keypath.transformer_fn)
+                new_keypath = Keypath(major_keypath, keypath.destination_keypath, is_optional=keypath.is_optional,
+                                      transformer_fn=keypath.transformer_fn)
                 # new_keypath = list(keypath)
                 # new_keypath[0] = major_keypath
                 key_keypaths.append(new_keypath)
@@ -42,15 +43,16 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     add_sum_scores_and_missing_scores_columns = True
 
     value_keypaths = [
-        ('answers.S1.answer', 'S1'),
-        ('answers.S2.answer', 'S2'),
-        ('answers.S3.answer', 'S3'),
-        ('answers.S4.answer', 'S4'),
-        ('answers.S5.answer', 'S5'),
-        ('answers.S6.answer', 'S6'),
+        Keypath('answers.S1.answer', 'S1'),
+        Keypath('answers.S2.answer', 'S2'),
+        Keypath('answers.S3.answer', 'S3'),
+        Keypath('answers.S4.answer', 'S4'),
+        Keypath('answers.S5.answer', 'S5'),
+        Keypath('answers.S6.answer', 'S6'),
     ]
 
     def get_derived_value_keypaths(self, row=None):
+        # row is None when asking for the keypaths for naming columns
         row_type = None  # row is None when asking for the keypaths for naming columns
         if row:
             if 'WILLM' in row['data']:
@@ -60,27 +62,28 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         if row_type is None or row_type == 'M':
             # print('WILLM derived value keypaths')
             return [
-                ('S1', 'S1 Score', self.code_response_reversed),
-                ('S2', 'S2 Score', self.code_response_reversed),
-                ('S3', 'S3 Score', self.code_response),
-                ('S4', 'S4 Score', self.code_response),
-                ('S5', 'S5 Score', self.code_response_reversed),
-                ('S6', 'S6 Score', self.code_response),
+                Keypath('S1', 'S1 Score', self.code_response_reversed),
+                Keypath('S2', 'S2 Score', self.code_response_reversed),
+                Keypath('S3', 'S3 Score', self.code_response),
+                Keypath('S4', 'S4 Score', self.code_response),
+                Keypath('S5', 'S5 Score', self.code_response_reversed),
+                Keypath('S6', 'S6 Score', self.code_response),
             ]
         if row_type == 'T':
             # print('WILLT derived value keypaths')
             return [
-                ('S1', 'S1 Score', self.code_response_reversed),
-                ('S2', 'S2 Score', self.code_response_reversed),
-                ('S3', 'S3 Score', self.code_response),
-                ('S4', 'S4 Score', self.code_response_reversed),
-                ('S5', 'S5 Score', self.code_response),
-                ('S6', 'S6 Score', self.code_response),
+                Keypath('S1', 'S1 Score', self.code_response_reversed),
+                Keypath('S2', 'S2 Score', self.code_response_reversed),
+                Keypath('S3', 'S3 Score', self.code_response),
+                Keypath('S4', 'S4 Score', self.code_response_reversed),
+                Keypath('S5', 'S5 Score', self.code_response),
+                Keypath('S6', 'S6 Score', self.code_response),
             ]
 
     @staticmethod
     def code_response(response_value):
         coding_scheme = {
+            None: None,
             '1': 1,
             '2': 2,
             '3': 3,
@@ -93,6 +96,7 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     @staticmethod
     def code_response_reversed(response_value):
         coding_scheme = {
+            None: None,
             '1': 6,
             '2': 5,
             '3': 4,
@@ -115,19 +119,20 @@ class MoodQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     add_sum_scores_and_missing_scores_columns = True
 
     value_keypaths = [
-        ('answers.S1.answer', 'S1'),
-        ('answers.S2.answer', 'S2'),
-        ('answers.S3.answer', 'S3'),
-        ('answers.S4.answer', 'S4'),
-        ('answers.S5.answer', 'S5'),
-        ('answers.S6.answer', 'S6'),
-        ('answers.S7.answer', 'S7'),
-        ('timeOnQuestion', 'Time On Question'),
+        Keypath('answers.S1.answer', 'S1'),
+        Keypath('answers.S2.answer', 'S2'),
+        Keypath('answers.S3.answer', 'S3'),
+        Keypath('answers.S4.answer', 'S4'),
+        Keypath('answers.S5.answer', 'S5'),
+        Keypath('answers.S6.answer', 'S6'),
+        Keypath('answers.S7.answer', 'S7'),
+        Keypath('timeOnQuestion', 'Time On Question'),
     ]
 
     @staticmethod
     def code_response(response_value):
         coding_scheme = {
+            None: None,
             '1': 1,
             '0': 0,
         }
@@ -136,6 +141,7 @@ class MoodQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     @staticmethod
     def code_response_reversed(response_value):
         coding_scheme = {
+            None: None,
             '1': 0,
             '0': 1,
         }
@@ -259,32 +265,33 @@ class EMREGQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     add_sum_scores_and_missing_scores_columns = True
 
     value_keypaths = [
-        ('answers.S1.answer', 'S1'),
-        ('answers.S2.answer', 'S2'),
-        ('answers.S3.answer', 'S3'),
-        ('answers.S4.answer', 'S4'),
-        ('answers.S5.answer', 'S5'),
-        ('answers.S6.answer', 'S6'),
-        ('answers.S7.answer', 'S7'),
-        ('answers.S8.answer', 'S8'),
-        ('timeOnQuestion', 'Time On Question'),
+        Keypath('answers.S1.answer', 'S1'),
+        Keypath('answers.S2.answer', 'S2'),
+        Keypath('answers.S3.answer', 'S3'),
+        Keypath('answers.S4.answer', 'S4'),
+        Keypath('answers.S5.answer', 'S5'),
+        Keypath('answers.S6.answer', 'S6'),
+        Keypath('answers.S7.answer', 'S7'),
+        Keypath('answers.S8.answer', 'S8'),
+        Keypath('timeOnQuestion', 'Time On Question'),
     ]
 
     def get_derived_value_keypaths(self, row=None):
         return [
-            ('S1', 'S1 Score', self.code_response),
-            ('S2', 'S2 Score', self.code_response),
-            ('S3', 'S3 Score', self.code_response),
-            ('S4', 'S4 Score', self.code_response),
-            ('S5', 'S5 Score', self.code_response),
-            ('S6', 'S6 Score', self.code_response),
-            ('S7', 'S7 Score', self.code_response),
-            ('S8', 'S8 Score', self.code_response),
+            Keypath('S1', 'S1 Score', self.code_response),
+            Keypath('S2', 'S2 Score', self.code_response),
+            Keypath('S3', 'S3 Score', self.code_response),
+            Keypath('S4', 'S4 Score', self.code_response),
+            Keypath('S5', 'S5 Score', self.code_response),
+            Keypath('S6', 'S6 Score', self.code_response),
+            Keypath('S7', 'S7 Score', self.code_response),
+            Keypath('S8', 'S8 Score', self.code_response),
         ]
 
     @staticmethod
     def code_response(response_value):
         coding_scheme = {
+            None: None,
             '1': 1,
             '2': 2,
             '3': 3,
@@ -296,6 +303,7 @@ class EMREGQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     @staticmethod
     def code_response_reversed(response_value):
         coding_scheme = {
+            None: None,
             '1': 5,
             '2': 4,
             '3': 3,
@@ -317,36 +325,37 @@ class PersonQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     add_sum_scores_and_missing_scores_columns = True
 
     value_keypaths = [
-        ('answers.S1.answer', 'S1'),
-        ('answers.S2.answer', 'S2'),
-        ('answers.S3.answer', 'S3'),
-        ('answers.S4.answer', 'S4'),
-        ('answers.S5.answer', 'S5'),
-        ('answers.S6.answer', 'S6'),
-        ('answers.S7.answer', 'S7'),
-        ('answers.S8.answer', 'S8'),
-        ('answers.S9.answer', 'S9'),
-        ('answers.S10.answer', 'S10'),
-        ('timeOnQuestion', 'Time On Question'),
+        Keypath('answers.S1.answer', 'S1'),
+        Keypath('answers.S2.answer', 'S2'),
+        Keypath('answers.S3.answer', 'S3'),
+        Keypath('answers.S4.answer', 'S4'),
+        Keypath('answers.S5.answer', 'S5'),
+        Keypath('answers.S6.answer', 'S6'),
+        Keypath('answers.S7.answer', 'S7'),
+        Keypath('answers.S8.answer', 'S8'),
+        Keypath('answers.S9.answer', 'S9'),
+        Keypath('answers.S10.answer', 'S10'),
+        Keypath('timeOnQuestion', 'Time On Question'),
     ]
 
     def get_derived_value_keypaths(self, row=None):
         return [
-            ('S1', 'S1 Score', self.code_response),
-            ('S2', 'S2 Score', self.code_response),
-            ('S3', 'S3 Score', self.code_response),
-            ('S4', 'S4 Score', self.code_response),
-            ('S5', 'S5 Score', self.code_response),
-            ('S6', 'S6 Score', self.code_response),
-            ('S7', 'S7 Score', self.code_response),
-            ('S8', 'S8 Score', self.code_response),
-            ('S9', 'S9 Score', self.code_response),
-            ('S10', 'S10 Score', self.code_response),
+            Keypath('S1', 'S1 Score', self.code_response),
+            Keypath('S2', 'S2 Score', self.code_response),
+            Keypath('S3', 'S3 Score', self.code_response),
+            Keypath('S4', 'S4 Score', self.code_response),
+            Keypath('S5', 'S5 Score', self.code_response),
+            Keypath('S6', 'S6 Score', self.code_response),
+            Keypath('S7', 'S7 Score', self.code_response),
+            Keypath('S8', 'S8 Score', self.code_response),
+            Keypath('S9', 'S9 Score', self.code_response),
+            Keypath('S10', 'S10 Score', self.code_response),
         ]
 
     @staticmethod
     def code_response(response_value):
         coding_scheme = {
+            None: None,
             '1': 1,
             '2': 2,
             '3': 3,
@@ -358,6 +367,7 @@ class PersonQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     @staticmethod
     def code_response_reversed(response_value):
         coding_scheme = {
+            None: None,
             '1': 5,
             '2': 4,
             '3': 3,
@@ -379,13 +389,13 @@ class RESTRQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     add_sum_scores_and_missing_scores_columns = True
 
     value_keypaths = [
-        ('answers.S1.answer', 'S1'),
-        ('answers.S2.answer', 'S2'),
-        ('answers.S3.answer', 'S3'),
-        ('answers.S4.answer', 'S4'),
-        ('answers.S5.answer', 'S5'),
-        ('answers.S6.answer', 'S6'),
-        ('timeOnQuestion', 'Time On Question'),
+        Keypath('answers.S1.answer', 'S1'),
+        Keypath('answers.S2.answer', 'S2'),
+        Keypath('answers.S3.answer', 'S3'),
+        Keypath('answers.S4.answer', 'S4'),
+        Keypath('answers.S5.answer', 'S5'),
+        Keypath('answers.S6.answer', 'S6'),
+        Keypath('timeOnQuestion', 'Time On Question'),
     ]
 
     def can_process_data(self, data):

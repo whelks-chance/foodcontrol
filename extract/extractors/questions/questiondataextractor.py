@@ -58,7 +58,7 @@ class QuestionDataExtractor(DataExtractor):
         if not self.keypaths_are_nested(value_keypaths):
             values = super().extract_values(data)
             values = [self.add_calculations(values[0])]
-            prefixes = self.get_question_type_prefixes(value_keypaths[0][0])
+            prefixes = self.get_question_type_prefixes(value_keypaths[0].source_keypath)
             values = self.add_question_type_column_names(values, prefixes)
             return values
 
@@ -164,24 +164,25 @@ class EXQuestionDataExtractor(QuestionDataExtractor):
 
     def get_value_keypaths(self):
         return [
-            ('data.EX-A.answers.0.answer', 'EX A Answer'),
-            ('data.EX-A.timeOnQuestion', 'EX A Time On Question'),
-            ('data.EX-F.answers.exercise-times-moderate.answer', 'EX F Times Moderate'),
-            ('data.EX-F.answers.exercise-times-vigorous.answer', 'EX F Times Vigorous'),
-            ('data.EX-F.answers.exercise-times-strengthening.answer', 'EX F Times Strengthening'),
-            ('data.EX-F.answers.exercise-minutes-moderate.answer', 'EX F Minutes Moderate'),
-            ('data.EX-F.answers.exercise-minutes-vigorous.answer', 'EX F Minutes Vigorous'),
-            ('data.EX-F.answers.exercise-minutes-strengthening.answer', 'EX F Minutes Strengthening'),
+            Keypath('data.EX-A.answers.0.answer', 'EX A Answer'),
+            Keypath('data.EX-A.timeOnQuestion', 'EX A Time On Question'),
+            Keypath('data.EX-F.answers.exercise-times-moderate.answer', 'EX F Times Moderate'),
+            Keypath('data.EX-F.answers.exercise-times-vigorous.answer', 'EX F Times Vigorous'),
+            Keypath('data.EX-F.answers.exercise-times-strengthening.answer', 'EX F Times Strengthening'),
+            Keypath('data.EX-F.answers.exercise-minutes-moderate.answer', 'EX F Minutes Moderate'),
+            Keypath('data.EX-F.answers.exercise-minutes-vigorous.answer', 'EX F Minutes Vigorous'),
+            Keypath('data.EX-F.answers.exercise-minutes-strengthening.answer', 'EX F Minutes Strengthening'),
         ]
 
     def get_derived_value_keypaths(self, row=None):
         return [
-            ('EX A Answer', 'EX A Answer Score', self.code_answer),
+            Keypath('EX A Answer', 'EX A Answer Score', self.code_answer),
         ]
 
     @staticmethod
     def code_answer(answer_value):
         coding_scheme = {
+            None:                              None,
             'I am inactive':                   0,
             'My activity levels are low':      1,
             'My activity levels are moderate': 2,
@@ -202,48 +203,49 @@ class FoodIMPQuestionExtractor(QuestionDataExtractor):
 
     def get_value_keypaths(self):
         return [
-            ('data.FOODIMP.answers.S1.answer', 'S1'),
-            ('data.FOODIMP.answers.S2.answer', 'S2'),
-            ('data.FOODIMP.answers.S3.answer', 'S3'),
-            ('data.FOODIMP.answers.S4.answer', 'S4'),
-            ('data.FOODIMP.answers.S5.answer', 'S5'),
-            ('data.FOODIMP.answers.S6.answer', 'S6'),
-            ('data.FOODIMP.answers.S7.answer', 'S7'),
-            ('data.FOODIMP.answers.S8.answer', 'S8'),
-            ('data.FOODIMP.answers.S9.answer', 'S9'),
-            ('data.FOODIMP.answers.S10.answer', 'S10'),
-            ('data.FOODIMP.answers.S11.answer', 'S11'),
-            ('data.FOODIMP.answers.S12.answer', 'S12'),
-            ('data.FOODIMP.answers.S13.answer', 'S13'),
-            ('data.FOODIMP.answers.S14.answer', 'S14'),
-            ('data.FOODIMP.answers.S15.answer', 'S15'),
-            ('data.FOODIMP.answers.S16.answer', 'S16'),
-            ('data.FOODIMP.timeOnQuestion', 'Time On Question'),
+            Keypath('data.FOODIMP.answers.S1.answer', 'S1'),
+            Keypath('data.FOODIMP.answers.S2.answer', 'S2'),
+            Keypath('data.FOODIMP.answers.S3.answer', 'S3'),
+            Keypath('data.FOODIMP.answers.S4.answer', 'S4'),
+            Keypath('data.FOODIMP.answers.S5.answer', 'S5'),
+            Keypath('data.FOODIMP.answers.S6.answer', 'S6'),
+            Keypath('data.FOODIMP.answers.S7.answer', 'S7'),
+            Keypath('data.FOODIMP.answers.S8.answer', 'S8'),
+            Keypath('data.FOODIMP.answers.S9.answer', 'S9'),
+            Keypath('data.FOODIMP.answers.S10.answer', 'S10'),
+            Keypath('data.FOODIMP.answers.S11.answer', 'S11'),
+            Keypath('data.FOODIMP.answers.S12.answer', 'S12'),
+            Keypath('data.FOODIMP.answers.S13.answer', 'S13'),
+            Keypath('data.FOODIMP.answers.S14.answer', 'S14'),
+            Keypath('data.FOODIMP.answers.S15.answer', 'S15'),
+            Keypath('data.FOODIMP.answers.S16.answer', 'S16'),
+            Keypath('data.FOODIMP.timeOnQuestion', 'Time On Question'),
         ]
 
     def get_derived_value_keypaths(self, row=None):
         return [
-            ('S1',  'S1 Score', self.code_response),
-            ('S2',  'S2 Score', self.code_response),
-            ('S3',  'S3 Score', self.code_response),
-            ('S4',  'S4 Score', self.code_response),
-            ('S5',  'S5 Score', self.code_response),
-            ('S6',  'S6 Score', self.code_response),
-            ('S7',  'S7 Score', self.code_response),
-            ('S8',  'S8 Score', self.code_response_reversed),
-            ('S9',  'S9 Score', self.code_response),
-            ('S10', 'S10 Score', self.code_response_reversed),
-            ('S11', 'S11 Score', self.code_response),
-            ('S12', 'S12 Score', self.code_response_reversed),
-            ('S13', 'S13 Score', self.code_response),
-            ('S14', 'S14 Score', self.code_response_multiple),
-            ('S15', 'S15 Score', self.code_response_multiple),
-            ('S16', 'S16 Score', self.code_response_multiple),
+            Keypath('S1',  'S1 Score', self.code_response),
+            Keypath('S2',  'S2 Score', self.code_response),
+            Keypath('S3',  'S3 Score', self.code_response),
+            Keypath('S4',  'S4 Score', self.code_response),
+            Keypath('S5',  'S5 Score', self.code_response),
+            Keypath('S6',  'S6 Score', self.code_response),
+            Keypath('S7',  'S7 Score', self.code_response),
+            Keypath('S8',  'S8 Score', self.code_response_reversed),
+            Keypath('S9',  'S9 Score', self.code_response),
+            Keypath('S10', 'S10 Score', self.code_response_reversed),
+            Keypath('S11', 'S11 Score', self.code_response),
+            Keypath('S12', 'S12 Score', self.code_response_reversed),
+            Keypath('S13', 'S13 Score', self.code_response),
+            Keypath('S14', 'S14 Score', self.code_response_multiple),
+            Keypath('S15', 'S15 Score', self.code_response_multiple),
+            Keypath('S16', 'S16 Score', self.code_response_multiple),
         ]
 
     @staticmethod
     def code_response(response_value):
         coding_scheme = {
+            None: None,
             '1': 1,
             '0': 0,
         }
@@ -252,6 +254,7 @@ class FoodIMPQuestionExtractor(QuestionDataExtractor):
     @staticmethod
     def code_response_reversed(response_value):
         coding_scheme = {
+            None: None,
             '1': 0,
             '0': 1,
         }
@@ -260,6 +263,7 @@ class FoodIMPQuestionExtractor(QuestionDataExtractor):
     @staticmethod
     def code_response_multiple(response_value):
         coding_scheme = {
+            None: None,
             '0': 0,
             '1': 0,
             '2': 1,
@@ -278,16 +282,16 @@ class GoalsQuestionDataExtractor(QuestionDataExtractor):
 
     def get_value_keypaths(self):
         return [
-            ('data.GOALS.answers.ideal-weight.answer.unit1_val', 'Ideal Weight Unit 1 Value'),
-            ('data.GOALS.answers.ideal-weight.answer.unit2_val', 'Ideal Weight Unit 2 Value'),
-            ('data.GOALS.answers.ideal-weight.answer.units', 'Ideal Weight Units'),
-            ('data.GOALS.answers.achievable-weight.answer.unit1_val', 'Achievable Weight Unit 1 Value'),
-            ('data.GOALS.answers.achievable-weight.answer.unit2_val', 'Achievable Weight Unit 2 Value'),
-            ('data.GOALS.answers.achievable-weight.answer.units', 'Achievable Weight Units'),
-            ('data.GOALS.answers.happy-weight.answer.unit1_val', 'Happy Weight Unit 1 Value'),
-            ('data.GOALS.answers.happy-weight.answer.unit2_val', 'Happy Weight Unit 2 Value'),
-            ('data.GOALS.answers.happy-weight.answer.units', 'Happy Weight Units'),
-            ('data.GOALS.timeOnQuestion', 'Time On Question'),
+            Keypath('data.GOALS.answers.ideal-weight.answer.unit1_val', 'Ideal Weight Unit 1 Value'),
+            Keypath('data.GOALS.answers.ideal-weight.answer.unit2_val', 'Ideal Weight Unit 2 Value'),
+            Keypath('data.GOALS.answers.ideal-weight.answer.units', 'Ideal Weight Units'),
+            Keypath('data.GOALS.answers.achievable-weight.answer.unit1_val', 'Achievable Weight Unit 1 Value'),
+            Keypath('data.GOALS.answers.achievable-weight.answer.unit2_val', 'Achievable Weight Unit 2 Value'),
+            Keypath('data.GOALS.answers.achievable-weight.answer.units', 'Achievable Weight Units'),
+            Keypath('data.GOALS.answers.happy-weight.answer.unit1_val', 'Happy Weight Unit 1 Value'),
+            Keypath('data.GOALS.answers.happy-weight.answer.unit2_val', 'Happy Weight Unit 2 Value'),
+            Keypath('data.GOALS.answers.happy-weight.answer.units', 'Happy Weight Units'),
+            Keypath('data.GOALS.timeOnQuestion', 'Time On Question'),
         ]
 
     def can_process_data(self, data):
@@ -301,10 +305,10 @@ class IntentQuestionDataExtractor(QuestionDataExtractor):
 
     def get_value_keypaths(self):
         return [
-            ('data.INTENT-H.answers.healthy-foods.answer', 'Healthy Foods Answer'),
-            ('data.INTENT-H.timeOnQuestion', 'Healthy Foods Answer'),
-            ('data.INTENT-U.answers.unhealthy-foods.answer', 'Unhealthy Foods Answer'),
-            ('data.INTENT-U.timeOnQuestion', 'Unhealthy Foods Answer'),
+            Keypath('data.INTENT-H.answers.healthy-foods.answer', 'Healthy Foods Answer'),
+            Keypath('data.INTENT-H.timeOnQuestion', 'Healthy Foods Answer'),
+            Keypath('data.INTENT-U.answers.unhealthy-foods.answer', 'Unhealthy Foods Answer'),
+            Keypath('data.INTENT-U.timeOnQuestion', 'Unhealthy Foods Answer'),
         ]
 
     def can_process_data(self, data):
@@ -318,12 +322,12 @@ class EffectQuestionDataExtractor(QuestionDataExtractor):
 
     def get_value_keypaths(self):
         return [
-            ('data.EFFECT-H.answers.healthy.answer', 'H Answer'),
-            ('data.EFFECT-H.timeOnQuestion', 'H Time on Question'),
-            ('data.EFFECT-U.answers.unhealthy.answer', 'U Answer'),
-            ('data.EFFECT-U.timeOnQuestion', 'U Time on Question'),
-            ('data.EFFECT-W.answers.weight.answer', 'W Answer'),
-            ('data.EFFECT-W.timeOnQuestion', 'W Time on Question'),
+            Keypath('data.EFFECT-H.answers.healthy.answer', 'H Answer'),
+            Keypath('data.EFFECT-H.timeOnQuestion', 'H Time on Question'),
+            Keypath('data.EFFECT-U.answers.unhealthy.answer', 'U Answer'),
+            Keypath('data.EFFECT-U.timeOnQuestion', 'U Time on Question'),
+            Keypath('data.EFFECT-W.answers.weight.answer', 'W Answer'),
+            Keypath('data.EFFECT-W.timeOnQuestion', 'W Time on Question'),
         ]
 
     def can_process_data(self, data):
@@ -340,22 +344,22 @@ class MINDFQuestionDataExtractor(QuestionDataExtractor):
 
     def get_value_keypaths(self):
         return [
-            ('data.MINDF.answers.S1.answer', 'S1'),
-            ('data.MINDF.answers.S2.answer', 'S2'),
-            ('data.MINDF.answers.S3.answer', 'S3'),
-            ('data.MINDF.answers.S4.answer', 'S4'),
-            ('data.MINDF.answers.S5.answer', 'S5'),
-            ('data.MINDF.answers.S6.answer', 'S6'),
-            ('data.MINDF.answers.S7.answer', 'S7'),
-            ('data.MINDF.answers.S8.answer', 'S8'),
-            ('data.MINDF.answers.S9.answer', 'S9'),
-            ('data.MINDF.answers.S10.answer', 'S10'),
-            ('data.MINDF.answers.S11.answer', 'S11'),
-            ('data.MINDF.answers.S12.answer', 'S12'),
-            ('data.MINDF.answers.S13.answer', 'S13'),
-            ('data.MINDF.answers.S14.answer', 'S14'),
-            ('data.MINDF.answers.S15.answer', 'S15'),
-            ('data.MINDF.timeOnQuestion', 'Time On Question'),
+            Keypath('data.MINDF.answers.S1.answer', 'S1'),
+            Keypath('data.MINDF.answers.S2.answer', 'S2'),
+            Keypath('data.MINDF.answers.S3.answer', 'S3'),
+            Keypath('data.MINDF.answers.S4.answer', 'S4'),
+            Keypath('data.MINDF.answers.S5.answer', 'S5'),
+            Keypath('data.MINDF.answers.S6.answer', 'S6'),
+            Keypath('data.MINDF.answers.S7.answer', 'S7'),
+            Keypath('data.MINDF.answers.S8.answer', 'S8'),
+            Keypath('data.MINDF.answers.S9.answer', 'S9'),
+            Keypath('data.MINDF.answers.S10.answer', 'S10'),
+            Keypath('data.MINDF.answers.S11.answer', 'S11'),
+            Keypath('data.MINDF.answers.S12.answer', 'S12'),
+            Keypath('data.MINDF.answers.S13.answer', 'S13'),
+            Keypath('data.MINDF.answers.S14.answer', 'S14'),
+            Keypath('data.MINDF.answers.S15.answer', 'S15'),
+            Keypath('data.MINDF.timeOnQuestion', 'Time On Question'),
         ]
 
     def can_process_data(self, data):
