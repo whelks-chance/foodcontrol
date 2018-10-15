@@ -29,6 +29,11 @@ class MajorCharacterQuestionDataExtractor(QuestionDataExtractor):
     def get_value_keypaths(self):
         return self.major_keypaths
 
+    @staticmethod
+    def blank(response_value):
+        """A do nothing method used when a method is required"""
+        return None
+
 
 class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
 
@@ -48,14 +53,14 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     ]
 
     def get_derived_value_keypaths(self, row=None):
-        row_type = None
+        row_type = None  # row is None when asking for the keypaths for naming columns
         if row:
             if 'WILLM' in row['data']:
                 row_type = 'M'
             elif 'WILLT' in row['data']:
                 row_type = 'T'
-        if row_type == 'M':
-            print('WILLM derived value keypaths')
+        if row_type is None or row_type == 'M':
+            # print('WILLM derived value keypaths')
             return [
                 ('S1', 'S1 Score', self.code_response_reversed),
                 ('S2', 'S2 Score', self.code_response_reversed),
@@ -65,7 +70,7 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
                 ('S6', 'S6 Score', self.code_response),
             ]
         if row_type == 'T':
-            print('WILLT derived value keypaths')
+            # print('WILLT derived value keypaths')
             return [
                 ('S1', 'S1 Score', self.code_response_reversed),
                 ('S2', 'S2 Score', self.code_response_reversed),
@@ -74,8 +79,6 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
                 ('S5', 'S5 Score', self.code_response),
                 ('S6', 'S6 Score', self.code_response),
             ]
-        print('WILL', row_type)
-        print(row)
 
     @staticmethod
     def code_response(response_value):
@@ -168,7 +171,7 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     ]
 
     def get_derived_value_keypaths(self, row=None):
-        row_type = None
+        row_type = None  # row is None when asking for the keypaths for naming columns
         if row:
             if 'IMPN' in row['data']:
                 row_type = 'N'
@@ -176,7 +179,7 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
                 row_type = 'M'
             elif 'IMPA' in row['data']:
                 row_type = 'M'
-        if row_type == 'A':
+        if row_type is None or row_type == 'A':
             # print('IMPA derived value keypaths')
             return [
                 ('S1', 'S1 Score', self.code_response),
@@ -206,7 +209,7 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
                 ('S10', 'S10 Score', self.code_response),
                 ('S11', 'S11 Score', self.code_response_reversed),
             ]
-        if row_type is None or row_type == 'N':
+        if row_type == 'N':
             # print('IMPN derived value keypaths')
             return [
                 ('S1', 'S1 Score', self.code_response_reversed),
@@ -241,10 +244,6 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
             '4': 1,
         }
         return coding_scheme[response_value]
-
-    @staticmethod
-    def blank(response_value):
-        return None
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'IMP[AMN]')
