@@ -1,5 +1,7 @@
 from .gamedataextractor import GameDataExtractor
 
+from keypath_extractor import Keypath
+
 
 class MeasuresDataExtractor(GameDataExtractor):
 
@@ -8,7 +10,7 @@ class MeasuresDataExtractor(GameDataExtractor):
     @staticmethod
     def get_value_keypaths():
         return [
-            ('data.emoji', 'Emoji'),
-            ('data.fuel-gauge', 'Fuel Gauge'),
-            ('data.last-eaten', 'Last Eaten'),
+            Keypath('data.emoji', 'Emoji'),
+            Keypath('data.fuel-gauge', 'Fuel Gauge'),
+            Keypath('data.last-eaten', 'Last Eaten'),
         ]

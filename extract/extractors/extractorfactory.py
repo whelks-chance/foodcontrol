@@ -5,19 +5,19 @@ from .questions import *
 class ExtractorFactory:
 
     game_extractors = [
-        # StopDataExtractor(),
-        # RestraintDataExtractor(),
-        # NAStopDataExtractor(),
-        # NARestraintDataExtractor(),
-        # GStopDataExtractor(),
-        # GRestraintDataExtractor(),
-        # DoubleDataExtractor(),
-        # MCIIDataExtractor(),
-        # GoalVisDataExtractor(),
-        # MeasuresDataExtractor(),
-        # EligibilityDataExtractor(),
-        # AdditionalInfoDataExtractor(),
-        # VirtualSupermarketDataExtractor(),
+        StopDataExtractor(),
+        RestraintDataExtractor(),
+        NAStopDataExtractor(),
+        NARestraintDataExtractor(),
+        GStopDataExtractor(),
+        GRestraintDataExtractor(),
+        DoubleDataExtractor(),
+        MCIIDataExtractor(),
+        GoalVisDataExtractor(),
+        MeasuresDataExtractor(),
+        EligibilityDataExtractor(),
+        AdditionalInfoDataExtractor(),
+        VirtualSupermarketDataExtractor(),
     ]
 
     question_extractors = [

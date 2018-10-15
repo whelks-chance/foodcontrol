@@ -61,7 +61,6 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
                 row_type = 'T'
         else:
             row_type = 'M'
-
         keypaths = {
             'M': [
                 Keypath('S1', 'S1 Score', self.code_response_reversed),
@@ -188,7 +187,6 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
                 row_type = 'N'
         else:
             row_type = 'M'
-
         keypaths = {
             'A': [
                 Keypath('S1', 'S1 Score', transformer_fn=self.code_response),

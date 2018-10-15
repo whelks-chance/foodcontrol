@@ -2,21 +2,23 @@ from collections import defaultdict
 
 from .gamedataextractor import GameDataExtractor
 
+from keypath_extractor import Keypath
+
 
 class VirtualSupermarketDataExtractor(GameDataExtractor):
 
     type = 'virtual-supermarket-selected'
 
     common_shop_keypaths = [
-        ('shop', 'Shop'),
-        ('type', 'Type'),
-        ('name', 'Name')
+        Keypath('shop', 'Shop'),
+        Keypath('type', 'Type'),
+        Keypath('name', 'Name')
     ]
 
     item_keypaths = [
-        ('id', 'Item ID'),
-        ('name', 'Item Name'),
-        ('selected', 'Item Selected')
+        Keypath('id', 'Item ID'),
+        Keypath('name', 'Item Name'),
+        Keypath('selected', 'Item Selected')
     ]
 
     def get_value_keypaths_for_naming_columns(self):

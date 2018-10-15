@@ -1,5 +1,7 @@
 from .gamedataextractor import GameDataExtractor
 
+from keypath_extractor import Keypath
+
 
 class EligibilityDataExtractor(GameDataExtractor):
 
@@ -8,26 +10,26 @@ class EligibilityDataExtractor(GameDataExtractor):
     @staticmethod
     def get_value_keypaths():
         return [
-            ('data.gender', 'Gender'),
-            ('data.gender-other', 'Gender Other'),
-            ('data.dob', 'DOB'),
+            Keypath('data.gender', 'Gender'),
+            Keypath('data.gender-other', 'Gender Other'),
+            Keypath('data.dob', 'DOB'),
 
-            ('data.height.unit1_val', 'Height Unit 1 Value'),
-            ('data.height.unit2_val', 'Height Unit 2 Value'),
-            ('data.height.units', 'Height Units'),
+            Keypath('data.height.unit1_val', 'Height Unit 1 Value'),
+            Keypath('data.height.unit2_val', 'Height Unit 2 Value'),
+            Keypath('data.height.units', 'Height Units'),
 
-            ('data.weight.unit1_val', 'Weight Unit 1 Value'),
-            ('data.weight.unit2_val', 'Weight Unit 2 Value'),
-            ('data.weight.units', 'Weight Units'),
+            Keypath('data.weight.unit1_val', 'Weight Unit 1 Value'),
+            Keypath('data.weight.unit2_val', 'Weight Unit 2 Value'),
+            Keypath('data.weight.units', 'Weight Units'),
 
-            ('data.allergies', 'Allergies'),
-            ('data.allergies-other', 'Allergies Other'),
-            ('data.eating-disorder', 'Allergies'),
-            ('data.eating-disorder-other', 'Allergies Other'),
+            Keypath('data.allergies', 'Allergies'),
+            Keypath('data.allergies-other', 'Allergies Other'),
+            Keypath('data.eating-disorder', 'Allergies'),
+            Keypath('data.eating-disorder-other', 'Allergies Other'),
 
-            ('data.bmi', 'BMI'),
-            ('data.age', 'Age'),
-            ('data.eligible', 'Eligible'),
-            ('data.height_cm', 'Height CM'),
-            ('data.weight_kgs', 'Weight KGs'),
+            Keypath('data.bmi', 'BMI'),
+            Keypath('data.age', 'Age'),
+            Keypath('data.eligible', 'Eligible'),
+            Keypath('data.height_cm', 'Height CM'),
+            Keypath('data.weight_kgs', 'Weight KGs'),
         ]

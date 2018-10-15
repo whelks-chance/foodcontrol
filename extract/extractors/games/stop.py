@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from .gamedataextractor import GameDataExtractor
+from keypath_extractor import Keypath
 
 
 class AbstractStopDataExtractor(GameDataExtractor):
@@ -9,7 +10,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
     @staticmethod
     def get_value_keypaths():
         return [
-            ('data.captureDate', 'Capture Date'),
+            Keypath('data.captureDate', 'Capture Date'),
         ]
 
     durations = defaultdict(list)

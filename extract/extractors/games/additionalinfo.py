@@ -1,5 +1,7 @@
 from .gamedataextractor import GameDataExtractor
 
+from keypath_extractor import Keypath
+
 
 class AdditionalInfoDataExtractor(GameDataExtractor):
 
@@ -7,35 +9,35 @@ class AdditionalInfoDataExtractor(GameDataExtractor):
 
     def get_value_keypaths(self):
         return [
-            ('data.first-language', 'First Language'),
-            ('data.first-language-other', 'First Language Other'),
+            Keypath('data.first-language', 'First Language'),
+            Keypath('data.first-language-other', 'First Language Other'),
 
-            ('data.ethnicity', 'Ethnicity'),
-            ('data.ethnicity-other', 'Ethnicity Other'),
+            Keypath('data.ethnicity', 'Ethnicity'),
+            Keypath('data.ethnicity-other', 'Ethnicity Other'),
 
-            ('data.country', 'Country'),
+            Keypath('data.country', 'Country'),
 
-            ('data.hip.unit1_val', 'Hip Unit 1 Value'),
-            ('data.hip.unit2_val', 'Hip Unit 2 Value'),
-            ('data.hip.units', 'Hip Units'),
+            Keypath('data.hip.unit1_val', 'Hip Unit 1 Value'),
+            Keypath('data.hip.unit2_val', 'Hip Unit 2 Value'),
+            Keypath('data.hip.units', 'Hip Units'),
 
-            ('data.waist.unit1_val', 'Waist Unit 1 Value'),
-            ('data.waist.unit2_val', 'Waist Unit 2 Value'),
-            ('data.waist.units', 'Waist Units'),
+            Keypath('data.waist.unit1_val', 'Waist Unit 1 Value'),
+            Keypath('data.waist.unit2_val', 'Waist Unit 2 Value'),
+            Keypath('data.waist.units', 'Waist Units'),
 
-            ('data.health', 'Health'),
-            ('data.health-other', 'Health Other'),
+            Keypath('data.health', 'Health'),
+            Keypath('data.health-other', 'Health Other'),
 
-            ('data.weight-loss', 'Weight Loss'),
-            ('data.weight-loss-other', 'Weight Loss Other'),
-            ('data.weight-loss-success', 'Weight Loss Success'),
+            Keypath('data.weight-loss', 'Weight Loss'),
+            Keypath('data.weight-loss-other', 'Weight Loss Other'),
+            Keypath('data.weight-loss-success', 'Weight Loss Success'),
 
-            ('data.additional-details', 'Additional Details'),
+            Keypath('data.additional-details', 'Additional Details'),
 
-            ('data.smoking-status', 'Smoking Status'),
-            ('data.smoking-status-other', 'Smoking Status Other'),
+            Keypath('data.smoking-status', 'Smoking Status'),
+            Keypath('data.smoking-status-other', 'Smoking Status Other'),
 
-            ('data.weight-loss-success-other', 'Weight Loss Success Other'),
-            ('data.waist_cm', 'Waist CM'),
-            ('data.hip_cm', 'Hip CM'),
+            Keypath('data.weight-loss-success-other', 'Weight Loss Success Other'),
+            Keypath('data.waist_cm', 'Waist CM'),
+            Keypath('data.hip_cm', 'Hip CM'),
         ]
