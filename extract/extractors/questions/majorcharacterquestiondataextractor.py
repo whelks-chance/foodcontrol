@@ -224,62 +224,6 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         }
         return keypaths[row_type]
 
-    # def get_derived_value_keypaths(self, row=None):
-    #     row_type = None  # row is None when asking for the keypaths for naming columns
-    #     if row:
-    #         if 'IMPA' in row['data']:
-    #             row_type = 'A'
-    #         elif 'IMPM' in row['data']:
-    #             row_type = 'M'
-    #         elif 'IMPN' in row['data']:
-    #             row_type = 'N'
-    #
-    #     if row_type is None or row_type == 'A':
-    #         # print('IMPA derived value keypaths')
-    #         return [
-    #             Keypath('S1', 'S1 Score', transformer_fn=self.code_response),
-    #             Keypath('S2', 'S2 Score', transformer_fn=self.code_response),
-    #             Keypath('S3', 'S3 Score', transformer_fn=self.code_response_reversed),
-    #             Keypath('S4', 'S4 Score', transformer_fn=self.code_response),
-    #             Keypath('S5', 'S5 Score', transformer_fn=self.code_response_reversed),
-    #             Keypath('S6', 'S6 Score', transformer_fn=self.code_response),
-    #             Keypath('S7', 'S7 Score', transformer_fn=self.code_response),
-    #             Keypath('S8', 'S8 Score', transformer_fn=self.code_response),
-    #             Keypath('S9', 'S9 Score', transformer_fn=self.blank),
-    #             Keypath('S10', 'S10 Score', transformer_fn=self.blank),
-    #             Keypath('S11', 'S11 Score', transformer_fn=self.blank),
-    #         ]
-    #     if row_type == 'M':
-    #         # print('IMPM derived value keypaths')
-    #         return [
-    #             Keypath('S1', 'S1 Score', transformer_fn=self.code_response),
-    #             Keypath('S2', 'S2 Score', transformer_fn=self.code_response),
-    #             Keypath('S3', 'S3 Score', transformer_fn=self.code_response),
-    #             Keypath('S4', 'S4 Score', transformer_fn=self.code_response),
-    #             Keypath('S5', 'S5 Score', transformer_fn=self.code_response),
-    #             Keypath('S6', 'S6 Score', transformer_fn=self.code_response),
-    #             Keypath('S7', 'S7 Score', transformer_fn=self.code_response),
-    #             Keypath('S8', 'S8 Score', transformer_fn=self.code_response),
-    #             Keypath('S9', 'S9 Score', transformer_fn=self.code_response),
-    #             Keypath('S10', 'S10 Score', transformer_fn=self.code_response),
-    #             Keypath('S11', 'S11 Score', transformer_fn=self.code_response_reversed),
-    #         ]
-    #     if row_type == 'N':
-    #         # print('IMPN derived value keypaths')
-    #         return [
-    #             Keypath('S1', 'S1 Score', transformer_fn=self.code_response_reversed),
-    #             Keypath('S2', 'S2 Score', transformer_fn=self.code_response_reversed),
-    #             Keypath('S3', 'S3 Score', transformer_fn=self.code_response_reversed),
-    #             Keypath('S4', 'S4 Score', transformer_fn=self.code_response_reversed),
-    #             Keypath('S5', 'S5 Score', transformer_fn=self.code_response_reversed),
-    #             Keypath('S6', 'S6 Score', transformer_fn=self.code_response_reversed),
-    #             Keypath('S7', 'S7 Score', transformer_fn=self.code_response),
-    #             Keypath('S8', 'S8 Score', transformer_fn=self.code_response_reversed),
-    #             Keypath('S9', 'S9 Score', transformer_fn=self.code_response),
-    #             Keypath('S10', 'S10 Score', transformer_fn=self.code_response),
-    #             Keypath('S11', 'S11 Score', transformer_fn=self.code_response_reversed),
-    #         ]
-
     @staticmethod
     def code_response(response_value):
         coding_scheme = {
