@@ -173,12 +173,13 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     def get_derived_value_keypaths(self, row=None):
         row_type = None  # row is None when asking for the keypaths for naming columns
         if row:
-            if 'IMPN' in row['data']:
-                row_type = 'N'
+            if 'IMPA' in row['data']:
+                row_type = 'A'
             elif 'IMPM' in row['data']:
                 row_type = 'M'
-            elif 'IMPA' in row['data']:
-                row_type = 'M'
+            elif 'IMPN' in row['data']:
+                row_type = 'N'
+
         if row_type is None or row_type == 'A':
             # print('IMPA derived value keypaths')
             return [
