@@ -1,5 +1,7 @@
 from .questiondataextractor import QuestionDataExtractor
 
+from keypath_extractor import Keypath
+
 
 class MajorCharacterQuestionDataExtractor(QuestionDataExtractor):
     """
@@ -20,19 +22,15 @@ class MajorCharacterQuestionDataExtractor(QuestionDataExtractor):
             key_keypaths = []
             major_keypaths.append(key_keypaths)
             for keypath in keypaths:
-                major_keypath = '.'.join(['data', key, keypath[0]])
-                new_keypath = list(keypath)
-                new_keypath[0] = major_keypath
+                major_keypath = '.'.join(['data', key, keypath.source_keypath])
+                new_keypath = Keypath(major_keypath, keypath.destination_keypath, is_optional=keypath.is_optional, transformer_fn=keypath.transformer_fn)
+                # new_keypath = list(keypath)
+                # new_keypath[0] = major_keypath
                 key_keypaths.append(new_keypath)
         return major_keypaths
 
     def get_value_keypaths(self):
         return self.major_keypaths
-
-    @staticmethod
-    def blank(response_value):
-        """A do nothing method used when a method is required"""
-        return None
 
 
 class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
@@ -156,18 +154,18 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     add_sum_scores_and_missing_scores_columns = True
 
     value_keypaths = [
-        ('answers.S1.answer', 'S1'),
-        ('answers.S2.answer', 'S2'),
-        ('answers.S3.answer', 'S3'),
-        ('answers.S4.answer', 'S4'),
-        ('answers.S5.answer', 'S5'),
-        ('answers.S6.answer', 'S6'),
-        ('answers.S7.answer', 'S7'),
-        ('answers.S8.answer', 'S8'),
-        ('answers.S9.answer', 'S9'),
-        ('answers.S10.answer', 'S10'),
-        ('answers.S11.answer', 'S11'),
-        ('timeOnQuestion', 'Time On Question'),
+        Keypath('answers.S1.answer', 'S1'),
+        Keypath('answers.S2.answer', 'S2'),
+        Keypath('answers.S3.answer', 'S3'),
+        Keypath('answers.S4.answer', 'S4'),
+        Keypath('answers.S5.answer', 'S5'),
+        Keypath('answers.S6.answer', 'S6'),
+        Keypath('answers.S7.answer', 'S7'),
+        Keypath('answers.S8.answer', 'S8'),
+        Keypath('answers.S9.answer', 'S9', is_optional=True),
+        Keypath('answers.S10.answer', 'S10', is_optional=True),
+        Keypath('answers.S11.answer', 'S11', is_optional=True),
+        Keypath('timeOnQuestion', 'Time On Question'),
     ]
 
     def get_derived_value_keypaths(self, row=None):
@@ -183,52 +181,53 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         if row_type is None or row_type == 'A':
             # print('IMPA derived value keypaths')
             return [
-                ('S1', 'S1 Score', self.code_response),
-                ('S2', 'S2 Score', self.code_response),
-                ('S3', 'S3 Score', self.code_response_reversed),
-                ('S4', 'S4 Score', self.code_response),
-                ('S5', 'S5 Score', self.code_response_reversed),
-                ('S6', 'S6 Score', self.code_response),
-                ('S7', 'S7 Score', self.code_response),
-                ('S8', 'S8 Score', self.code_response),
-                ('S9', 'S9 Score', self.blank),
-                ('S10', 'S10 Score', self.blank),
-                ('S11', 'S11 Score', self.blank),
+                Keypath('S1', 'S1 Score', transformer_fn=self.code_response),
+                Keypath('S2', 'S2 Score', transformer_fn=self.code_response),
+                Keypath('S3', 'S3 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S4', 'S4 Score', transformer_fn=self.code_response),
+                Keypath('S5', 'S5 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S6', 'S6 Score', transformer_fn=self.code_response),
+                Keypath('S7', 'S7 Score', transformer_fn=self.code_response),
+                Keypath('S8', 'S8 Score', transformer_fn=self.code_response),
+                Keypath('S9', 'S9 Score', transformer_fn=self.blank),
+                Keypath('S10', 'S10 Score', transformer_fn=self.blank),
+                Keypath('S11', 'S11 Score', transformer_fn=self.blank),
             ]
         if row_type == 'M':
             # print('IMPM derived value keypaths')
             return [
-                ('S1', 'S1 Score', self.code_response),
-                ('S2', 'S2 Score', self.code_response),
-                ('S3', 'S3 Score', self.code_response),
-                ('S4', 'S4 Score', self.code_response),
-                ('S5', 'S5 Score', self.code_response),
-                ('S6', 'S6 Score', self.code_response),
-                ('S7', 'S7 Score', self.code_response),
-                ('S8', 'S8 Score', self.code_response),
-                ('S9', 'S9 Score', self.code_response),
-                ('S10', 'S10 Score', self.code_response),
-                ('S11', 'S11 Score', self.code_response_reversed),
+                Keypath('S1', 'S1 Score', transformer_fn=self.code_response),
+                Keypath('S2', 'S2 Score', transformer_fn=self.code_response),
+                Keypath('S3', 'S3 Score', transformer_fn=self.code_response),
+                Keypath('S4', 'S4 Score', transformer_fn=self.code_response),
+                Keypath('S5', 'S5 Score', transformer_fn=self.code_response),
+                Keypath('S6', 'S6 Score', transformer_fn=self.code_response),
+                Keypath('S7', 'S7 Score', transformer_fn=self.code_response),
+                Keypath('S8', 'S8 Score', transformer_fn=self.code_response),
+                Keypath('S9', 'S9 Score', transformer_fn=self.code_response),
+                Keypath('S10', 'S10 Score', transformer_fn=self.code_response),
+                Keypath('S11', 'S11 Score', transformer_fn=self.code_response_reversed),
             ]
         if row_type == 'N':
             # print('IMPN derived value keypaths')
             return [
-                ('S1', 'S1 Score', self.code_response_reversed),
-                ('S2', 'S2 Score', self.code_response_reversed),
-                ('S3', 'S3 Score', self.code_response_reversed),
-                ('S4', 'S4 Score', self.code_response_reversed),
-                ('S5', 'S5 Score', self.code_response_reversed),
-                ('S6', 'S6 Score', self.code_response_reversed),
-                ('S7', 'S7 Score', self.code_response),
-                ('S8', 'S8 Score', self.code_response_reversed),
-                ('S9', 'S9 Score', self.code_response),
-                ('S10', 'S10 Score', self.code_response),
-                ('S11', 'S11 Score', self.code_response_reversed),
+                Keypath('S1', 'S1 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S2', 'S2 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S3', 'S3 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S4', 'S4 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S5', 'S5 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S6', 'S6 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S7', 'S7 Score', transformer_fn=self.code_response),
+                Keypath('S8', 'S8 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S9', 'S9 Score', transformer_fn=self.code_response),
+                Keypath('S10', 'S10 Score', transformer_fn=self.code_response),
+                Keypath('S11', 'S11 Score', transformer_fn=self.code_response_reversed),
             ]
 
     @staticmethod
     def code_response(response_value):
         coding_scheme = {
+            None: None,
             '1': 1,
             '2': 2,
             '3': 3,
@@ -239,6 +238,7 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     @staticmethod
     def code_response_reversed(response_value):
         coding_scheme = {
+            None: None,
             '1': 4,
             '2': 3,
             '3': 2,

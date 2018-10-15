@@ -1,5 +1,6 @@
 import dpath
-from keypath_extractor import KeypathExtractor
+
+from keypath_extractor import Keypath, KeypathExtractor
 
 
 class DataExtractor:
@@ -18,8 +19,8 @@ class DataExtractor:
     def get_common_keypaths(self):
         """Return a list of keypaths common to all rows"""
         return [
-            ('userId', 'User ID'),
-            ('sessionId', 'Session ID'),
+            Keypath('userId', 'User ID'),
+            Keypath('sessionId', 'Session ID'),
         ]
 
     def get_value_keypaths(self):
@@ -61,8 +62,7 @@ class DataExtractor:
         """
         # A keypath is a 3-element tuple: (source keypath, destination keypath, transformer function)
         # The destination keypath is used as the column name
-        print(self.get_all_column_keypaths())
-        return [keypath[1] for keypath in self.get_all_column_keypaths()]
+        return [keypath.destination_keypath for keypath in self.get_all_column_keypaths()]
 
     def get_csv_row_values(self, values):
         return self.listify_values(self.get_column_names(), values)
@@ -136,7 +136,6 @@ class DataExtractor:
         values = {}
         try:
             value_keypath_extractor = KeypathExtractor(value_keypaths)
-            # value_keypath_extractor.raise_on_non_existent_keypath = False
             values = value_keypath_extractor.extract(data)
             values = KeypathExtractor(derived_value_keypaths).extract(values, values)
         except KeyError as e:

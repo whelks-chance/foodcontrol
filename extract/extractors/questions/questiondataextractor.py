@@ -4,6 +4,8 @@ from utils import irange
 
 from extractors.dataextractor import DataExtractor
 
+from keypath_extractor import Keypath
+
 
 class QuestionDataExtractor(DataExtractor):
     """The abstract base class for all questionnaire data extractors"""
@@ -19,7 +21,7 @@ class QuestionDataExtractor(DataExtractor):
 
     def get_common_keypaths(self):
         return super().get_common_keypaths() + [
-            ('data.TUMsessionID', 'TUM Session ID'),
+            Keypath('data.TUMsessionID', 'TUM Session ID'),
         ]
 
     def get_value_keypaths_for_naming_columns(self):
@@ -29,10 +31,10 @@ class QuestionDataExtractor(DataExtractor):
             keypaths = self.get_value_keypaths()
         if self.should_add_sum_scores_and_missing_scores_columns():
             return keypaths + [
-                # A source keypath of None is not a problem here because we're
-                # only using the destination keypath to get the column name
-                (None, 'Sum Scores'),
-                (None, 'Missing Scores'),
+                # A source keypath of 'Does not matter' is not a problem here because
+                # we're only using the destination keypath to get the column name
+                Keypath('Does not matter', 'Sum Scores'),
+                Keypath('Does not matter', 'Missing Scores'),
             ]
         return keypaths
 
@@ -68,7 +70,7 @@ class QuestionDataExtractor(DataExtractor):
             all_value_keypaths = common_keypaths + value_keypaths
             values = self.extract_values_with_keypaths(all_value_keypaths, derived_value_keypaths, data)
             values = self.add_calculations(values)
-            prefixes = self.get_question_type_prefixes(value_keypaths[0][0])
+            prefixes = self.get_question_type_prefixes(value_keypaths[0].source_keypath)
             values = self.add_question_type_column_names(values, prefixes)
             rows.append(values)
         return rows
@@ -133,18 +135,26 @@ class QuestionDataExtractor(DataExtractor):
         sum_scores = 0
         column_names_to_count = self.score_column_name_sequence(number_of_scores)
         for column_name in column_names_to_count:
-            score = values[column_name]
-            if score and score != DataExtractor.EMPTY_CELL_VALUE:
-                sum_scores += int(score)  # Scores may appear as quoted numbers
+            if column_name in values:
+                score = values[column_name]
+                if score and score != DataExtractor.EMPTY_CELL_VALUE:
+                    sum_scores += int(score)  # Scores may appear as quoted numbers
         return sum_scores
 
     def calculate_missing_scores(self, values, number_of_scores):
         sum_missing = 0
         for column_name in self.score_column_name_sequence(number_of_scores):
-            value = values[column_name]
-            if value == DataExtractor.EMPTY_CELL_VALUE or value is None:
-                sum_missing += 1
+            if column_name in values:
+                value = values[column_name]
+                if value == DataExtractor.EMPTY_CELL_VALUE or value is None:
+                    sum_missing += 1
         return sum_missing
+
+    @staticmethod
+    def blank(response_value):
+        """A do nothing method used when a method is required"""
+        # print('blank(): {} -> {}'.format(response_value, response_value))
+        return None
 
 
 class EXQuestionDataExtractor(QuestionDataExtractor):
