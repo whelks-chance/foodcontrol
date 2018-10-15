@@ -53,25 +53,25 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
 
     def get_derived_value_keypaths(self, row=None):
         # row is None when asking for the keypaths for naming columns
-        row_type = None  # row is None when asking for the keypaths for naming columns
         if row:
-            if 'WILLM' in row['data']:
+            data = row['data']
+            if 'WILLM' in data:
                 row_type = 'M'
-            elif 'WILLT' in row['data']:
+            elif 'WILLT' in data:
                 row_type = 'T'
-        if row_type is None or row_type == 'M':
-            # print('WILLM derived value keypaths')
-            return [
+        else:
+            row_type = 'M'
+
+        keypaths = {
+            'M': [
                 Keypath('S1', 'S1 Score', self.code_response_reversed),
                 Keypath('S2', 'S2 Score', self.code_response_reversed),
                 Keypath('S3', 'S3 Score', self.code_response),
                 Keypath('S4', 'S4 Score', self.code_response),
                 Keypath('S5', 'S5 Score', self.code_response_reversed),
                 Keypath('S6', 'S6 Score', self.code_response),
-            ]
-        if row_type == 'T':
-            # print('WILLT derived value keypaths')
-            return [
+            ],
+            'T': [
                 Keypath('S1', 'S1 Score', self.code_response_reversed),
                 Keypath('S2', 'S2 Score', self.code_response_reversed),
                 Keypath('S3', 'S3 Score', self.code_response),
@@ -79,6 +79,8 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
                 Keypath('S5', 'S5 Score', self.code_response),
                 Keypath('S6', 'S6 Score', self.code_response),
             ]
+        }
+        return keypaths[row_type]
 
     @staticmethod
     def code_response(response_value):
