@@ -31,6 +31,21 @@ class MajorCharacterQuestionDataExtractor(QuestionDataExtractor):
     def get_value_keypaths(self):
         return self.major_keypaths
 
+    def get_question_subtype(self, row, question_subtype_for_null_row):
+        """
+        Returns the major character for a question subtype if the subtype
+        is present in the row, e.g. return T if the question type is WILLT.
+        """
+        # row is None when asking for the keypaths for naming columns
+        if row:
+            for major_character in self.major_characters:
+                row_type = '{}{}'.format(self.prefix, major_character)
+                if row_type in row['data']:
+                    return major_character
+            assert False, 'No matching prefix/major character row type'
+        else:
+            return question_subtype_for_null_row
+
 
 class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
 
@@ -50,15 +65,7 @@ class WillQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     ]
 
     def get_derived_value_keypaths(self, row=None):
-        # row is None when asking for the keypaths for naming columns
-        if row:
-            data = row['data']
-            if 'WILLM' in data:
-                row_type = 'M'
-            elif 'WILLT' in data:
-                row_type = 'T'
-        else:
-            row_type = 'M'
+        row_type = self.get_question_subtype(row, 'M')
         keypaths = {
             'M': [
                 Keypath('S1', 'S1 Score', self.code_response_reversed),
@@ -174,17 +181,7 @@ class IMPQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     ]
 
     def get_derived_value_keypaths(self, row=None):
-        # row is None when asking for the keypaths for naming columns
-        if row:
-            data = row['data']
-            if 'IMPA' in data:
-                row_type = 'A'
-            elif 'IMPM' in data:
-                row_type = 'M'
-            elif 'IMPN' in data:
-                row_type = 'N'
-        else:
-            row_type = 'M'
+        row_type = self.get_question_subtype(row, 'M')
         keypaths = {
             'A': [
                 Keypath('S1', 'S1 Score', transformer_fn=self.code_response),
@@ -275,23 +272,7 @@ class EMREGQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     ]
 
     def get_derived_value_keypaths(self, row=None):
-        # row is None when asking for the keypaths for naming columns
-        if row:
-            data = row['data']
-            if 'EMREGN' in data:
-                row_type = 'N'
-            elif 'EMREGG' in data:
-                row_type = 'G'
-            elif 'EMREGI' in data:
-                row_type = 'I'
-            elif 'EMREGA' in data:
-                row_type = 'A'
-            elif 'EMREGS' in data:
-                row_type = 'S'
-            elif 'EMREGC' in data:
-                row_type = 'C'
-        else:
-            row_type = 'S'
+        row_type = self.get_question_subtype(row, 'S')
         keypaths = {
             'N': [
                 Keypath('S1', 'S1 Score', transformer_fn=self.code_response),
@@ -395,21 +376,7 @@ class PersonQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
     ]
 
     def get_derived_value_keypaths(self, row=None):
-        # row is None when asking for the keypaths for naming columns
-        if row:
-            data = row['data']
-            if 'PERSONN' in data:
-                row_type = 'N'
-            elif 'PERSONE' in data:
-                row_type = 'E'
-            elif 'PERSONO' in data:
-                row_type = 'O'
-            elif 'PERSONA' in data:
-                row_type = 'A'
-            elif 'PERSONC' in data:
-                row_type = 'C'
-        else:
-            row_type = 'N'
+        row_type = self.get_question_subtype(row, 'N')
         keypaths = {
             'N': [
                 Keypath('S1', 'S1 Score', transformer_fn=self.code_response),
