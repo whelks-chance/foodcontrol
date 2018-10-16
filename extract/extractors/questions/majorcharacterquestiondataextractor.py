@@ -25,8 +25,6 @@ class MajorCharacterQuestionDataExtractor(QuestionDataExtractor):
                 major_keypath = '.'.join(['data', key, keypath.source_keypath])
                 new_keypath = Keypath(major_keypath, keypath.destination_keypath, is_optional=keypath.is_optional,
                                       transformer_fn=keypath.transformer_fn)
-                # new_keypath = list(keypath)
-                # new_keypath[0] = major_keypath
                 key_keypaths.append(new_keypath)
         return major_keypaths
 
