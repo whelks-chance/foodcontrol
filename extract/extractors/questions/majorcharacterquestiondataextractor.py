@@ -396,19 +396,101 @@ class PersonQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         Keypath('timeOnQuestion', 'Time On Question'),
     ]
 
+    # def get_derived_value_keypaths(self, row=None):
+    #     return [
+    #         Keypath('S1', 'S1 Score', self.code_response),
+    #         Keypath('S2', 'S2 Score', self.code_response),
+    #         Keypath('S3', 'S3 Score', self.code_response),
+    #         Keypath('S4', 'S4 Score', self.code_response),
+    #         Keypath('S5', 'S5 Score', self.code_response),
+    #         Keypath('S6', 'S6 Score', self.code_response),
+    #         Keypath('S7', 'S7 Score', self.code_response),
+    #         Keypath('S8', 'S8 Score', self.code_response),
+    #         Keypath('S9', 'S9 Score', self.code_response),
+    #         Keypath('S10', 'S10 Score', self.code_response),
+    #     ]
+
     def get_derived_value_keypaths(self, row=None):
-        return [
-            Keypath('S1', 'S1 Score', self.code_response),
-            Keypath('S2', 'S2 Score', self.code_response),
-            Keypath('S3', 'S3 Score', self.code_response),
-            Keypath('S4', 'S4 Score', self.code_response),
-            Keypath('S5', 'S5 Score', self.code_response),
-            Keypath('S6', 'S6 Score', self.code_response),
-            Keypath('S7', 'S7 Score', self.code_response),
-            Keypath('S8', 'S8 Score', self.code_response),
-            Keypath('S9', 'S9 Score', self.code_response),
-            Keypath('S10', 'S10 Score', self.code_response),
-        ]
+        # row is None when asking for the keypaths for naming columns
+        if row:
+            data = row['data']
+            if 'PERSONN' in data:
+                row_type = 'N'
+            elif 'PERSONE' in data:
+                row_type = 'E'
+            elif 'PERSONO' in data:
+                row_type = 'O'
+            elif 'PERSONA' in data:
+                row_type = 'A'
+            elif 'PERSONC' in data:
+                row_type = 'C'
+        else:
+            row_type = 'N'
+        keypaths = {
+            'N': [
+                Keypath('S1', 'S1 Score', transformer_fn=self.code_response),
+                Keypath('S2', 'S2 Score', transformer_fn=self.code_response),
+                Keypath('S3', 'S3 Score', transformer_fn=self.code_response),
+                Keypath('S4', 'S4 Score', transformer_fn=self.code_response),
+                Keypath('S5', 'S5 Score', transformer_fn=self.code_response),
+                Keypath('S6', 'S6 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S7', 'S7 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S8', 'S8 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S9', 'S9 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S10', 'S10 Score', transformer_fn=self.code_response_reversed),
+            ],
+            'E': [
+                Keypath('S1', 'S1 Score', transformer_fn=self.code_response),
+                Keypath('S2', 'S2 Score', transformer_fn=self.code_response),
+                Keypath('S3', 'S3 Score', transformer_fn=self.code_response),
+                Keypath('S4', 'S4 Score', transformer_fn=self.code_response),
+                Keypath('S5', 'S5 Score', transformer_fn=self.code_response),
+                Keypath('S6', 'S6 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S7', 'S7 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S8', 'S8 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S9', 'S9 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S10', 'S10 Score', transformer_fn=self.code_response_reversed),
+            ],
+            'O': [
+                Keypath('S1', 'S1 Score', transformer_fn=self.code_response),
+                Keypath('S2', 'S2 Score', transformer_fn=self.code_response),
+                Keypath('S3', 'S3 Score', transformer_fn=self.code_response),
+                Keypath('S4', 'S4 Score', transformer_fn=self.code_response),
+                Keypath('S5', 'S5 Score', transformer_fn=self.code_response),
+                Keypath('S6', 'S6 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S6', 'S6 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S7', 'S7 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S8', 'S8 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S9', 'S9 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S10', 'S10 Score', transformer_fn=self.code_response_reversed),
+            ],
+            'A': [
+                Keypath('S1', 'S1 Score', transformer_fn=self.code_response),
+                Keypath('S2', 'S2 Score', transformer_fn=self.code_response),
+                Keypath('S3', 'S3 Score', transformer_fn=self.code_response),
+                Keypath('S4', 'S4 Score', transformer_fn=self.code_response),
+                Keypath('S5', 'S5 Score', transformer_fn=self.code_response),
+                Keypath('S6', 'S6 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S6', 'S6 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S7', 'S7 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S8', 'S8 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S9', 'S9 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S10', 'S10 Score', transformer_fn=self.code_response_reversed),
+            ],
+            'C': [
+                Keypath('S1', 'S1 Score', transformer_fn=self.code_response),
+                Keypath('S2', 'S2 Score', transformer_fn=self.code_response),
+                Keypath('S3', 'S3 Score', transformer_fn=self.code_response),
+                Keypath('S4', 'S4 Score', transformer_fn=self.code_response),
+                Keypath('S5', 'S5 Score', transformer_fn=self.code_response),
+                Keypath('S6', 'S6 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S7', 'S7 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S8', 'S8 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S9', 'S9 Score', transformer_fn=self.code_response_reversed),
+                Keypath('S10', 'S10 Score', transformer_fn=self.code_response_reversed),
+            ]
+        }
+        return keypaths[row_type]
 
     @staticmethod
     def code_response(response_value):

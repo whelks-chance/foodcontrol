@@ -35,8 +35,8 @@ class ExtractorFactory:
         # IMPQuestionDataExtractor(),
         # WillQuestionDataExtractor(),
         # MoodQuestionDataExtractor(),
-        EMREGQuestionDataExtractor(),
-        # PersonQuestionDataExtractor(),
+        # EMREGQuestionDataExtractor(),
+        PersonQuestionDataExtractor(),
         # RESTRQuestionDataExtractor(),
     ]
 
