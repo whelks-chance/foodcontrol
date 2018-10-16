@@ -153,7 +153,6 @@ class QuestionDataExtractor(DataExtractor):
     @staticmethod
     def blank(response_value):
         """A do nothing method used when a method is required"""
-        # print('blank(): {} -> {}'.format(response_value, response_value))
         return None
 
 
@@ -176,18 +175,18 @@ class EXQuestionDataExtractor(QuestionDataExtractor):
 
     def get_derived_value_keypaths(self, row=None):
         return [
-            Keypath('EX A Answer', 'EX A Answer Score', self.code_answer),
+            Keypath('EX A Answer', 'EX A Answer Score', self.code_response),
         ]
 
     @staticmethod
-    def code_answer(answer_value):
+    def code_response(response_value):
         coding_scheme = {
             None:                              None,
             'I am inactive':                   0,
             'My activity levels are low':      1,
             'My activity levels are moderate': 2,
         }
-        return coding_scheme[answer_value]
+        return coding_scheme[response_value]
 
     def can_process_data(self, data):
         return self.can_process_data_with_pattern(data, r'EX-[AF]')
