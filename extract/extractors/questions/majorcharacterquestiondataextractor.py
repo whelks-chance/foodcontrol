@@ -396,20 +396,6 @@ class PersonQuestionDataExtractor(MajorCharacterQuestionDataExtractor):
         Keypath('timeOnQuestion', 'Time On Question'),
     ]
 
-    # def get_derived_value_keypaths(self, row=None):
-    #     return [
-    #         Keypath('S1', 'S1 Score', self.code_response),
-    #         Keypath('S2', 'S2 Score', self.code_response),
-    #         Keypath('S3', 'S3 Score', self.code_response),
-    #         Keypath('S4', 'S4 Score', self.code_response),
-    #         Keypath('S5', 'S5 Score', self.code_response),
-    #         Keypath('S6', 'S6 Score', self.code_response),
-    #         Keypath('S7', 'S7 Score', self.code_response),
-    #         Keypath('S8', 'S8 Score', self.code_response),
-    #         Keypath('S9', 'S9 Score', self.code_response),
-    #         Keypath('S10', 'S10 Score', self.code_response),
-    #     ]
-
     def get_derived_value_keypaths(self, row=None):
         # row is None when asking for the keypaths for naming columns
         if row:
