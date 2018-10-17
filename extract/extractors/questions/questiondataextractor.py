@@ -31,7 +31,7 @@ class QuestionDataExtractor(DataExtractor):
             keypaths = self.get_value_keypaths()
         if self.should_add_sum_scores_and_missing_scores_columns():
             return keypaths + [
-                # A source keypath of 'Does not matter' is not a problem here because
+                # The source keypath of 'Does not matter' is a placeholder because
                 # we're only using the destination keypath to get the column name
                 Keypath('Does not matter', 'Sum Scores'),
                 Keypath('Does not matter', 'Missing Scores'),
@@ -90,15 +90,27 @@ class QuestionDataExtractor(DataExtractor):
         return hasattr(self, 'add_sum_scores_and_missing_scores_columns') and self.add_sum_scores_and_missing_scores_columns
 
     def has_subtype(self):
+        """
+        Questions with a subtype, e.g. WILL[MT] and FREQ[1-5]-[1-12], have a nested keypath
+        structure - one list of keypaths per subtype - so need to be handled differently.
+        Major Character and Major Minor questions have subtypes. Most questions do have a
+        subtype so questions without a subtype are explicitly marked with a no-subtype property
+        with a True value.
+        """
         return not hasattr(self, 'no_subtype')
 
     def get_question_type_column_names(self):
+        """Return ['QType', 'Sub QType'] for a question with a subtype; ['QType'] otherwise"""
         column_names = ['QType']
         if self.has_subtype():
             column_names += ['Sub QType']
         return column_names
 
     def get_question_type_prefixes(self, keypath):
+        """
+        Return a (prefix, character) tuple for the string source keypath,
+        e.g. data.EFFECT-A -> ('EFFECT', 'A')
+        """
         paths = keypath.split('.')
         question_type = paths[1]
         if '-' in question_type:
@@ -128,10 +140,15 @@ class QuestionDataExtractor(DataExtractor):
 
     @staticmethod
     def score_column_name_sequence(number_of_scores):
+        """
+        Create a list of column names for a set of extracted scores,
+        e.g. for 4 scores the list would be ['S1', 'S2', 'S3', 'S4']
+        These are used to access the scores when creating the sum
+        and counting the number of missing scores.
+        """
         return ['S' + str(response) for response in irange(1, number_of_scores)]
 
     def calculate_sum_scores(self, values, number_of_scores):
-        assert type(values) is not list
         sum_scores = 0
         column_names_to_count = self.score_column_name_sequence(number_of_scores)
         for column_name in column_names_to_count:
@@ -152,7 +169,7 @@ class QuestionDataExtractor(DataExtractor):
 
     @staticmethod
     def blank(response_value):
-        """A do nothing method used when a method is required"""
+        """A placeholder method that does nothing that's used when a method is required"""
         return None
 
 

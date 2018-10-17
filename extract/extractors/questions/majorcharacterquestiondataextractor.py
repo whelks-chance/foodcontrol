@@ -16,6 +16,42 @@ class MajorCharacterQuestionDataExtractor(QuestionDataExtractor):
         print(self.major_keypaths)
 
     def create_major_keypaths(self, keypaths):
+        """
+        Create a full set of keypaths from the base keypaths defined in the subclass
+        using the combinations of prefix and major characters, e.g. for the following
+        base keypaths:
+
+        [
+            Keypath('answers.S1.answer', 'S1'),
+            Keypath('answers.S2.answer', 'S2'),
+            Keypath('answers.S3.answer', 'S3'),
+            Keypath('answers.S4.answer', 'S4'),
+            Keypath('answers.S5.answer', 'S5'),
+            Keypath('answers.S6.answer', 'S6'),
+        ]
+
+        the prefix WILL and the major characters M and T, the following keypaths are created:
+
+        [
+            [
+                Keypath('data.WILLM.answers.S1.answer', 'S1'),
+                Keypath('data.WILLM.answers.S2.answer', 'S2'),
+                Keypath('data.WILLM.answers.S3.answer', 'S3'),
+                Keypath('data.WILLM.answers.S4.answer', 'S4'),
+                Keypath('data.WILLM.answers.S5.answer', 'S5'),
+                Keypath('data.WILLM.answers.S6.answer', 'S6'),
+            ],
+            [
+                Keypath('data.WILLT.answers.S1.answer', 'S1'),
+                Keypath('data.WILLT.answers.S2.answer', 'S2'),
+                Keypath('data.WILLT.answers.S3.answer', 'S3'),
+                Keypath('data.WILLT.answers.S4.answer', 'S4'),
+                Keypath('data.WILLT.answers.S5.answer', 'S5'),
+                Keypath('data.WILLT.answers.S6.answer', 'S6'),
+            ]
+        ]
+
+        """
         major_keypaths = []
         for major in self.major_characters:
             key = '{}{}'.format(self.prefix, major)
