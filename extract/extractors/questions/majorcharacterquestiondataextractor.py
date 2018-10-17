@@ -17,9 +17,8 @@ class MajorCharacterQuestionDataExtractor(QuestionDataExtractor):
 
     def create_major_keypaths(self, keypaths):
         """
-        Create a full set of keypaths from the base keypaths defined in the subclass
-        using the combinations of prefix and major characters, e.g. for the following
-        base keypaths:
+        Create a full set of keypaths from base keypaths using the combinations
+        of prefix and major characters, e.g. for the following base keypaths:
 
         [
             Keypath('answers.S1.answer', 'S1'),

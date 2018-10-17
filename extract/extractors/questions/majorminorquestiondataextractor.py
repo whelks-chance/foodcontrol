@@ -18,6 +18,70 @@ class MajorMinorQuestionDataExtractor(QuestionDataExtractor):
         self.major_minor_keypaths = self.create_major_minor_keypaths(self.value_keypaths)
 
     def create_major_minor_keypaths(self, keypaths):
+        """
+        Create a full set of keypaths from base keypaths using the combinations
+        of prefix and major and minor ranges, e.g. for the following base keypaths:
+
+        [
+            Keypath('answers.S1.answer', 'S1'),
+            Keypath('answers.S2.answer', 'S2'),
+            Keypath('answers.S3.answer', 'S3'),
+            Keypath('answers.S4.answer', 'S4'),
+            Keypath('answers.S5.answer', 'S5'),
+            Keypath('answers.S6.answer', 'S6'),
+        ]
+
+        the prefix FREQ, the major range 1-2 and the minor range 1-3,
+        the following keypaths are created:
+
+        [
+            [
+                Keypath('data.FREQ1-1.answers.S1.answer', 'S1'),
+                Keypath('data.FREQ1-1.answers.S2.answer', 'S2'),
+                Keypath('data.FREQ1-1.answers.S3.answer', 'S3'),
+                Keypath('data.FREQ1-1.answers.S4.answer', 'S4'),
+                Keypath('data.FREQ1-1.answers.S5.answer', 'S5'),
+                Keypath('data.FREQ1-1.answers.S6.answer', 'S6'),
+
+                Keypath('data.FREQ1-2.answers.S1.answer', 'S1'),
+                Keypath('data.FREQ1-2.answers.S2.answer', 'S2'),
+                Keypath('data.FREQ1-2.answers.S3.answer', 'S3'),
+                Keypath('data.FREQ1-2.answers.S4.answer', 'S4'),
+                Keypath('data.FREQ1-2.answers.S5.answer', 'S5'),
+                Keypath('data.FREQ1-2.answers.S6.answer', 'S6'),
+
+                Keypath('data.FREQ1-3.answers.S1.answer', 'S1'),
+                Keypath('data.FREQ1-3.answers.S2.answer', 'S2'),
+                Keypath('data.FREQ1-3.answers.S3.answer', 'S3'),
+                Keypath('data.FREQ1-3.answers.S4.answer', 'S4'),
+                Keypath('data.FREQ1-3.answers.S5.answer', 'S5'),
+                Keypath('data.FREQ1-3.answers.S6.answer', 'S6'),
+            ],
+            [
+                Keypath('data.FREQ2-1.answers.S1.answer', 'S1'),
+                Keypath('data.FREQ2-1.answers.S2.answer', 'S2'),
+                Keypath('data.FREQ2-1.answers.S3.answer', 'S3'),
+                Keypath('data.FREQ2-1.answers.S4.answer', 'S4'),
+                Keypath('data.FREQ2-1.answers.S5.answer', 'S5'),
+                Keypath('data.FREQ2-1.answers.S6.answer', 'S6'),
+
+                Keypath('data.FREQ2-2.answers.S1.answer', 'S1'),
+                Keypath('data.FREQ2-2.answers.S2.answer', 'S2'),
+                Keypath('data.FREQ2-2.answers.S3.answer', 'S3'),
+                Keypath('data.FREQ2-2.answers.S4.answer', 'S4'),
+                Keypath('data.FREQ2-2.answers.S5.answer', 'S5'),
+                Keypath('data.FREQ2-2.answers.S6.answer', 'S6'),
+
+                Keypath('data.FREQ2-3.answers.S1.answer', 'S1'),
+                Keypath('data.FREQ2-3.answers.S2.answer', 'S2'),
+                Keypath('data.FREQ2-3.answers.S3.answer', 'S3'),
+                Keypath('data.FREQ2-3.answers.S4.answer', 'S4'),
+                Keypath('data.FREQ2-3.answers.S5.answer', 'S5'),
+                Keypath('data.FREQ2-3.answers.S6.answer', 'S6'),
+
+            ]
+        ]
+        """
         major_minor_keypaths = []
         for major in self.major_range:
             for minor in self.minor_range:
