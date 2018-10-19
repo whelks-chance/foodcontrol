@@ -66,12 +66,12 @@ if __name__ == '__main__':
     extractor = Extractor()
 
     json_filenames = [
-        '020518.json',
-        '060618.json',
-        '070618.json',
-        '200818.json',
-        '040918.json',
-        '260918.json',
+        # '020518.json',
+        # '060618.json',
+        # '070618.json',
+        # '200818.json',
+        # '040918.json',
+        # '260918.json',
         '010618_to_040918.json',
     ]
 

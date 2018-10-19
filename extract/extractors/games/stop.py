@@ -1,4 +1,5 @@
 from collections import defaultdict
+from pprint import pprint
 
 from .gamedataextractor import GameDataExtractor
 from keypath_extractor import Keypath
@@ -20,6 +21,15 @@ class AbstractStopDataExtractor(GameDataExtractor):
         'on': defaultdict(int),
         'off': defaultdict(int)
     }
+    logs = []
+
+    def logit(self, message, data=None):
+        log = {
+            'message': message,
+            'data': data
+        }
+        pprint(log)
+        self.logs.append(log)
 
     def clear(self):
         self.durations.clear()
@@ -51,6 +61,76 @@ class AbstractStopDataExtractor(GameDataExtractor):
         check_trial_numbers()
         check_value_labels()
         check_points()  # Called 'General checks' in the DataAnalysisBeta Word document
+
+    @staticmethod
+    def within_stimulus_boundaries(session_event, item_radius=95, prefix='tapResponsePosition'):
+        tx = float(session_event['{}X'.format(prefix)])
+        ty = float(session_event['{}Y'.format(prefix)])
+        ix = session_event['itemPositionX']
+        iy = session_event['itemPositionY']
+        print(tx, ty, ix, iy)
+        if ((tx - ix) ** 2) + ((ty - iy) ** 2) < (item_radius ** 2):
+            return True
+        else:
+            return False
+
+    def check(self, row):
+        self.check_tap_responses(row)
+
+    def numericify(self, n):
+        if n is None:
+            n = 0
+        return n
+
+    def check_tap_responses(self, row):
+        print('check_tap_responses:', row['data'])
+        session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+        for session_event in session_events:
+            pprint(session_event)
+            trial_type = session_event['trialType']
+            tap_response_type = session_event['tapResponseType']
+            if trial_type == 'GO':
+                print('check_tap_responses: GO')
+                tap_response_start = self.numericify(session_event['tapResponseStart'])
+                if tap_response_type == 'CORRECT_GO':
+                    check_passes = tap_response_start > 0 and self.within_stimulus_boundaries(session_event)
+                    if not check_passes:
+                        self.logit('Check failed: GO CORRECT_GO gameSessionID={} roundID={}, trialID={}'.format(
+                            session_event['gameSessionID'], session_event['roundID'], session_event['trialID']),
+                            session_event)
+                if tap_response_type == 'INCORRECT_GO':
+                    check_passes = tap_response_start == 0
+                    if not check_passes:
+                        self.logit('Check failed: GO INCORRECT_GO gameSessionID={} roundID={}, trialID={}'.format(
+                            session_event['gameSessionID'], session_event['roundID'], session_event['trialID']),
+                            session_event)
+                if tap_response_type == 'MISS_GO':
+                    check_passes = tap_response_start > 0 and not self.within_stimulus_boundaries(session_event)
+                    if not check_passes:
+                        self.logit('Check failed: GO MISS_GO gameSessionID={} roundID={}, trialID={}'.format(
+                            session_event['gameSessionID'], session_event['roundID'], session_event['trialID']),
+                            session_event)
+
+            if trial_type == 'STOP':
+                print('check_tap_responses: STOP')
+                if tap_response_type == 'CORRECT_GO':
+                    check_passes = session_event['tapResponseStart'] == 0
+                    if not check_passes:
+                        self.logit('Check failed: STOP CORRECT_GO gameSessionID={} roundID={}, trialID={}'.format(
+                            session_event['gameSessionID'], session_event['roundID'], session_event['trialID']),
+                            session_event)
+                if tap_response_type == 'INCORRECT_GO':
+                    check_passes = session_event['tapResponseStart'] > 0 and self.within_stimulus_boundaries(session_event)
+                    if not check_passes:
+                        self.logit('Check failed: STOP INCORRECT_GO gameSessionID={} roundID={}, trialID={}'.format(
+                            session_event['gameSessionID'], session_event['roundID'], session_event['trialID']),
+                            session_event)
+                if tap_response_type == 'MISS_STOP':
+                    check_passes = session_event['tapResponseStart'] > 0 and not self.within_stimulus_boundaries(session_event)
+                    if not check_passes:
+                        self.logit('Check failed: STOP MISS_STOP gameSessionID={} roundID={}, trialID={}'.format(
+                            session_event['gameSessionID'], session_event['roundID'], session_event['trialID']),
+                            session_event)
 
     def calculate(self, row):
         super(AbstractStopDataExtractor, self).calculate(row)
@@ -155,14 +235,25 @@ class AbstractStopDataExtractor(GameDataExtractor):
         count_raw_events()
         count_trial_types()
 
-        print(self.raw_count['on'])
-        print(self.raw_count['off'])
+        print('\nRaw Data')
+        pprint(self.raw_count['on'])
+        pprint(self.raw_count['off'])
+
+        print('\nDurations')
         for key in self.durations:
             print(key, self.durations[key])
+
+        print('\nTrial Type Count')
         for key in self.trial_type_count:
             print(key, self.trial_type_count[key])
+
+        print('\nItem Type Count')
         for key in self.item_type_count:
             print(key, self.item_type_count[key])
+
+        print('\nLog')
+        for log in self.logs:
+            print(log['message'])
 
 
 class StopDataExtractor(AbstractStopDataExtractor):
@@ -198,6 +289,10 @@ class GRestraintDataExtractor(AbstractStopDataExtractor):
 class DoubleDataExtractor(AbstractStopDataExtractor):
 
     type = 'DOUBLE'
+
+    def check_tap_responses(self, row):
+        print('check_tap_responses:', row['data'])
+        # assert False
 
     def check(self, row):
         super(DoubleDataExtractor, self).check(row)
