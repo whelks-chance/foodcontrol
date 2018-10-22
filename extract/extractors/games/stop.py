@@ -33,8 +33,8 @@ class AbstractStopDataExtractor(GameDataExtractor):
         pprint(log)
         self.logs.append(log)
 
-    def log_message_if_check_fails(self, check_passes, trial, response, session_event):
-        if not check_passes:
+    def log_message_if_check_failed(self, check_passed, trial, response, session_event):
+        if not check_passed:
             message = 'Check failed: {} {} gameSessionID={} roundID={}, trialID={}'.format(
                                 trial, response,
                                 session_event['gameSessionID'], session_event['roundID'], session_event['trialID'])
@@ -103,26 +103,26 @@ class AbstractStopDataExtractor(GameDataExtractor):
                 print('check_tap_responses: GO')
                 tap_response_start = self.numericify(session_event['tapResponseStart'])
                 if tap_response_type == 'CORRECT_GO':
-                    check_passes = tap_response_start > 0 and self.within_stimulus_boundaries(session_event)
-                    self.log_message_if_check_fails(check_passes, 'GO', 'CORRECT_GO', session_event)
+                    check_passed = tap_response_start > 0 and self.within_stimulus_boundaries(session_event)
+                    self.log_message_if_check_failed(check_passed, 'GO', 'CORRECT_GO', session_event)
                 if tap_response_type == 'INCORRECT_GO':
-                    check_passes = tap_response_start == 0
-                    self.log_message_if_check_fails(check_passes, 'GO', 'INCORRECT_GO', session_event)
+                    check_passed = tap_response_start == 0
+                    self.log_message_if_check_failed(check_passed, 'GO', 'INCORRECT_GO', session_event)
                 if tap_response_type == 'MISS_GO':
-                    check_passes = tap_response_start > 0 and not self.within_stimulus_boundaries(session_event)
-                    self.log_message_if_check_fails(check_passes, 'GO', 'MISS_GO', session_event)
+                    check_passed = tap_response_start > 0 and not self.within_stimulus_boundaries(session_event)
+                    self.log_message_if_check_failed(check_passed, 'GO', 'MISS_GO', session_event)
 
             if trial_type == 'STOP':
                 print('check_tap_responses: STOP')
                 if tap_response_type == 'CORRECT_GO':
-                    check_passes = session_event['tapResponseStart'] == 0
-                    self.log_message_if_check_fails(check_passes, 'STOP', 'CORRECT_GO', session_event)
+                    check_passed = session_event['tapResponseStart'] == 0
+                    self.log_message_if_check_failed(check_passed, 'STOP', 'CORRECT_GO', session_event)
                 if tap_response_type == 'INCORRECT_GO':
-                    check_passes = session_event['tapResponseStart'] > 0 and self.within_stimulus_boundaries(session_event)
-                    self.log_message_if_check_fails(check_passes, 'STOP', 'INCORRECT_GO', session_event)
+                    check_passed = session_event['tapResponseStart'] > 0 and self.within_stimulus_boundaries(session_event)
+                    self.log_message_if_check_failed(check_passed, 'STOP', 'INCORRECT_GO', session_event)
                 if tap_response_type == 'MISS_STOP':
-                    check_passes = session_event['tapResponseStart'] > 0 and not self.within_stimulus_boundaries(session_event)
-                    self.log_message_if_check_fails(check_passes, 'STOP', 'MISS_STOP', session_event)
+                    check_passed = session_event['tapResponseStart'] > 0 and not self.within_stimulus_boundaries(session_event)
+                    self.log_message_if_check_failed(check_passed, 'STOP', 'MISS_STOP', session_event)
 
     def calculate(self, row):
         super(AbstractStopDataExtractor, self).calculate(row)
