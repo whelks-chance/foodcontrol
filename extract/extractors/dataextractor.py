@@ -44,7 +44,7 @@ class DataExtractor:
     def get_value_keypaths_for_naming_columns(self):
         """
         Subclasses may generate multiple CSV rows per JSON row but
-        we only need the column names for the first set of keypaths.
+        we only need the column names for the first set of keypaths
         """
         keypaths = self.get_value_keypaths()
         if self.keypaths_are_nested(keypaths):
@@ -53,6 +53,7 @@ class DataExtractor:
 
     @staticmethod
     def keypaths_are_nested(keypaths):
+        """Nested keypaths are contained in a list of lists"""
         return type(keypaths[0]) is list
 
     def get_column_names(self):

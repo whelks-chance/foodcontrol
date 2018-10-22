@@ -20,9 +20,7 @@ class Extractor:
             print('no rows to extract with: ', extractor.type)
             return
 
-        csv_filename = extractor.get_filename()
-        if csv_filename.endswith('-'):
-            csv_filename = csv_filename[:-1]
+        csv_filename = self.clean_filename(extractor.get_filename())
         output_filename = json_csv_path / '{}.csv'.format(csv_filename.upper())
         with open(output_filename, 'w', encoding='utf-8') as csv_file:
             csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
@@ -43,11 +41,23 @@ class Extractor:
             csv_file.write(file_data)          # Write the data rows
 
     @staticmethod
+    def clean_filename(filename):
+        """
+        The filename is based on the game or question
+        prefix which may need some tidying.
+        """
+        # Remove trailing -
+        if filename.endswith('-'):
+            filename = filename[:-1]
+        return filename
+
+    @staticmethod
     def has_row_to_extract(json_array, extractor):
+        """
+        Return True the row extractor can process any of the rows in the JSON array.
+        """
         for row in json_array:
-            # print(row)
             if extractor.can_process_row(row):
-                # print(row)
                 return True
         return False
 

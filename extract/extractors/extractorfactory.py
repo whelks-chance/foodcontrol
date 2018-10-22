@@ -40,7 +40,7 @@ class ExtractorFactory:
         RESTRQuestionDataExtractor(),
     ]
 
-    extractors = game_extractors  # /+ question_extractors
+    extractors = game_extractors  # + question_extractors
 
     def __init__(self):
         self.extractors_by_type = {extractor.type: extractor for extractor in self.extractors}
