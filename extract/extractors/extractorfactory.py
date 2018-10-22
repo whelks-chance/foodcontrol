@@ -6,18 +6,18 @@ class ExtractorFactory:
 
     game_extractors = [
         StopDataExtractor(),
-        RestraintDataExtractor(),
-        NAStopDataExtractor(),
-        NARestraintDataExtractor(),
-        GStopDataExtractor(),
-        GRestraintDataExtractor(),
-        DoubleDataExtractor(),
-        MCIIDataExtractor(),
-        GoalVisDataExtractor(),
-        MeasuresDataExtractor(),
-        EligibilityDataExtractor(),
-        AdditionalInfoDataExtractor(),
-        VirtualSupermarketDataExtractor(),
+        # RestraintDataExtractor(),
+        # NAStopDataExtractor(),
+        # NARestraintDataExtractor(),
+        # GStopDataExtractor(),
+        # GRestraintDataExtractor(),
+        # DoubleDataExtractor(),
+        # MCIIDataExtractor(),
+        # GoalVisDataExtractor(),
+        # MeasuresDataExtractor(),
+        # EligibilityDataExtractor(),
+        # AdditionalInfoDataExtractor(),
+        # VirtualSupermarketDataExtractor(),
     ]
 
     question_extractors = [
@@ -40,7 +40,7 @@ class ExtractorFactory:
         RESTRQuestionDataExtractor(),
     ]
 
-    extractors = game_extractors + question_extractors
+    extractors = game_extractors  # /+ question_extractors
 
     def __init__(self):
         self.extractors_by_type = {extractor.type: extractor for extractor in self.extractors}
