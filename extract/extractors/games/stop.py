@@ -25,13 +25,20 @@ class AbstractStopDataExtractor(GameDataExtractor):
     }
     logs = []
 
-    def logit(self, message, data=None):
+    def log_message(self, message, data=None):
         log = {
             'message': message,
             'data': data
         }
         pprint(log)
         self.logs.append(log)
+
+    def log_message_if_check_fails(self, check_passes, trial, response, session_event):
+        if not check_passes:
+            message = 'Check failed: {} {} gameSessionID={} roundID={}, trialID={}'.format(
+                                trial, response,
+                                session_event['gameSessionID'], session_event['roundID'], session_event['trialID'])
+            self.log_message(message, session_event)
 
     def clear(self):
         self.session_duration = 0
@@ -97,43 +104,25 @@ class AbstractStopDataExtractor(GameDataExtractor):
                 tap_response_start = self.numericify(session_event['tapResponseStart'])
                 if tap_response_type == 'CORRECT_GO':
                     check_passes = tap_response_start > 0 and self.within_stimulus_boundaries(session_event)
-                    if not check_passes:
-                        self.logit('Check failed: GO CORRECT_GO gameSessionID={} roundID={}, trialID={}'.format(
-                            session_event['gameSessionID'], session_event['roundID'], session_event['trialID']),
-                            session_event)
+                    self.log_message_if_check_fails(check_passes, 'GO', 'CORRECT_GO', session_event)
                 if tap_response_type == 'INCORRECT_GO':
                     check_passes = tap_response_start == 0
-                    if not check_passes:
-                        self.logit('Check failed: GO INCORRECT_GO gameSessionID={} roundID={}, trialID={}'.format(
-                            session_event['gameSessionID'], session_event['roundID'], session_event['trialID']),
-                            session_event)
+                    self.log_message_if_check_fails(check_passes, 'GO', 'INCORRECT_GO', session_event)
                 if tap_response_type == 'MISS_GO':
                     check_passes = tap_response_start > 0 and not self.within_stimulus_boundaries(session_event)
-                    if not check_passes:
-                        self.logit('Check failed: GO MISS_GO gameSessionID={} roundID={}, trialID={}'.format(
-                            session_event['gameSessionID'], session_event['roundID'], session_event['trialID']),
-                            session_event)
+                    self.log_message_if_check_fails(check_passes, 'GO', 'MISS_GO', session_event)
 
             if trial_type == 'STOP':
                 print('check_tap_responses: STOP')
                 if tap_response_type == 'CORRECT_GO':
                     check_passes = session_event['tapResponseStart'] == 0
-                    if not check_passes:
-                        self.logit('Check failed: STOP CORRECT_GO gameSessionID={} roundID={}, trialID={}'.format(
-                            session_event['gameSessionID'], session_event['roundID'], session_event['trialID']),
-                            session_event)
+                    self.log_message_if_check_fails(check_passes, 'STOP', 'CORRECT_GO', session_event)
                 if tap_response_type == 'INCORRECT_GO':
                     check_passes = session_event['tapResponseStart'] > 0 and self.within_stimulus_boundaries(session_event)
-                    if not check_passes:
-                        self.logit('Check failed: STOP INCORRECT_GO gameSessionID={} roundID={}, trialID={}'.format(
-                            session_event['gameSessionID'], session_event['roundID'], session_event['trialID']),
-                            session_event)
+                    self.log_message_if_check_fails(check_passes, 'STOP', 'INCORRECT_GO', session_event)
                 if tap_response_type == 'MISS_STOP':
                     check_passes = session_event['tapResponseStart'] > 0 and not self.within_stimulus_boundaries(session_event)
-                    if not check_passes:
-                        self.logit('Check failed: STOP MISS_STOP gameSessionID={} roundID={}, trialID={}'.format(
-                            session_event['gameSessionID'], session_event['roundID'], session_event['trialID']),
-                            session_event)
+                    self.log_message_if_check_fails(check_passes, 'STOP', 'MISS_STOP', session_event)
 
     def calculate(self, row):
         super(AbstractStopDataExtractor, self).calculate(row)
@@ -178,34 +167,29 @@ class AbstractStopDataExtractor(GameDataExtractor):
                         trial_duration = trial_end - trial_start
                         record_duration('trial', trial_duration)
 
-                        # stop_signal_duration = None
                         stop_signal_onset = session_event['stopSignalOnset']
                         stop_signal_offset = session_event['stopSignalOffset']
                         if not_none(stop_signal_onset, stop_signal_offset):
                             stop_signal_duration = stop_signal_offset - stop_signal_onset
                             record_duration('stop_signal', stop_signal_duration)
 
-                        # stimulus_duration = None
                         stimulus_onset = session_event['stimulusOnset']
                         stimulus_offset = session_event['stimulusOffset']
                         if not_none(stimulus_onset, stimulus_offset):
                             stimulus_duration = stimulus_offset - stimulus_onset
                             record_duration('stimulus', stimulus_duration)
 
-                        # signal_stop_difference = None
                         # Difference between signal onset and stop signal delay
                         stop_signal_delay = session_event['stopSignalDelay']
                         if not_none(stop_signal_onset, stop_signal_delay):
                             signal_stop_difference = stop_signal_onset - stop_signal_delay
                             record_duration('signal_stop_difference', signal_stop_difference)
 
-                        # stimulus_stop_difference = None
                         # Duration between signal offset and stimulus offset
                         if not_none(stimulus_offset, stop_signal_offset):
                             stimulus_stop_difference = stimulus_offset - stop_signal_offset
                             record_duration('stimulus_stop_difference', stimulus_stop_difference)
 
-                        # inter_trial_duration = None
                         if previous_session_event:
                             previous_trial_start = previous_session_event['trialStart']
                             inter_trial_duration = trial_start - previous_trial_start
@@ -215,9 +199,11 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
             def calculate_trial_duration_stats():
 
+                def remove_none_values(values):
+                    return [d for d in values if d is not None]
+
                 def calculate_stats(durations_key):
-                    durations = self.durations[durations_key]
-                    durations = [d for d in durations if d is not None]
+                    durations = remove_none_values(self.durations[durations_key])
                     return {
                         'min': min(durations),
                         'max': max(durations),
