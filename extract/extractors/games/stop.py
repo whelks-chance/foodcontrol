@@ -96,7 +96,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
         print('check_tap_responses:', row['data'])
         session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
         for session_event in session_events:
-            pprint(session_event)
+            # pprint(session_event)
             trial_type = session_event['trialType']
             tap_response_type = session_event['tapResponseType']
             if trial_type == 'GO':
@@ -216,6 +216,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
                     'stop_signal',
                     'stimulus',
                     'signal_stop_difference',
+                    'stimulus_stop_difference',
                     'inter_trial'
                 ]
 
@@ -229,21 +230,35 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
         def count_trial_types():
             session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+            self.trial_count = 0
+            self.raw_round_trial_counts = defaultdict(set)
             for session_event in session_events:
+                self.trial_count += 1
+                self.raw_round_trial_counts[session_event['roundID']].add(session_event['trialID'])
                 # trialType = GO/STOP
                 self.trial_type_count[session_event['trialType']] += 1
                 # itemType = HEALTHY/NON-HEALTHY
                 item_type = session_event['itemType']
                 selected = session_event['selected']
                 block_id = session_event['roundID']
+
+                # trialType = GO/STOP
+                self.item_type_count[block_id][session_event['trialType']] += 1
+
                 if item_type == 'HEALTHY':
                     self.item_type_count[block_id]['HEALTHY'] += 1
-                    if selected == 'RANDOM':
+                    if selected == 'random':
                         self.item_type_count[block_id]['HEALTHY_RANDOM'] += 1
                     else:
                         self.item_type_count[block_id]['HEALTHY_NOT_RANDOM'] += 1
                 if item_type == 'NON_HEALTHY':
                     self.item_type_count[block_id]['NON_HEALTHY'] += 1
+
+            self.session_item_counts = defaultdict(int)
+            for block_id_key in self.item_type_count.keys():
+                items = self.item_type_count[block_id_key]
+                for item_key in items.keys():
+                    self.session_item_counts[item_key] += items[item_key]
 
         def count_raw_events():
             # "Raw data"
@@ -256,14 +271,35 @@ class AbstractStopDataExtractor(GameDataExtractor):
         count_trial_types()
         count_raw_events()
 
-        print('\nDurations:')
+        print('\nRAW COUNTS:')
         print(' ON', self.raw_count['on'])
         print('OFF', self.raw_count['off'])
-        pprint(self.trial_stats)
+
+        print('\nTRIAL DURATIONS:')
         for key in self.durations:
             print(key, self.durations[key])
+
+        print('\nTRIAL STATS:')
+        pprint(self.trial_stats)
+
+        print('\nTRIAL TYPE COUNTS:')
+        trial_count = 0
         for key in self.trial_type_count:
+            trial_count += self.trial_type_count[key]
             print(key, self.trial_type_count[key])
+        print(trial_count, self.trial_count)
+        # assert trial_count == self.trial_count
+
+        print('\nITEM TYPE COUNTS:')
+        pprint(self.item_type_count)
+
+        print('\nSESSION ITEM TYPE COUNTS:')
+        pprint(self.session_item_counts)
+
+        print('\nRAW ROUND TRIAL COUNTS:')
+        # print(self.raw_round_trial_counts)
+        for key in self.raw_round_trial_counts:
+            print(key, len(self.raw_round_trial_counts[key]), self.raw_round_trial_counts[key])
 
         print('\nLog')
         for log in self.logs:
