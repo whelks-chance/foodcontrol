@@ -260,6 +260,12 @@ class AbstractStopDataExtractor(GameDataExtractor):
                 for item_key in items.keys():
                     self.session_item_counts[item_key] += items[item_key]
 
+            self.item_type_percentages = defaultdict(float)
+            for block_id_key in self.item_type_count.keys():
+                items = self.item_type_count[block_id_key]
+                print('items:', items)
+
+
         def count_raw_events():
             # "Raw data"
             raw_events = self.get_keypath_value(row, 'data.0.rawEvents')
