@@ -226,7 +226,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
             calculate_trial_durations()
             calculate_trial_duration_stats()
 
-        def count_trial_types():
+        def count_trial_and_types():
             self.trial_count = 0
             self.raw_round_trial_counts = defaultdict(set)
             self.block_trial_type_counts = defaultdict(lambda: defaultdict(int))  # dict of int dict
@@ -304,9 +304,44 @@ class AbstractStopDataExtractor(GameDataExtractor):
                 self.raw_count['on'][raw_event['eventOn']] += 1
                 self.raw_count['off'][raw_event['eventOff']] += 1
 
+        def check_value_labels():
+            session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+
+            # Record healthy/non-healthy label allocation counts
+            self.label_allocation_counts = defaultdict(lambda: defaultdict(int))  # dict of int dict
+            for session_event in session_events:
+                item_id = session_event['itemID']
+                item_type = session_event['itemType']
+                for prefix in ['1_', '2_']:
+                    if item_id.startswith(prefix):
+                        self.label_allocation_counts[item_type][prefix] += 1
+
+            # Record healthy/non-healthy label allocation percentages
+            # TODO
+
+            # Record the item IDs for each value of selected (MB/random/user/upload/non-food)
+            self.selected_item_ids = defaultdict(set)  # dict of set
+            for session_event in session_events:
+                selected = session_event['selected']
+                item_id = session_event['itemID']
+                self.selected_item_ids[selected].add(item_id)
+
+            # Record the block-level set of unique item IDs
+            self.block_item_ids = defaultdict(set)  # dict of set
+            for session_event in session_events:
+                block_id = session_event['roundID']
+                item_id = session_event['itemID']
+                self.block_item_ids[block_id].add(item_id)
+
+            # Record the session-level set of unique item IDs
+            self.session_item_ids = set()
+            for _, item_ids in self.block_item_ids.items():
+                self.session_item_ids.update(item_ids)
+
         calculate_durations()
-        count_trial_types()
+        count_trial_and_types()
         count_raw_events()
+        check_value_labels()
 
         print('TRIAL COUNT: ', self.trial_count)
 
@@ -344,6 +379,20 @@ class AbstractStopDataExtractor(GameDataExtractor):
         print('\nRAW ROUND TRIAL COUNTS:')
         for key in self.raw_round_trial_counts:
             print(key, len(self.raw_round_trial_counts[key]), self.raw_round_trial_counts[key])
+
+        # Label Allocation Counts
+        print('\nLABEL ALLOCATION COUNTS:')
+        pprint(self.label_allocation_counts)
+
+        # Selected Item IDs
+        print('\nSELCTED ITEM IDs:')
+        pprint(self.selected_item_ids)
+
+        # Unique Item IDs
+        print('\nSESSION ITEM IDs:')
+        pprint(self.session_item_ids)
+        print('\nBLOCK ITEM IDs:')
+        pprint(self.block_item_ids)
 
         print('\nLog')
         for log in self.logs:
