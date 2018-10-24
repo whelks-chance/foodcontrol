@@ -257,6 +257,24 @@ class AbstractStopDataExtractor(GameDataExtractor):
                 if item_type == 'NON_HEALTHY':
                     self.block_item_type_counts[block_id]['NON_HEALTHY'] += 1
 
+            # Calculate the block-level trial type percentages
+            self.block_trial_type_percentages = defaultdict(lambda: defaultdict(float))  # dict of float dict
+            for block_id_key, items in self.block_trial_type_counts.items():
+                block_total = 0
+                for item_key, item_count in items.items():
+                    block_total += item_count
+                for item_key, item_count in items.items():
+                    self.block_trial_type_percentages[block_id_key][item_key] = self.block_trial_type_counts[block_id_key][item_key] / block_total
+
+            # Calculate the block-level item type percentages
+            self.block_item_type_percentages = defaultdict(lambda: defaultdict(float))  # dict of float dict
+            for block_id_key, items in self.block_item_type_counts.items():
+                block_total = 0
+                for item_key, item_count in items.items():
+                    block_total += item_count
+                for item_key, item_count in items.items():
+                    self.block_item_type_percentages[block_id_key][item_key] = self.block_item_type_counts[block_id_key][item_key] / block_total
+
             # Calculate the session-level trial type counts from the block-level counts
             self.session_trial_type_counts = defaultdict(int)
             for block_id_key, items in self.block_trial_type_counts.items():
@@ -290,6 +308,8 @@ class AbstractStopDataExtractor(GameDataExtractor):
         count_trial_types()
         count_raw_events()
 
+        print('TRIAL COUNT: ', self.trial_count)
+
         print('\nRAW COUNTS:')
         print(' ON', self.raw_count['on'])
         print('OFF', self.raw_count['off'])
@@ -308,6 +328,8 @@ class AbstractStopDataExtractor(GameDataExtractor):
         pprint(self.session_trial_type_percentages)
         print('\nBLOCK TRIAL TYPE COUNTS:')
         pprint(self.block_trial_type_counts)
+        print('\nBLOCK TRIAL TYPE PERCENTAGES:')
+        pprint(self.block_trial_type_percentages)
 
         # Trial Items
         print('\nSESSION ITEM TYPE COUNTS:')
@@ -316,6 +338,8 @@ class AbstractStopDataExtractor(GameDataExtractor):
         pprint(self.session_item_type_percentages)
         print('\nBLOCK ITEM TYPE COUNTS:')
         pprint(self.block_item_type_counts)
+        print('\nBLOCK ITEM TYPE PERCENTAGES:')
+        pprint(self.block_item_type_percentages)
 
         print('\nRAW ROUND TRIAL COUNTS:')
         for key in self.raw_round_trial_counts:
