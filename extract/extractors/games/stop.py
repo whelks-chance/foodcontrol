@@ -95,7 +95,6 @@ class AbstractStopDataExtractor(GameDataExtractor):
         print('check_tap_responses:', row['data'])
         session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
         for session_event in session_events:
-            # pprint(session_event)
             trial_type = session_event['trialType']
             tap_response_type = session_event['tapResponseType']
             if trial_type == 'GO':
@@ -230,8 +229,8 @@ class AbstractStopDataExtractor(GameDataExtractor):
         def count_trial_types():
             self.trial_count = 0
             self.raw_round_trial_counts = defaultdict(set)
-            self.block_trial_type_counts = defaultdict(lambda: defaultdict(int))
-            self.block_item_type_counts = defaultdict(lambda: defaultdict(int))
+            self.block_trial_type_counts = defaultdict(lambda: defaultdict(int))  # dict of int dict
+            self.block_item_type_counts = defaultdict(lambda: defaultdict(int))   # dict of int dict
 
             session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
             for session_event in session_events:
@@ -265,12 +264,22 @@ class AbstractStopDataExtractor(GameDataExtractor):
                 for item_key in items.keys():
                     self.session_trial_type_counts[item_key] += items[item_key]
 
+            # Calculate the session-level trial type percentages
+            self.session_trial_type_percentages = defaultdict(float)
+            for trial_type in self.session_trial_type_counts.keys():
+                self.session_trial_type_percentages[trial_type] = self.session_trial_type_counts[trial_type] / self.trial_count
+
             # Calculate the session-level item type counts from the block-level counts
             self.session_item_type_counts = defaultdict(int)
             for block_id_key in self.block_item_type_counts.keys():
                 items = self.block_item_type_counts[block_id_key]
                 for item_key in items.keys():
                     self.session_item_type_counts[item_key] += items[item_key]
+
+            # Calculate the session-level item type percentages
+            self.session_item_type_percentages = defaultdict(float)
+            for item_type in self.session_item_type_counts.keys():
+                self.session_item_type_percentages[item_type] = self.session_item_type_counts[item_type] / self.trial_count
 
         def count_raw_events():
             # "Raw data"
@@ -294,20 +303,23 @@ class AbstractStopDataExtractor(GameDataExtractor):
         print('\nTRIAL STATS:')
         pprint(self.trial_stats)
 
+        # Trial Types
         print('\nSESSION TRIAL TYPE COUNTS:')
         pprint(self.session_trial_type_counts)
-
+        print('\nSESSION TRIAL TYPE PERCENTAGES:')
+        pprint(self.session_trial_type_percentages)
         print('\nBLOCK TRIAL TYPE COUNTS:')
         pprint(self.block_trial_type_counts)
 
+        # Trial Items
         print('\nSESSION ITEM TYPE COUNTS:')
         pprint(self.session_item_type_counts)
-
+        print('\nSESSION ITEM TYPE PERCENTAGES:')
+        pprint(self.session_item_type_percentages)
         print('\nBLOCK ITEM TYPE COUNTS:')
         pprint(self.block_item_type_counts)
 
         print('\nRAW ROUND TRIAL COUNTS:')
-        # print(self.raw_round_trial_counts)
         for key in self.raw_round_trial_counts:
             print(key, len(self.raw_round_trial_counts[key]), self.raw_round_trial_counts[key])
 
