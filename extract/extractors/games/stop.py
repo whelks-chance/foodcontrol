@@ -259,27 +259,25 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
             # Calculate the session-level trial type counts from the block-level counts
             self.session_trial_type_counts = defaultdict(int)
-            for block_id_key in self.block_trial_type_counts.keys():
-                items = self.block_trial_type_counts[block_id_key]
-                for item_key in items.keys():
-                    self.session_trial_type_counts[item_key] += items[item_key]
+            for block_id_key, items in self.block_trial_type_counts.items():
+                for item_key, item_count in items.items():
+                    self.session_trial_type_counts[item_key] += item_count
 
             # Calculate the session-level trial type percentages
             self.session_trial_type_percentages = defaultdict(float)
-            for trial_type in self.session_trial_type_counts.keys():
-                self.session_trial_type_percentages[trial_type] = self.session_trial_type_counts[trial_type] / self.trial_count
+            for trial_type, trial_type_count in self.session_trial_type_counts.items():
+                self.session_trial_type_percentages[trial_type] = trial_type_count / self.trial_count
 
             # Calculate the session-level item type counts from the block-level counts
             self.session_item_type_counts = defaultdict(int)
-            for block_id_key in self.block_item_type_counts.keys():
-                items = self.block_item_type_counts[block_id_key]
-                for item_key in items.keys():
-                    self.session_item_type_counts[item_key] += items[item_key]
+            for block_id_key, items in self.block_item_type_counts.items():
+                for item_key, item_count in items.items():
+                    self.session_item_type_counts[item_key] += item_count
 
             # Calculate the session-level item type percentages
             self.session_item_type_percentages = defaultdict(float)
-            for item_type in self.session_item_type_counts.keys():
-                self.session_item_type_percentages[item_type] = self.session_item_type_counts[item_type] / self.trial_count
+            for item_type, item_type_count in self.session_item_type_counts.items():
+                self.session_item_type_percentages[item_type] = item_type_count / self.trial_count
 
         def count_raw_events():
             # "Raw data"
