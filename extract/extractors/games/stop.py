@@ -309,6 +309,10 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
             # Record healthy/non-healthy label allocation counts
             self.label_allocation_counts = defaultdict(lambda: defaultdict(int))  # dict of int dict
+            self.label_allocation_counts['HEALTHY']['1_'] = 0
+            self.label_allocation_counts['HEALTHY']['2_'] = 0
+            self.label_allocation_counts['NON_HEALTHY']['1_'] = 0
+            self.label_allocation_counts['NON_HEALTHY']['2_'] = 0
             for session_event in session_events:
                 item_id = session_event['itemID']
                 item_type = session_event['itemType']
@@ -317,7 +321,17 @@ class AbstractStopDataExtractor(GameDataExtractor):
                         self.label_allocation_counts[item_type][prefix] += 1
 
             # Record healthy/non-healthy label allocation percentages
-            # TODO
+            self.label_allocation_item_id_percentages = defaultdict(lambda: defaultdict(float))  # dict of int dict
+            healthy_sum = self.label_allocation_counts['HEALTHY']['1_'] + self.label_allocation_counts['HEALTHY']['2_']
+            non_healthy_sum = self.label_allocation_counts['NON_HEALTHY']['1_'] + self.label_allocation_counts['NON_HEALTHY']['2_']
+            self.label_allocation_item_id_percentages['HEALTHY']['1_'] = self.label_allocation_counts['HEALTHY']['1_'] / healthy_sum
+            self.label_allocation_item_id_percentages['HEALTHY']['2_'] = self.label_allocation_counts['HEALTHY']['2_'] / healthy_sum
+            self.label_allocation_item_id_percentages['NON_HEALTHY']['1_'] = self.label_allocation_counts['NON_HEALTHY']['1_'] / non_healthy_sum
+            self.label_allocation_item_id_percentages['NON_HEALTHY']['2_'] = self.label_allocation_counts['NON_HEALTHY']['2_'] / non_healthy_sum
+            total_sum = healthy_sum + non_healthy_sum
+            self.label_allocation_item_type_percentages = defaultdict(float)
+            self.label_allocation_item_type_percentages['HEALTHY'] = healthy_sum / total_sum
+            self.label_allocation_item_type_percentages['NON_HEALTHY'] = non_healthy_sum / total_sum
 
             # Record the item IDs for each value of selected (MB/random/user/upload/non-food)
             self.selected_item_ids = defaultdict(set)  # dict of set
@@ -383,6 +397,11 @@ class AbstractStopDataExtractor(GameDataExtractor):
         # Label Allocation Counts
         print('\nLABEL ALLOCATION COUNTS:')
         pprint(self.label_allocation_counts)
+
+        # Label Allocation Percentages
+        print('\nLABEL ALLOCATION PERCENTAGES:')
+        pprint(self.label_allocation_item_id_percentages)
+        pprint(self.label_allocation_item_type_percentages)
 
         # Selected Item IDs
         print('\nSELCTED ITEM IDs:')
