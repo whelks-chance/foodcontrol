@@ -77,7 +77,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
         ty = float(session_event['{}Y'.format(prefix)])
         ix = session_event['itemPositionX']
         iy = session_event['itemPositionY']
-        print(tx, ty, ix, iy)
+        # print(tx, ty, ix, iy)
         if ((tx - ix) ** 2) + ((ty - iy) ** 2) < (item_radius ** 2):
             return True
         else:
@@ -92,13 +92,13 @@ class AbstractStopDataExtractor(GameDataExtractor):
         return n
 
     def check_tap_responses(self, row):
-        print('check_tap_responses:', row['data'])
+        # print('check_tap_responses:', row['data'])
         session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
         for session_event in session_events:
             trial_type = session_event['trialType']
             tap_response_type = session_event['tapResponseType']
             if trial_type == 'GO':
-                print('check_tap_responses: GO')
+                # print('check_tap_responses: GO')
                 tap_response_start = self.numericify(session_event['tapResponseStart'])
                 if tap_response_type == 'CORRECT_GO':
                     check_passed = tap_response_start > 0 and self.within_stimulus_boundaries(session_event)
@@ -111,7 +111,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
                     self.log_message_if_check_failed(check_passed, 'GO', 'MISS_GO', session_event)
 
             if trial_type == 'STOP':
-                print('check_tap_responses: STOP')
+                # print('check_tap_responses: STOP')
                 if tap_response_type == 'CORRECT_GO':
                     check_passed = session_event['tapResponseStart'] == 0
                     self.log_message_if_check_failed(check_passed, 'STOP', 'CORRECT_GO', session_event)
@@ -352,10 +352,35 @@ class AbstractStopDataExtractor(GameDataExtractor):
             for _, item_ids in self.block_item_ids.items():
                 self.session_item_ids.update(item_ids)
 
+        def check_points():
+            points = {
+                'GO': {
+                    'CORRECT_GO': 20,
+                    'INCORRECT_GO': -50,
+                    'MISS_GO': -20,
+                },
+                'STOP': {
+                    'CORRECT_STOP': 50,
+                    'INCORRECT_STOP': -50,
+                    'MISS_STOP': -50,
+                }
+            }
+            running_total = 0
+            session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+            for session_event in session_events:
+                trial_type = session_event['trialType']
+                tap_response_type = session_event['tapResponseType']
+                points_this_trial = session_event['pointsThisTrial']
+                assert points_this_trial == points[trial_type][tap_response_type]
+                running_total += points_this_trial
+                points_running_total = session_event['pointsRunningTotal']
+                assert points_running_total == running_total
+
         calculate_durations()
         count_trial_and_types()
         count_raw_events()
         check_value_labels()
+        check_points()
 
         print('TRIAL COUNT: ', self.trial_count)
 
