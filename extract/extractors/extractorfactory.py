@@ -11,7 +11,7 @@ class ExtractorFactory:
         # NARestraintDataExtractor(),
         # GStopDataExtractor(),
         # GRestraintDataExtractor(),
-        # DoubleDataExtractor(),
+        DoubleDataExtractor(),
         # MCIIDataExtractor(),
         # GoalVisDataExtractor(),
         # MeasuresDataExtractor(),
