@@ -28,7 +28,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
             'message': message,
             'data': data
         }
-        pprint(log)
+        # pprint(log)
         self.logs.append(log)
 
     def log_message_if_check_failed(self, check_passed, session_event, extra_message=None):
@@ -361,71 +361,133 @@ class AbstractStopDataExtractor(GameDataExtractor):
             for _, item_ids in self.block_item_ids.items():
                 self.session_item_ids.update(item_ids)
 
+        def calculate_dependent_variables():
+            trial_count = 0
+            self.dv_correct_counts = defaultdict(lambda: defaultdict(int))
+            session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+            for session_event in session_events:
+                trial_count += 1
+                # GO/STOP
+                if 'tapResponseType' in session_event:
+                    tap_response_type = session_event['tapResponseType']
+                    if tap_response_type == 'CORRECT_GO' or tap_response_type == 'CORRECT_STOP':
+                        block_id = session_event['roundID']
+                        self.dv_correct_counts[block_id][tap_response_type] += 1
+
+            # Calculate the CORRECT_GO/STOP block-level percentages
+            self.dv_correct_block_percentages = defaultdict(lambda: defaultdict(int))
+            for block_id_key, tap_response_types in self.dv_correct_counts.items():
+                block_total = 0
+                for tap_response_type, count in tap_response_types.items():
+                    block_total += count
+                for tap_response_type, count in tap_response_types.items():
+                    self.dv_correct_block_percentages[block_id_key][tap_response_type] = count / block_total
+
+            # Calculate the CORRECT_GO/STOP session-level percentages
+            self.dv_correct_session_percentages = defaultdict(int)
+            for block_id_key, tap_response_types in self.dv_correct_counts.items():
+                for tap_response_type_key, item_count in tap_response_types.items():
+                    self.dv_correct_session_percentages[tap_response_type_key] += item_count
+
+            self.dv_correct_go_responses = list()
+            self.dv_correct_stop_responses = list()
+            self.dv_correct_responses = defaultdict(lambda: defaultdict(list))
+            for session_event in session_events:
+                # GO/STOP
+                if 'tapResponseType' in session_event:
+                    tap_response_type = session_event['tapResponseType']
+                    tap_response_start = self.numericify(session_event['tapResponseStart'])
+                    item_type = session_event['itemType']
+                    self.dv_correct_responses[tap_response_type][item_type].append(tap_response_start)
+                    if tap_response_type == 'CORRECT_GO':
+                        self.dv_correct_go_responses.append(tap_response_start)
+                    if tap_response_type == 'CORRECT_STOP':
+                        self.dv_correct_stop_responses.append(tap_response_start)
+
         calculate_durations()
         count_trial_and_types()
         count_raw_events()
         check_value_labels()
         self.check_points(row)
+        calculate_dependent_variables()
 
-        print('TRIAL COUNT: ', self.trial_count)
+        # print('TRIAL COUNT: ', self.trial_count)
+        #
+        # print('\nRAW COUNTS:')
+        # print(' ON', self.raw_count['on'])
+        # print('OFF', self.raw_count['off'])
+        #
+        # print('\nTRIAL DURATIONS:')
+        # for key in self.durations:
+        #     print(key, self.durations[key])
+        #
+        # print('\nTRIAL STATS:')
+        # pprint(self.trial_stats)
+        #
+        # # Trial Types
+        # print('\nSESSION TRIAL TYPE COUNTS:')
+        # pprint(self.session_trial_type_counts)
+        # print('\nSESSION TRIAL TYPE PERCENTAGES:')
+        # pprint(self.session_trial_type_percentages)
+        # print('\nBLOCK TRIAL TYPE COUNTS:')
+        # pprint(self.block_trial_type_counts)
+        # print('\nBLOCK TRIAL TYPE PERCENTAGES:')
+        # pprint(self.block_trial_type_percentages)
+        #
+        # # Trial Items
+        # print('\nSESSION ITEM TYPE COUNTS:')
+        # pprint(self.session_item_type_counts)
+        # print('\nSESSION ITEM TYPE PERCENTAGES:')
+        # pprint(self.session_item_type_percentages)
+        # print('\nBLOCK ITEM TYPE COUNTS:')
+        # pprint(self.block_item_type_counts)
+        # print('\nBLOCK ITEM TYPE PERCENTAGES:')
+        # pprint(self.block_item_type_percentages)
+        #
+        # print('\nRAW ROUND TRIAL COUNTS:')
+        # for key in self.raw_round_trial_counts:
+        #     print(key, len(self.raw_round_trial_counts[key]), self.raw_round_trial_counts[key])
+        #
+        # # Label Allocation Counts
+        # print('\nLABEL ALLOCATION COUNTS:')
+        # pprint(self.label_allocation_counts)
+        #
+        # # Label Allocation Percentages
+        # print('\nLABEL ALLOCATION PERCENTAGES:')
+        # pprint(self.label_allocation_item_id_percentages)
+        # pprint(self.label_allocation_item_type_percentages)
+        #
+        # # Selected Item IDs
+        # print('\nSELCTED ITEM IDs:')
+        # print(self.selected_item_ids)
+        #
+        # # Unique Item IDs
+        # print('\nSESSION ITEM IDs:')
+        # print(self.session_item_ids)
+        # print('\nBLOCK ITEM IDs:')
+        # print(self.block_item_ids)
 
-        print('\nRAW COUNTS:')
-        print(' ON', self.raw_count['on'])
-        print('OFF', self.raw_count['off'])
+        def mean(numbers):
+            if numbers and len(numbers) > 0:
+                return statistics.mean(numbers)
+            else:
+                return 0
 
-        print('\nTRIAL DURATIONS:')
-        for key in self.durations:
-            print(key, self.durations[key])
+        print('\nDV CORRECT COUNTS:')
+        print(self.dv_correct_counts)
+        print('mean CORRECT_GO responses', mean(self.dv_correct_go_responses))
+        print('mean CORRECT_GO HEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
+        print('mean CORRECT_GO UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['NON_HEALTHY']))
+        print('mean CORRECT_STOP responses', mean(self.dv_correct_stop_responses))
+        print('mean CORRECT_STOP HEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY']))
+        print('mean CORRECT_STOP UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['NON_HEALTHY']))
 
-        print('\nTRIAL STATS:')
-        pprint(self.trial_stats)
+        print('DV BLOCK LEVEL PERCENTAGES:')
+        pprint(self.dv_correct_block_percentages)
+        print('DV SESSION LEVEL PERCENTAGES:')
+        pprint(self.dv_correct_session_percentages)
 
-        # Trial Types
-        print('\nSESSION TRIAL TYPE COUNTS:')
-        pprint(self.session_trial_type_counts)
-        print('\nSESSION TRIAL TYPE PERCENTAGES:')
-        pprint(self.session_trial_type_percentages)
-        print('\nBLOCK TRIAL TYPE COUNTS:')
-        pprint(self.block_trial_type_counts)
-        print('\nBLOCK TRIAL TYPE PERCENTAGES:')
-        pprint(self.block_trial_type_percentages)
-
-        # Trial Items
-        print('\nSESSION ITEM TYPE COUNTS:')
-        pprint(self.session_item_type_counts)
-        print('\nSESSION ITEM TYPE PERCENTAGES:')
-        pprint(self.session_item_type_percentages)
-        print('\nBLOCK ITEM TYPE COUNTS:')
-        pprint(self.block_item_type_counts)
-        print('\nBLOCK ITEM TYPE PERCENTAGES:')
-        pprint(self.block_item_type_percentages)
-
-        print('\nRAW ROUND TRIAL COUNTS:')
-        for key in self.raw_round_trial_counts:
-            print(key, len(self.raw_round_trial_counts[key]), self.raw_round_trial_counts[key])
-
-        # Label Allocation Counts
-        print('\nLABEL ALLOCATION COUNTS:')
-        pprint(self.label_allocation_counts)
-
-        # Label Allocation Percentages
-        print('\nLABEL ALLOCATION PERCENTAGES:')
-        pprint(self.label_allocation_item_id_percentages)
-        pprint(self.label_allocation_item_type_percentages)
-
-        # Selected Item IDs
-        print('\nSELCTED ITEM IDs:')
-        pprint(self.selected_item_ids)
-
-        # Unique Item IDs
-        print('\nSESSION ITEM IDs:')
-        pprint(self.session_item_ids)
-        print('\nBLOCK ITEM IDs:')
-        pprint(self.block_item_ids)
-
-        print('\nLog')
-        for log in self.logs:
-            print(log['message'])
+        # print('\nLog')
 
 
 class StopDataExtractor(AbstractStopDataExtractor):
@@ -490,7 +552,7 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
                     check_passed = points_this_trial == -20
                     self.log_message_if_check_failed(check_passed, session_event)
                 else:
-                    print(initial_tap_response_type, second_tap_response_type)
+                    # print(initial_tap_response_type, second_tap_response_type)
                     check_passed = points_this_trial == -50
                     self.log_message_if_check_failed(check_passed, session_event)
             if trial_type == 'DOUBLE':
@@ -560,22 +622,6 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
                 if second_tap_response_type == 'MISS':
                     check_passed = second_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
                     self.log_message_if_check_failed(check_passed, session_event)
-
-    def check(self, row):
-        super(DoubleDataExtractor, self).check(row)
-
-        def check_initial_response_type():
-            pass
-
-        def check_second_response_type():
-            pass
-
-        def check_points():
-            pass
-
-        check_initial_response_type()
-        check_second_response_type()
-        check_points()
 
     def calculate(self, row):
         super(DoubleDataExtractor, self).calculate(row)
