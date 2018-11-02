@@ -362,11 +362,10 @@ class AbstractStopDataExtractor(GameDataExtractor):
                 self.session_item_ids.update(item_ids)
 
         def calculate_dependent_variables():
-            trial_count = 0
             self.dv_correct_counts = defaultdict(lambda: defaultdict(int))
             session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+            trial_count = len(session_events)
             for session_event in session_events:
-                trial_count += 1
                 # GO/STOP
                 if 'tapResponseType' in session_event:
                     tap_response_type = session_event['tapResponseType']
@@ -392,6 +391,10 @@ class AbstractStopDataExtractor(GameDataExtractor):
             self.dv_correct_go_responses = list()
             self.dv_correct_stop_responses = list()
             self.dv_correct_responses = defaultdict(lambda: defaultdict(list))
+            self.dv_incorrect_healthy_selected_responses = list()
+            self.dv_incorrect_healthy_not_selected_responses = list()
+            self.dv_incorrect_unhealthy_selected_responses = list()
+            self.dv_incorrect_unhealthy_not_selected_responses = list()
             for session_event in session_events:
                 # GO/STOP
                 if 'tapResponseType' in session_event:
@@ -403,6 +406,20 @@ class AbstractStopDataExtractor(GameDataExtractor):
                         self.dv_correct_go_responses.append(tap_response_start)
                     if tap_response_type == 'CORRECT_STOP':
                         self.dv_correct_stop_responses.append(tap_response_start)
+
+                    trial_type = session_event['trialType']
+                    selected = session_event['selected']
+                    if trial_type == 'STOP' and tap_response_type != 'CORRECT_STOP':
+                        if item_type == 'HEALTHY':
+                            if selected != 'random':
+                                self.dv_incorrect_healthy_selected_responses.append(tap_response_start)
+                            if selected == 'random':
+                                self.dv_incorrect_healthy_not_selected_responses.append(tap_response_start)
+                        if item_type == 'NON_HEALTHY':
+                            if selected != 'random':
+                                self.dv_incorrect_unhealthy_selected_responses.append(tap_response_start)
+                            if selected == 'random':
+                                self.dv_incorrect_unhealthy_not_selected_responses.append(tap_response_start)
 
         calculate_durations()
         count_trial_and_types()
@@ -475,6 +492,11 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
         print('\nDV CORRECT COUNTS:')
         print(self.dv_correct_counts)
+        print('DV BLOCK LEVEL CORRECT PERCENTAGES:')
+        pprint(self.dv_correct_block_percentages)
+        print('DV SESSION LEVEL CORRECT PERCENTAGES:')
+        pprint(self.dv_correct_session_percentages)
+
         print('mean CORRECT_GO responses', mean(self.dv_correct_go_responses))
         print('mean CORRECT_GO HEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
         print('mean CORRECT_GO UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['NON_HEALTHY']))
@@ -482,11 +504,10 @@ class AbstractStopDataExtractor(GameDataExtractor):
         print('mean CORRECT_STOP HEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY']))
         print('mean CORRECT_STOP UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['NON_HEALTHY']))
 
-        print('DV BLOCK LEVEL PERCENTAGES:')
-        pprint(self.dv_correct_block_percentages)
-        print('DV SESSION LEVEL PERCENTAGES:')
-        pprint(self.dv_correct_session_percentages)
-
+        print('mean INCORRECT HEALTHY SELECTED responses', mean(self.dv_incorrect_healthy_selected_responses))
+        print('mean INCORRECT HEALTHY NOT SELECTED responses', mean(self.dv_incorrect_healthy_not_selected_responses))
+        print('mean INCORRECT UNHEALTHY SELECTED responses', mean(self.dv_incorrect_unhealthy_selected_responses))
+        print('mean INCORRECT UNHEALTHY NOT SELECTED responses', mean(self.dv_incorrect_unhealthy_not_selected_responses))
         # print('\nLog')
 
 
