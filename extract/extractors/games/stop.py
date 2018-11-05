@@ -131,6 +131,56 @@ class AbstractStopDataExtractor(GameDataExtractor):
             points_running_total = session_event['pointsRunningTotal']
             assert points_running_total == running_total
 
+    def calculate_ssrt(self, row):
+        session_events = self.get_session_events(row)
+        if session_events:
+
+            # Mean SSRT
+            tap_response_start_total = 0
+            stop_signal_delay_total = 0
+            stop_signal_onset_total = 0
+            for session_event in session_events:
+                trial_type = session_event['trialType']
+                tap_response_start = self.numericify(session_event['tapResponseStart'])
+                if trial_type == 'GO' and tap_response_start > 0:
+                    tap_response_start_total += tap_response_start
+                stop_signal_delay = self.numericify(session_event['stopSignalDelay'])
+                stop_signal_delay_total += stop_signal_delay
+                stop_signal_onset = self.numericify(session_event['stopSignalOnset'])
+                stop_signal_onset_total += stop_signal_onset
+            mean_tap_response_start = tap_response_start_total / len(session_events)
+            mean_stop_signal_delay = stop_signal_delay_total / len(session_events)
+            mean_stop_signal_onset = stop_signal_onset_total / len(session_events)
+            mean_ideal_ssrt = mean_tap_response_start - mean_stop_signal_delay  # What the SSRT should be
+            mean_actual_ssrt = mean_tap_response_start - mean_stop_signal_onset  # What the SSRT actually is
+            print('\n IDEAL MEAN SSRT:', mean_ideal_ssrt)
+            print('ACTUAL MEAN SSRT:', mean_actual_ssrt)
+
+            # Integration SSRT
+            incorrect_stop_trials_count = 0
+            for session_event in session_events:
+                tap_response_type = session_event['tapResponseType']
+                if tap_response_type == 'INCORRECT_STOP' or tap_response_type == 'MISS_STOP':
+                    incorrect_stop_trials_count += 1
+            print('INCORRECT STOP TRIALS:', incorrect_stop_trials_count)
+
+
+
+    def get_session_events(self, row):
+        """
+        Handle inconsistently formatted data structures:
+        data -> object vs data -> [ object ]
+        """
+        session_events = None
+        try:
+            session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+        except KeyError:
+            try:
+                session_events = self.get_keypath_value(row, 'data.sessionEvents')
+            except KeyError:
+                pass
+        return session_events
+
     def calculate(self, row):
         super(AbstractStopDataExtractor, self).calculate(row)
 
@@ -145,27 +195,12 @@ class AbstractStopDataExtractor(GameDataExtractor):
             def record_duration(key, value):
                 self.durations[key].append(value)
 
-            def get_session_events(row):
-                """
-                Handle inconsistently formatted data structures:
-                data -> object vs data -> [ object ]
-                """
-                session_events = None
-                try:
-                    session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
-                except KeyError:
-                    try:
-                        session_events = self.get_keypath_value(row, 'data.sessionEvents')
-                    except KeyError:
-                        pass
-                return session_events
-
             def calculate_trial_durations():
 
                 def not_none(a, b):
                     return a is not None and b is not None
 
-                session_events = get_session_events(row)
+                session_events = self.get_session_events(row)
                 if session_events:
                     previous_session_event = None
                     for session_event in session_events:
@@ -427,6 +462,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
         check_value_labels()
         self.check_points(row)
         calculate_dependent_variables()
+        self.calculate_ssrt(row)
 
         # print('TRIAL COUNT: ', self.trial_count)
         #
@@ -490,24 +526,25 @@ class AbstractStopDataExtractor(GameDataExtractor):
             else:
                 return 0
 
-        print('\nDV CORRECT COUNTS:')
-        print(self.dv_correct_counts)
-        print('DV BLOCK LEVEL CORRECT PERCENTAGES:')
-        pprint(self.dv_correct_block_percentages)
-        print('DV SESSION LEVEL CORRECT PERCENTAGES:')
-        pprint(self.dv_correct_session_percentages)
+        # print('\nDV CORRECT COUNTS:')
+        # print(self.dv_correct_counts)
+        # print('DV BLOCK LEVEL CORRECT PERCENTAGES:')
+        # pprint(self.dv_correct_block_percentages)
+        # print('DV SESSION LEVEL CORRECT PERCENTAGES:')
+        # pprint(self.dv_correct_session_percentages)
+        #
+        # print('mean CORRECT_GO responses', mean(self.dv_correct_go_responses))
+        # print('mean CORRECT_GO HEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
+        # print('mean CORRECT_GO UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['NON_HEALTHY']))
+        # print('mean CORRECT_STOP responses', mean(self.dv_correct_stop_responses))
+        # print('mean CORRECT_STOP HEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY']))
+        # print('mean CORRECT_STOP UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['NON_HEALTHY']))
+        #
+        # print('mean INCORRECT HEALTHY SELECTED responses', mean(self.dv_incorrect_healthy_selected_responses))
+        # print('mean INCORRECT HEALTHY NOT SELECTED responses', mean(self.dv_incorrect_healthy_not_selected_responses))
+        # print('mean INCORRECT UNHEALTHY SELECTED responses', mean(self.dv_incorrect_unhealthy_selected_responses))
+        # print('mean INCORRECT UNHEALTHY NOT SELECTED responses', mean(self.dv_incorrect_unhealthy_not_selected_responses))
 
-        print('mean CORRECT_GO responses', mean(self.dv_correct_go_responses))
-        print('mean CORRECT_GO HEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
-        print('mean CORRECT_GO UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['NON_HEALTHY']))
-        print('mean CORRECT_STOP responses', mean(self.dv_correct_stop_responses))
-        print('mean CORRECT_STOP HEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY']))
-        print('mean CORRECT_STOP UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['NON_HEALTHY']))
-
-        print('mean INCORRECT HEALTHY SELECTED responses', mean(self.dv_incorrect_healthy_selected_responses))
-        print('mean INCORRECT HEALTHY NOT SELECTED responses', mean(self.dv_incorrect_healthy_not_selected_responses))
-        print('mean INCORRECT UNHEALTHY SELECTED responses', mean(self.dv_incorrect_unhealthy_selected_responses))
-        print('mean INCORRECT UNHEALTHY NOT SELECTED responses', mean(self.dv_incorrect_unhealthy_not_selected_responses))
         # print('\nLog')
 
 
@@ -643,6 +680,9 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
                 if second_tap_response_type == 'MISS':
                     check_passed = second_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
                     self.log_message_if_check_failed(check_passed, session_event)
+
+    def calculate_ssrt(self, row):
+        pass
 
     def calculate(self, row):
         super(DoubleDataExtractor, self).calculate(row)
