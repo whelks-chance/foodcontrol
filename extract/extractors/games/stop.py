@@ -164,8 +164,6 @@ class AbstractStopDataExtractor(GameDataExtractor):
                     incorrect_stop_trials_count += 1
             print('INCORRECT STOP TRIALS:', incorrect_stop_trials_count)
 
-
-
     def get_session_events(self, row):
         """
         Handle inconsistently formatted data structures:
@@ -348,6 +346,12 @@ class AbstractStopDataExtractor(GameDataExtractor):
                 self.raw_count['on'][raw_event['eventOn']] += 1
                 self.raw_count['off'][raw_event['eventOff']] += 1
 
+        def denominator(n):
+            if n:
+                return n
+            else:
+                return 1
+
         def check_value_labels():
             session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
 
@@ -367,15 +371,16 @@ class AbstractStopDataExtractor(GameDataExtractor):
             # Record healthy/non-healthy label allocation percentages
             self.label_allocation_item_id_percentages = defaultdict(lambda: defaultdict(float))  # dict of int dict
             healthy_sum = self.label_allocation_counts['HEALTHY']['1_'] + self.label_allocation_counts['HEALTHY']['2_']
+            pprint(self.label_allocation_counts)
             non_healthy_sum = self.label_allocation_counts['NON_HEALTHY']['1_'] + self.label_allocation_counts['NON_HEALTHY']['2_']
-            self.label_allocation_item_id_percentages['HEALTHY']['1_'] = self.label_allocation_counts['HEALTHY']['1_'] / healthy_sum
-            self.label_allocation_item_id_percentages['HEALTHY']['2_'] = self.label_allocation_counts['HEALTHY']['2_'] / healthy_sum
-            self.label_allocation_item_id_percentages['NON_HEALTHY']['1_'] = self.label_allocation_counts['NON_HEALTHY']['1_'] / non_healthy_sum
-            self.label_allocation_item_id_percentages['NON_HEALTHY']['2_'] = self.label_allocation_counts['NON_HEALTHY']['2_'] / non_healthy_sum
+            self.label_allocation_item_id_percentages['HEALTHY']['1_'] = self.label_allocation_counts['HEALTHY']['1_'] / denominator(healthy_sum)
+            self.label_allocation_item_id_percentages['HEALTHY']['2_'] = self.label_allocation_counts['HEALTHY']['2_'] / denominator(healthy_sum)
+            self.label_allocation_item_id_percentages['NON_HEALTHY']['1_'] = self.label_allocation_counts['NON_HEALTHY']['1_'] / denominator(non_healthy_sum)
+            self.label_allocation_item_id_percentages['NON_HEALTHY']['2_'] = self.label_allocation_counts['NON_HEALTHY']['2_'] / denominator(non_healthy_sum)
             total_sum = healthy_sum + non_healthy_sum
             self.label_allocation_item_type_percentages = defaultdict(float)
-            self.label_allocation_item_type_percentages['HEALTHY'] = healthy_sum / total_sum
-            self.label_allocation_item_type_percentages['NON_HEALTHY'] = non_healthy_sum / total_sum
+            self.label_allocation_item_type_percentages['HEALTHY'] = healthy_sum / denominator(total_sum)
+            self.label_allocation_item_type_percentages['NON_HEALTHY'] = non_healthy_sum / denominator(total_sum)
 
             # Record the item IDs for each value of selected (MB/random/user/upload/non-food)
             self.selected_item_ids = defaultdict(set)  # dict of set
@@ -464,61 +469,61 @@ class AbstractStopDataExtractor(GameDataExtractor):
         calculate_dependent_variables()
         self.calculate_ssrt(row)
 
-        # print('TRIAL COUNT: ', self.trial_count)
-        #
-        # print('\nRAW COUNTS:')
-        # print(' ON', self.raw_count['on'])
-        # print('OFF', self.raw_count['off'])
-        #
-        # print('\nTRIAL DURATIONS:')
-        # for key in self.durations:
-        #     print(key, self.durations[key])
-        #
-        # print('\nTRIAL STATS:')
-        # pprint(self.trial_stats)
-        #
-        # # Trial Types
-        # print('\nSESSION TRIAL TYPE COUNTS:')
-        # pprint(self.session_trial_type_counts)
-        # print('\nSESSION TRIAL TYPE PERCENTAGES:')
-        # pprint(self.session_trial_type_percentages)
-        # print('\nBLOCK TRIAL TYPE COUNTS:')
-        # pprint(self.block_trial_type_counts)
-        # print('\nBLOCK TRIAL TYPE PERCENTAGES:')
-        # pprint(self.block_trial_type_percentages)
-        #
-        # # Trial Items
-        # print('\nSESSION ITEM TYPE COUNTS:')
-        # pprint(self.session_item_type_counts)
-        # print('\nSESSION ITEM TYPE PERCENTAGES:')
-        # pprint(self.session_item_type_percentages)
-        # print('\nBLOCK ITEM TYPE COUNTS:')
-        # pprint(self.block_item_type_counts)
-        # print('\nBLOCK ITEM TYPE PERCENTAGES:')
-        # pprint(self.block_item_type_percentages)
-        #
-        # print('\nRAW ROUND TRIAL COUNTS:')
-        # for key in self.raw_round_trial_counts:
-        #     print(key, len(self.raw_round_trial_counts[key]), self.raw_round_trial_counts[key])
-        #
-        # # Label Allocation Counts
-        # print('\nLABEL ALLOCATION COUNTS:')
-        # pprint(self.label_allocation_counts)
-        #
-        # # Label Allocation Percentages
-        # print('\nLABEL ALLOCATION PERCENTAGES:')
-        # pprint(self.label_allocation_item_id_percentages)
-        # pprint(self.label_allocation_item_type_percentages)
-        #
-        # # Selected Item IDs
-        # print('\nSELCTED ITEM IDs:')
-        # print(self.selected_item_ids)
-        #
-        # # Unique Item IDs
-        # print('\nSESSION ITEM IDs:')
-        # print(self.session_item_ids)
-        # print('\nBLOCK ITEM IDs:')
-        # print(self.block_item_ids)
+        print('TRIAL COUNT: ', self.trial_count)
+
+        print('\nRAW COUNTS:')
+        print(' ON', self.raw_count['on'])
+        print('OFF', self.raw_count['off'])
+
+        print('\nTRIAL DURATIONS:')
+        for key in self.durations:
+            print(key, self.durations[key])
+
+        print('\nTRIAL STATS:')
+        pprint(self.trial_stats)
+
+        # Trial Types
+        print('\nSESSION TRIAL TYPE COUNTS:')
+        pprint(self.session_trial_type_counts)
+        print('\nSESSION TRIAL TYPE PERCENTAGES:')
+        pprint(self.session_trial_type_percentages)
+        print('\nBLOCK TRIAL TYPE COUNTS:')
+        pprint(self.block_trial_type_counts)
+        print('\nBLOCK TRIAL TYPE PERCENTAGES:')
+        pprint(self.block_trial_type_percentages)
+
+        # Trial Items
+        print('\nSESSION ITEM TYPE COUNTS:')
+        pprint(self.session_item_type_counts)
+        print('\nSESSION ITEM TYPE PERCENTAGES:')
+        pprint(self.session_item_type_percentages)
+        print('\nBLOCK ITEM TYPE COUNTS:')
+        pprint(self.block_item_type_counts)
+        print('\nBLOCK ITEM TYPE PERCENTAGES:')
+        pprint(self.block_item_type_percentages)
+
+        print('\nRAW ROUND TRIAL COUNTS:')
+        for key in self.raw_round_trial_counts:
+            print(key, len(self.raw_round_trial_counts[key]), self.raw_round_trial_counts[key])
+
+        # Label Allocation Counts
+        print('\nLABEL ALLOCATION COUNTS:')
+        pprint(self.label_allocation_counts)
+
+        # Label Allocation Percentages
+        print('\nLABEL ALLOCATION PERCENTAGES:')
+        pprint(self.label_allocation_item_id_percentages)
+        pprint(self.label_allocation_item_type_percentages)
+
+        # Selected Item IDs
+        print('\nSELCTED ITEM IDs:')
+        print(self.selected_item_ids)
+
+        # Unique Item IDs
+        print('\nSESSION ITEM IDs:')
+        print(self.session_item_ids)
+        print('\nBLOCK ITEM IDs:')
+        print(self.block_item_ids)
 
         def mean(numbers):
             if numbers and len(numbers) > 0:
@@ -526,24 +531,24 @@ class AbstractStopDataExtractor(GameDataExtractor):
             else:
                 return 0
 
-        # print('\nDV CORRECT COUNTS:')
-        # print(self.dv_correct_counts)
-        # print('DV BLOCK LEVEL CORRECT PERCENTAGES:')
-        # pprint(self.dv_correct_block_percentages)
-        # print('DV SESSION LEVEL CORRECT PERCENTAGES:')
-        # pprint(self.dv_correct_session_percentages)
-        #
-        # print('mean CORRECT_GO responses', mean(self.dv_correct_go_responses))
-        # print('mean CORRECT_GO HEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
-        # print('mean CORRECT_GO UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['NON_HEALTHY']))
-        # print('mean CORRECT_STOP responses', mean(self.dv_correct_stop_responses))
-        # print('mean CORRECT_STOP HEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY']))
-        # print('mean CORRECT_STOP UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['NON_HEALTHY']))
-        #
-        # print('mean INCORRECT HEALTHY SELECTED responses', mean(self.dv_incorrect_healthy_selected_responses))
-        # print('mean INCORRECT HEALTHY NOT SELECTED responses', mean(self.dv_incorrect_healthy_not_selected_responses))
-        # print('mean INCORRECT UNHEALTHY SELECTED responses', mean(self.dv_incorrect_unhealthy_selected_responses))
-        # print('mean INCORRECT UNHEALTHY NOT SELECTED responses', mean(self.dv_incorrect_unhealthy_not_selected_responses))
+        print('\nDV CORRECT COUNTS:')
+        print(self.dv_correct_counts)
+        print('DV BLOCK LEVEL CORRECT PERCENTAGES:')
+        pprint(self.dv_correct_block_percentages)
+        print('DV SESSION LEVEL CORRECT PERCENTAGES:')
+        pprint(self.dv_correct_session_percentages)
+
+        print('mean CORRECT_GO responses', mean(self.dv_correct_go_responses))
+        print('mean CORRECT_GO HEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
+        print('mean CORRECT_GO UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['NON_HEALTHY']))
+        print('mean CORRECT_STOP responses', mean(self.dv_correct_stop_responses))
+        print('mean CORRECT_STOP HEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY']))
+        print('mean CORRECT_STOP UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['NON_HEALTHY']))
+
+        print('mean INCORRECT HEALTHY SELECTED responses', mean(self.dv_incorrect_healthy_selected_responses))
+        print('mean INCORRECT HEALTHY NOT SELECTED responses', mean(self.dv_incorrect_healthy_not_selected_responses))
+        print('mean INCORRECT UNHEALTHY SELECTED responses', mean(self.dv_incorrect_unhealthy_selected_responses))
+        print('mean INCORRECT UNHEALTHY NOT SELECTED responses', mean(self.dv_incorrect_unhealthy_not_selected_responses))
 
         # print('\nLog')
 
