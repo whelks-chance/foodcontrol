@@ -1,9 +1,11 @@
 import statistics
 from collections import defaultdict
+from openpyxl import Workbook
 from pprint import pprint
 
 from .gamedataextractor import GameDataExtractor
 from keypath_extractor import Keypath
+from utils import irange
 
 
 class AbstractStopDataExtractor(GameDataExtractor):
@@ -469,20 +471,114 @@ class AbstractStopDataExtractor(GameDataExtractor):
         calculate_dependent_variables()
         self.calculate_ssrt(row)
 
+        def mean(numbers):
+            if numbers and len(numbers) > 0:
+                return statistics.mean(numbers)
+            else:
+                return 0
+
+        def cell(row, column):
+            return '{}{}'.format(str(row), str(column))
+
+        A = 'A'
+        B = 'B'
+        C = 'C'
+        D = 'D'
+        E = 'E'
+        F = 'F'
+        G = 'G'
+        H = 'H'
+        I = 'I'
+        J = 'J'
+        letters = [A, B, C, D, E, F, G, H, I, J]
+        wb = Workbook()
+
+        # Counts
         print('TRIAL COUNT: ', self.trial_count)
+        # Reuse the default sheet
+        counts_sheet = wb.active
+        counts_sheet.title = 'Counts'
+
+        # Trial Counts
+        counts_sheet[cell(A, 1)] = 'Trial Count'
+        counts_sheet[cell(B, 1)] = self.trial_count
 
         print('\nRAW COUNTS:')
         print(' ON', self.raw_count['on'])
-        print('OFF', self.raw_count['off'])
+        r = 3
+        counts_sheet[cell(A, r)] = 'Raw Counts'
+        r += 1
+        counts_sheet[cell(A, r)] = 'On'
+        r += 1
+        for key, value in self.raw_count['on'].items():
+            counts_sheet[cell(A, r)] = key
+            counts_sheet[cell(B, r)] = value
+            r += 1
+            print(key, value)
 
+        print('OFF', self.raw_count['off'])
+        r += 1
+        counts_sheet[cell(A, r)] = 'Off'
+        r += 1
+        for key, value in self.raw_count['off'].items():
+            counts_sheet[cell(A, r)] = key
+            counts_sheet[cell(B, r)] = value
+            r += 1
+            print(key, value)
+
+        # Durations
         print('\nTRIAL DURATIONS:')
         for key in self.durations:
             print(key, self.durations[key])
 
         print('\nTRIAL STATS:')
         pprint(self.trial_stats)
+        r = 1
+        stats_sheet = wb.create_sheet('Stats')
+        stats_sheet[cell(A, r)] = 'Field'
+        stats_sheet[cell(B, r)] = 'Min'
+        stats_sheet[cell(C, r)] = 'Max'
+        stats_sheet[cell(D, r)] = 'Mean'
+        stats_sheet[cell(E, r)] = 'St Dev'
+        r += 1
+        for field, stats in self.trial_stats.items():
+            stats_sheet[cell(A, r)] = field
+            stats_sheet[cell(B, r)] = stats['min']
+            stats_sheet[cell(C, r)] = stats['max']
+            stats_sheet[cell(D, r)] = stats['mean']
+            stats_sheet[cell(E, r)] = stats['stdev']
+            r += 1
 
         # Trial Types
+        # - Block
+        r = 1
+        trial_types_sheet = wb.create_sheet('Trial Types')
+        trial_types_sheet[cell(A, r)] = 'Session'
+        r += 1
+        trial_types_sheet[cell(A, r)] = 'Trial Type'
+        trial_types_sheet[cell(B, r)] = 'Count'
+        trial_types_sheet[cell(C, r)] = 'Percentage'
+        for trial_type in ['GO', 'STOP']:
+            r += 1
+            trial_types_sheet[cell(A, r)] = trial_type
+            trial_types_sheet[cell(B, r)] = self.session_trial_type_counts[trial_type]
+            trial_types_sheet[cell(C, r)] = self.session_trial_type_percentages[trial_type]
+        # - Session
+        r += 2
+        trial_types_sheet[cell(A, r)] = 'Block'
+        r += 1
+        trial_types_sheet[cell(A, r)] = 'Block'
+        trial_types_sheet[cell(B, r)] = 'Trial Type'
+        trial_types_sheet[cell(C, r)] = 'Count'
+        trial_types_sheet[cell(D, r)] = 'Percentage'
+        for block_key in irange(1, 4):
+            for trial_type in ['GO', 'STOP']:
+                r += 1
+                trial_types_sheet[cell(A, r)] = block_key
+                trial_types_sheet[cell(B, r)] = trial_type
+                trial_types_sheet[cell(C, r)] = self.block_trial_type_counts[block_key][trial_type]
+                trial_types_sheet[cell(D, r)] = self.block_trial_type_percentages[block_key][trial_type]
+
         print('\nSESSION TRIAL TYPE COUNTS:')
         pprint(self.session_trial_type_counts)
         print('\nSESSION TRIAL TYPE PERCENTAGES:')
@@ -493,6 +589,34 @@ class AbstractStopDataExtractor(GameDataExtractor):
         pprint(self.block_trial_type_percentages)
 
         # Trial Items
+        # - Block
+        r = 1
+        trial_types_sheet = wb.create_sheet('Item Types')
+        trial_types_sheet[cell(A, r)] = 'Session'
+        r += 1
+        trial_types_sheet[cell(A, r)] = 'Item Type'
+        trial_types_sheet[cell(B, r)] = 'Count'
+        trial_types_sheet[cell(C, r)] = 'Percentage'
+        for trial_type in ['HEALTHY', 'HEALTHY_RANDOM', 'HEALTHY_NOT_RANDOM', 'NON_HEALTHY']:
+            r += 1
+            trial_types_sheet[cell(A, r)] = trial_type
+            trial_types_sheet[cell(B, r)] = self.session_item_type_counts[trial_type]
+            trial_types_sheet[cell(C, r)] = self.session_item_type_percentages[trial_type]
+        # - Session
+        r += 2
+        trial_types_sheet[cell(A, r)] = 'Block'
+        r += 1
+        trial_types_sheet[cell(A, r)] = 'Block'
+        trial_types_sheet[cell(B, r)] = 'Item Type'
+        trial_types_sheet[cell(C, r)] = 'Count'
+        trial_types_sheet[cell(D, r)] = 'Percentage'
+        for block_key in irange(1, 4):
+            for trial_type in ['HEALTHY', 'HEALTHY_RANDOM', 'HEALTHY_NOT_RANDOM', 'NON_HEALTHY']:
+                r += 1
+                trial_types_sheet[cell(A, r)] = block_key
+                trial_types_sheet[cell(B, r)] = trial_type
+                trial_types_sheet[cell(C, r)] = self.block_item_type_counts[block_key][trial_type]
+                trial_types_sheet[cell(D, r)] = self.block_item_type_percentages[block_key][trial_type]
         print('\nSESSION ITEM TYPE COUNTS:')
         pprint(self.session_item_type_counts)
         print('\nSESSION ITEM TYPE PERCENTAGES:')
@@ -502,11 +626,35 @@ class AbstractStopDataExtractor(GameDataExtractor):
         print('\nBLOCK ITEM TYPE PERCENTAGES:')
         pprint(self.block_item_type_percentages)
 
+        r = 1
+        raw_round_sheet = wb.create_sheet('Raw Rounds')
+        raw_round_sheet[cell(A, r)] = 'Round'
+        raw_round_sheet[cell(B, r)] = 'Count'
+        r += 1
+        for block_key in irange(1, 4):
+            raw_round_sheet[cell(A, r)] = block_key
+            raw_round_sheet[cell(B, r)] = len(self.raw_round_trial_counts[block_key])
+            r += 1
         print('\nRAW ROUND TRIAL COUNTS:')
         for key in self.raw_round_trial_counts:
             print(key, len(self.raw_round_trial_counts[key]), self.raw_round_trial_counts[key])
 
         # Label Allocation Counts
+        r = 1
+        label_allocation_count_sheet = wb.create_sheet('Label Allocations')
+        label_allocation_count_sheet[cell(A, r)] = 'Session'
+        r += 1
+        label_allocation_count_sheet[cell(A, r)] = 'Trial Type'
+        label_allocation_count_sheet[cell(B, r)] = 'Prefix'
+        label_allocation_count_sheet[cell(C, r)] = 'Count'
+        label_allocation_count_sheet[cell(D, r)] = 'Percentage'
+        for item_type in ['HEALTHY', 'NON_HEALTHY']:
+            for prefix in ['1_', '2_']:
+                r += 1
+                label_allocation_count_sheet[cell(A, r)] = item_type
+                label_allocation_count_sheet[cell(B, r)] = prefix
+                label_allocation_count_sheet[cell(C, r)] = self.label_allocation_counts[item_type][prefix]
+                label_allocation_count_sheet[cell(D, r)] = self.label_allocation_item_id_percentages[item_type][prefix]
         print('\nLABEL ALLOCATION COUNTS:')
         pprint(self.label_allocation_counts)
 
@@ -515,21 +663,50 @@ class AbstractStopDataExtractor(GameDataExtractor):
         pprint(self.label_allocation_item_id_percentages)
         pprint(self.label_allocation_item_type_percentages)
 
+        r += 2
+        label_allocation_count_sheet[cell(A, r)] = 'Item Type'
+        label_allocation_count_sheet[cell(B, r)] = 'Percentage'
+        r += 1
+        for item_type in self.label_allocation_item_type_percentages:
+            label_allocation_count_sheet[cell(A, r)] = item_type
+            label_allocation_count_sheet[cell(B, r)] = self.label_allocation_item_type_percentages[item_type]
+            r += 1
+
         # Selected Item IDs
+        r = 1
+        selected_items_sheet = wb.create_sheet('Selected Items')
+        for index, selected_label in enumerate(self.selected_item_ids):
+            selected_items_sheet[cell(letters[index], r)] = selected_label
+        r += 1
+        for index, selected_label in enumerate(self.selected_item_ids):
+            for i, selected_item_id in enumerate(self.selected_item_ids[selected_label]):
+                selected_items_sheet[cell(letters[index], r+i)] = selected_item_id
         print('\nSELCTED ITEM IDs:')
         print(self.selected_item_ids)
 
         # Unique Item IDs
+        # - Session
+        r = 1
+        unique_items_sheet = wb.create_sheet('Unique Items - Session')
+        unique_items_sheet[cell(A, r)] = 'Session'
+        r += 1
+        for index, unique_item_id in enumerate(self.session_item_ids):
+            unique_items_sheet[cell(A, r+index)] = unique_item_id
+        # - Blocks
+        r = 1
+        unique_items_sheet = wb.create_sheet('Unique Items - Blocks')
+        for block_key in irange(1, 4):
+            unique_items_sheet[cell(letters[block_key-1], r)] = block_key
+        r += 1
+        for block_key in irange(1, 4):
+            for index, unique_item_id in enumerate(self.block_item_ids[block_key]):
+                unique_items_sheet[cell(letters[block_key-1], r+index)] = unique_item_id
+
         print('\nSESSION ITEM IDs:')
         print(self.session_item_ids)
         print('\nBLOCK ITEM IDs:')
-        print(self.block_item_ids)
-
-        def mean(numbers):
-            if numbers and len(numbers) > 0:
-                return statistics.mean(numbers)
-            else:
-                return 0
+        pprint(self.block_item_ids)
+        # assert False
 
         print('\nDV CORRECT COUNTS:')
         print(self.dv_correct_counts)
@@ -550,6 +727,9 @@ class AbstractStopDataExtractor(GameDataExtractor):
         print('mean INCORRECT UNHEALTHY SELECTED responses', mean(self.dv_incorrect_unhealthy_selected_responses))
         print('mean INCORRECT UNHEALTHY NOT SELECTED responses', mean(self.dv_incorrect_unhealthy_not_selected_responses))
 
+        excel_filename = 'DerivedValues.xlsx'
+        wb.save(excel_filename)
+        assert False
         # print('\nLog')
 
 
