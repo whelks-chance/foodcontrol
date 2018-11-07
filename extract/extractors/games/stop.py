@@ -4,6 +4,7 @@ from openpyxl import Workbook
 from pprint import pprint
 
 from .gamedataextractor import GameDataExtractor
+from .session_event_log import SessionEventLog
 from keypath_extractor import Keypath
 from utils import irange
 
@@ -17,28 +18,13 @@ class AbstractStopDataExtractor(GameDataExtractor):
             Keypath('data.captureDate', 'Capture Date'),
         ]
 
-    logs = []
+    session_event_log = SessionEventLog()
     session_duration = 0
     durations = defaultdict(list)
     raw_count = {
         'on': defaultdict(int),
         'off': defaultdict(int)
     }
-
-    def log_message(self, message, data=None):
-        log = {
-            'message': message,
-            'data': data
-        }
-        # pprint(log)
-        self.logs.append(log)
-
-    def log_message_if_check_failed(self, check_passed, session_event, extra_message=None):
-        if not check_passed:
-            message = 'Check failed: {} {} gameSessionID={} roundID={}, trialID={}'.format(
-                                session_event['trialType'], session_event['tapResponseType'],
-                                session_event['gameSessionID'], session_event['roundID'], session_event['trialID'])
-            self.log_message(message, session_event)
 
     def clear(self):
         self.session_duration = 0
@@ -90,24 +76,24 @@ class AbstractStopDataExtractor(GameDataExtractor):
             if trial_type == 'GO':
                 if tap_response_type == 'CORRECT_GO':
                     check_passed = tap_response_start > 0 and self.within_stimulus_boundaries(session_event)
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 if tap_response_type == 'INCORRECT_GO':
                     check_passed = tap_response_start == 0
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 if tap_response_type == 'MISS_GO':
                     check_passed = tap_response_start > 0 and not self.within_stimulus_boundaries(session_event)
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
 
             if trial_type == 'STOP':
                 if tap_response_type == 'CORRECT_GO':
                     check_passed = tap_response_start == 0
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 if tap_response_type == 'INCORRECT_GO':
                     check_passed = tap_response_start > 0 and self.within_stimulus_boundaries(session_event)
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 if tap_response_type == 'MISS_STOP':
                     check_passed = tap_response_start > 0 and not self.within_stimulus_boundaries(session_event)
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
 
     def check_points(self, row):
         points = {
@@ -752,8 +738,10 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
         excel_filename = 'DerivedValues.xlsx'
         wb.save(excel_filename)
-        assert False
+        # assert False
         # print('\nLog')
+
+        self.session_event_log.print()
 
 
 class StopDataExtractor(AbstractStopDataExtractor):
@@ -790,15 +778,15 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
 
     type = 'DOUBLE'
 
-    def log_message_if_check_failed(self, check_passed, session_event, extra_message=None):
-        if not check_passed:
-            extra = ''
-            if extra_message:
-                extra = ': {}'.format(extra_message)
-            message = 'Check failed: {} {} {} gameSessionID={} roundID={}, trialID={}{}'.format(
-                session_event['trialType'], session_event['initialTapResponseType'], session_event['secondTapResponseType'],
-                session_event['gameSessionID'], session_event['roundID'], session_event['trialID'], extra)
-            self.log_message(message, session_event)
+    # def log_message_if_check_failed(self, check_passed, session_event, extra_message=None):
+    #     if not check_passed:
+    #         extra = ''
+    #         if extra_message:
+    #             extra = ': {}'.format(extra_message)
+    #         message = 'Check failed: {} {} {} gameSessionID={} roundID={}, trialID={}{}'.format(
+    #             session_event['trialType'], session_event['initialTapResponseType'], session_event['secondTapResponseType'],
+    #             session_event['gameSessionID'], session_event['roundID'], session_event['trialID'], extra)
+    #         self.log_message(message, session_event)
 
     def check_points(self, row):
         running_total = 0
@@ -813,27 +801,27 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
             if trial_type == 'GO':
                 if initial_tap_response_type == 'CORRECT_GO' and second_tap_response_type == 'N/A':
                     check_passed = points_this_trial == 20
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 elif initial_tap_response_type == 'INCORRECT_GO' and second_tap_response_type == 'N/A':
                     check_passed = points_this_trial == -20
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 else:
                     # print(initial_tap_response_type, second_tap_response_type)
                     check_passed = points_this_trial == -50
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
             if trial_type == 'DOUBLE':
                 if initial_tap_response_type == 'CORRECT' and second_tap_response_type == 'CORRECT':
                     check_passed = points_this_trial == 50
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 else:
                     check_passed = points_this_trial == -50
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
 
             running_total += points_this_trial
             points_running_total = session_event['pointsRunningTotal']
 
             check_passed = points_running_total == running_total
-            self.log_message_if_check_failed(check_passed, session_event, extra_message='points_running_total != running_total')
+            self.session_event_log.log_message_if_check_failed(check_passed, session_event, extra_message='points_running_total != running_total')
 
     def check_tap_responses(self, row):
         session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
@@ -847,47 +835,47 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
             if trial_type == 'GO':
                 if initial_tap_response_type == 'CORRECT_GO':
                     check_passed = initial_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 if initial_tap_response_type == 'INCORRECT_GO':
                     check_passed = initial_tap_response_start == 0
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 if initial_tap_response_type == 'MISS_GO':
                     check_passed = initial_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
 
             if trial_type == 'DOUBLE':
                 if initial_tap_response_type == 'CORRECT_GO':
                     check_passed = initial_tap_response_start == 0
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 if initial_tap_response_type == 'INCORRECT_GO':
                     check_passed = initial_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 if initial_tap_response_type == 'MISS_STOP':
                     check_passed = initial_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
 
             second_tap_response_start = self.numericify(session_event['initialTapResponseStart'])
             if trial_type == 'GO':
                 if second_tap_response_type == 'N/A':
                     check_passed = second_tap_response_start = 0
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 if second_tap_response_type == 'INCORRECT_DOUBLE_GO':
                     check_passed = second_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 if second_tap_response_type == 'MISS_GO':
                     check_passed = second_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
 
             if trial_type == 'DOUBLE':
                 if second_tap_response_type == 'CORRECT':
                     check_passed = second_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 if second_tap_response_type == 'INCORRECT':
                     check_passed = second_tap_response_start == 0
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
                 if second_tap_response_type == 'MISS':
                     check_passed = second_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.log_message_if_check_failed(check_passed, session_event)
+                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
 
     def calculate_ssrt(self, row):
         pass
