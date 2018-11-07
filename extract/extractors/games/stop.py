@@ -98,32 +98,25 @@ class AbstractStopDataExtractor(GameDataExtractor):
             return False
 
     def check_tap_responses(self, row):
-        session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+        checks = {
+            'GO': {
+                'CORRECT_GO': lambda tap_response_start, session_event: tap_response_start > 0 and self.within_stimulus_boundaries(session_event),
+                'INCORRECT_GO': lambda tap_response_start, session_event: tap_response_start == 0,
+                'MISS_GO': lambda tap_response_start, session_event: tap_response_start > 0 and not self.within_stimulus_boundaries(session_event),
+            },
+            'STOP': {
+                'CORRECT_STOP': lambda tap_response_start, session_event: tap_response_start == 0,
+                'INCORRECT_STOP': lambda tap_response_start, session_event: tap_response_start > 0 and self.within_stimulus_boundaries(session_event),
+                'MISS_STOP': lambda tap_response_start, session_event: tap_response_start > 0 and not self.within_stimulus_boundaries(session_event),
+            }
+        }
+        session_events = self.get_session_events(row)
         for session_event in session_events:
             trial_type = session_event['trialType']
             tap_response_type = session_event['tapResponseType']
             tap_response_start = self.numericify(session_event['tapResponseStart'])
-            if trial_type == 'GO':
-                if tap_response_type == 'CORRECT_GO':
-                    check_passed = tap_response_start > 0 and self.within_stimulus_boundaries(session_event)
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                if tap_response_type == 'INCORRECT_GO':
-                    check_passed = tap_response_start == 0
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                if tap_response_type == 'MISS_GO':
-                    check_passed = tap_response_start > 0 and not self.within_stimulus_boundaries(session_event)
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-
-            if trial_type == 'STOP':
-                if tap_response_type == 'CORRECT_GO':
-                    check_passed = tap_response_start == 0
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                if tap_response_type == 'INCORRECT_GO':
-                    check_passed = tap_response_start > 0 and self.within_stimulus_boundaries(session_event)
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                if tap_response_type == 'MISS_STOP':
-                    check_passed = tap_response_start > 0 and not self.within_stimulus_boundaries(session_event)
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+            check_passed = checks[trial_type][tap_response_type](tap_response_start, session_event)
+            self.session_event_log.log_message_if_check_failed(check_passed, session_event)
 
     def check_points(self, row):
         points = {
@@ -781,16 +774,6 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
 
     type = 'DOUBLE'
 
-    # def log_message_if_check_failed(self, check_passed, session_event, extra_message=None):
-    #     if not check_passed:
-    #         extra = ''
-    #         if extra_message:
-    #             extra = ': {}'.format(extra_message)
-    #         message = 'Check failed: {} {} {} gameSessionID={} roundID={}, trialID={}{}'.format(
-    #             session_event['trialType'], session_event['initialTapResponseType'], session_event['secondTapResponseType'],
-    #             session_event['gameSessionID'], session_event['roundID'], session_event['trialID'], extra)
-    #         self.log_message(message, session_event)
-
     def check_points(self, row):
         running_total = 0
         session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
@@ -827,58 +810,43 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
             self.session_event_log.log_message_if_check_failed(check_passed, session_event, extra_message='points_running_total != running_total')
 
     def check_tap_responses(self, row):
-        session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+        initial_tap_response_checks = {
+            'GO': {
+                'CORRECT_GO': lambda initial_tap_response_start, session_event: initial_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
+                'INCORRECT_GO': lambda initial_tap_response_start, session_event: initial_tap_response_start == 0,
+                'MISS_GO': lambda initial_tap_response_start, session_event: initial_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
+            },
+            'DOUBLE': {
+                'CORRECT': lambda initial_tap_response_start, session_event: initial_tap_response_start == 0,
+                'INCORRECT': lambda initial_tap_response_start, session_event: initial_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
+                'MISS': lambda initial_tap_response_start, session_event: initial_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
+            }
+        }
+        second_tap_response_checks = {
+            'GO': {
+                'N/A': lambda second_tap_response_start, session_event: second_tap_response_start == 0,
+                'INCORRECT_DOUBLE_GO': lambda second_tap_response_start, session_event: second_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
+                'MISS_GO': lambda second_tap_response_start, session_event: second_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
+            },
+            'DOUBLE': {
+                'CORRECT': lambda second_tap_response_start, session_event: second_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
+                'INCORRECT': lambda second_tap_response_start, session_event: second_tap_response_start == 0,
+                'MISS': lambda second_tap_response_start, session_event: second_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
+            }
+        }
+        session_events = self.get_session_events(row)
         for session_event in session_events:
             trial_type = session_event['trialType']
 
             initial_tap_response_type = session_event['initialTapResponseType']
-            second_tap_response_type = session_event['initialTapResponseType']
-
             initial_tap_response_start = self.numericify(session_event['initialTapResponseStart'])
-            if trial_type == 'GO':
-                if initial_tap_response_type == 'CORRECT_GO':
-                    check_passed = initial_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                if initial_tap_response_type == 'INCORRECT_GO':
-                    check_passed = initial_tap_response_start == 0
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                if initial_tap_response_type == 'MISS_GO':
-                    check_passed = initial_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+            check_passed = initial_tap_response_checks[trial_type][initial_tap_response_type](initial_tap_response_start, session_event)
+            self.session_event_log.log_message_if_check_failed(check_passed, session_event)
 
-            if trial_type == 'DOUBLE':
-                if initial_tap_response_type == 'CORRECT_GO':
-                    check_passed = initial_tap_response_start == 0
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                if initial_tap_response_type == 'INCORRECT_GO':
-                    check_passed = initial_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                if initial_tap_response_type == 'MISS_STOP':
-                    check_passed = initial_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-
-            second_tap_response_start = self.numericify(session_event['initialTapResponseStart'])
-            if trial_type == 'GO':
-                if second_tap_response_type == 'N/A':
-                    check_passed = second_tap_response_start = 0
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                if second_tap_response_type == 'INCORRECT_DOUBLE_GO':
-                    check_passed = second_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                if second_tap_response_type == 'MISS_GO':
-                    check_passed = second_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-
-            if trial_type == 'DOUBLE':
-                if second_tap_response_type == 'CORRECT':
-                    check_passed = second_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                if second_tap_response_type == 'INCORRECT':
-                    check_passed = second_tap_response_start == 0
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                if second_tap_response_type == 'MISS':
-                    check_passed = second_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+            second_tap_response_type = session_event['secondTapResponseType']
+            second_tap_response_start = self.numericify(session_event['secondTapResponseStart'])
+            check_passed = second_tap_response_checks[trial_type][second_tap_response_type](second_tap_response_start, session_event)
+            self.session_event_log.log_message_if_check_failed(check_passed, session_event)
 
     def calculate_ssrt(self, row):
         pass
