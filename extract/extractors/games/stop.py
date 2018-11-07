@@ -713,13 +713,30 @@ class AbstractStopDataExtractor(GameDataExtractor):
         print('\nBLOCK ITEM IDs:')
         pprint(self.block_item_ids)
 
+        r = 1
+        correct_count_sheet = wb.create_sheet('Correct Counts')
+        correct_count_sheet[cell(A, r)] = 'Block'
+        r += 1
+        correct_count_sheet[cell(A, r)] = 'Block'
+        correct_count_sheet[cell(B, r)] = 'Trial Type'
+        correct_count_sheet[cell(C, r)] = 'Count'
+        correct_count_sheet[cell(C, r)] = 'Count'
+        r += 1
+        for block_key in irange(1, 4):
+            for trial_type in ['CORRECT_GO', 'CORRECT_STOP']:
+                correct_count_sheet[cell(A, r)] = block_key
+                correct_count_sheet[cell(B, r)] = trial_type
+                correct_count_sheet[cell(C, r)] = self.dv_correct_counts[block_key][trial_type]
+                r += 1
+
+
         print('\nDV CORRECT COUNTS:')
         pprint(self.dv_correct_counts)
         print('DV BLOCK LEVEL CORRECT PERCENTAGES:')
         pprint(self.dv_correct_block_percentages)
         print('DV SESSION LEVEL CORRECT PERCENTAGES:')
         pprint(self.dv_correct_session_percentages)
-        assert False
+        # assert False
 
         print('mean CORRECT_GO responses', mean(self.dv_correct_go_responses))
         print('mean CORRECT_GO HEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
