@@ -425,10 +425,16 @@ class AbstractStopDataExtractor(GameDataExtractor):
                     self.dv_correct_block_percentages[block_id_key][tap_response_type] = count / block_total
 
             # Calculate the CORRECT_GO/STOP session-level percentages
-            self.dv_correct_session_percentages = defaultdict(int)
+            dv_correct_session_counts = defaultdict(int)
+            self.dv_correct_session_percentages = defaultdict(float)
             for block_id_key, tap_response_types in self.dv_correct_counts.items():
                 for tap_response_type_key, item_count in tap_response_types.items():
-                    self.dv_correct_session_percentages[tap_response_type_key] += item_count
+                    dv_correct_session_counts[tap_response_type_key] += item_count
+            correct_total = 0
+            for tap_response_type_key, count in dv_correct_session_counts.items():
+                correct_total += count
+            for tap_response_type_key, count in dv_correct_session_counts.items():
+                self.dv_correct_session_percentages[tap_response_type_key] = count / correct_total
 
             self.dv_correct_go_responses = list()
             self.dv_correct_stop_responses = list()
@@ -706,14 +712,14 @@ class AbstractStopDataExtractor(GameDataExtractor):
         print(self.session_item_ids)
         print('\nBLOCK ITEM IDs:')
         pprint(self.block_item_ids)
-        # assert False
 
         print('\nDV CORRECT COUNTS:')
-        print(self.dv_correct_counts)
+        pprint(self.dv_correct_counts)
         print('DV BLOCK LEVEL CORRECT PERCENTAGES:')
         pprint(self.dv_correct_block_percentages)
         print('DV SESSION LEVEL CORRECT PERCENTAGES:')
         pprint(self.dv_correct_session_percentages)
+        assert False
 
         print('mean CORRECT_GO responses', mean(self.dv_correct_go_responses))
         print('mean CORRECT_GO HEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
