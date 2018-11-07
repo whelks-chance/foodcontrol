@@ -26,6 +26,26 @@ class AbstractStopDataExtractor(GameDataExtractor):
         'off': defaultdict(int)
     }
 
+    @staticmethod
+    def numericify(n):
+        if n is None:
+            n = 0
+        return n
+
+    @staticmethod
+    def denominator(n):
+        if n:
+            return n
+        else:
+            return 1
+
+    @staticmethod
+    def mean(numbers):
+        if numbers and len(numbers) > 0:
+            return statistics.mean(numbers)
+        else:
+            return 0
+
     def clear(self):
         self.session_duration = 0
         self.durations.clear()
@@ -47,6 +67,24 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
         check_trials_count()
 
+    def check(self, row):
+        self.check_tap_responses(row)
+
+    def get_session_events(self, row):
+        """
+        Handle inconsistently formatted data structures:
+        data -> object vs data -> [ object ]
+        """
+        session_events = None
+        try:
+            session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+        except KeyError:
+            try:
+                session_events = self.get_keypath_value(row, 'data.sessionEvents')
+            except KeyError:
+                pass
+        return session_events
+
     @staticmethod
     def within_stimulus_boundaries(session_event, item_radius=95, prefix='tapResponsePosition'):
         tx = float(session_event['{}X'.format(prefix)])
@@ -58,14 +96,6 @@ class AbstractStopDataExtractor(GameDataExtractor):
             return True
         else:
             return False
-
-    def check(self, row):
-        self.check_tap_responses(row)
-
-    def numericify(self, n):
-        if n is None:
-            n = 0
-        return n
 
     def check_tap_responses(self, row):
         session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
@@ -151,21 +181,6 @@ class AbstractStopDataExtractor(GameDataExtractor):
                 if tap_response_type == 'INCORRECT_STOP' or tap_response_type == 'MISS_STOP':
                     incorrect_stop_trials_count += 1
             print('INCORRECT STOP TRIALS:', incorrect_stop_trials_count)
-
-    def get_session_events(self, row):
-        """
-        Handle inconsistently formatted data structures:
-        data -> object vs data -> [ object ]
-        """
-        session_events = None
-        try:
-            session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
-        except KeyError:
-            try:
-                session_events = self.get_keypath_value(row, 'data.sessionEvents')
-            except KeyError:
-                pass
-        return session_events
 
     def calculate(self, row):
         super(AbstractStopDataExtractor, self).calculate(row)
@@ -334,12 +349,6 @@ class AbstractStopDataExtractor(GameDataExtractor):
                 self.raw_count['on'][raw_event['eventOn']] += 1
                 self.raw_count['off'][raw_event['eventOff']] += 1
 
-        def denominator(n):
-            if n:
-                return n
-            else:
-                return 1
-
         def check_value_labels():
             session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
 
@@ -361,14 +370,14 @@ class AbstractStopDataExtractor(GameDataExtractor):
             healthy_sum = self.label_allocation_counts['HEALTHY']['1_'] + self.label_allocation_counts['HEALTHY']['2_']
             pprint(self.label_allocation_counts)
             non_healthy_sum = self.label_allocation_counts['NON_HEALTHY']['1_'] + self.label_allocation_counts['NON_HEALTHY']['2_']
-            self.label_allocation_item_id_percentages['HEALTHY']['1_'] = self.label_allocation_counts['HEALTHY']['1_'] / denominator(healthy_sum)
-            self.label_allocation_item_id_percentages['HEALTHY']['2_'] = self.label_allocation_counts['HEALTHY']['2_'] / denominator(healthy_sum)
-            self.label_allocation_item_id_percentages['NON_HEALTHY']['1_'] = self.label_allocation_counts['NON_HEALTHY']['1_'] / denominator(non_healthy_sum)
-            self.label_allocation_item_id_percentages['NON_HEALTHY']['2_'] = self.label_allocation_counts['NON_HEALTHY']['2_'] / denominator(non_healthy_sum)
+            self.label_allocation_item_id_percentages['HEALTHY']['1_'] = self.label_allocation_counts['HEALTHY']['1_'] / self.denominator(healthy_sum)
+            self.label_allocation_item_id_percentages['HEALTHY']['2_'] = self.label_allocation_counts['HEALTHY']['2_'] / self.denominator(healthy_sum)
+            self.label_allocation_item_id_percentages['NON_HEALTHY']['1_'] = self.label_allocation_counts['NON_HEALTHY']['1_'] / self.denominator(non_healthy_sum)
+            self.label_allocation_item_id_percentages['NON_HEALTHY']['2_'] = self.label_allocation_counts['NON_HEALTHY']['2_'] / self.denominator(non_healthy_sum)
             total_sum = healthy_sum + non_healthy_sum
             self.label_allocation_item_type_percentages = defaultdict(float)
-            self.label_allocation_item_type_percentages['HEALTHY'] = healthy_sum / denominator(total_sum)
-            self.label_allocation_item_type_percentages['NON_HEALTHY'] = non_healthy_sum / denominator(total_sum)
+            self.label_allocation_item_type_percentages['HEALTHY'] = healthy_sum / self.denominator(total_sum)
+            self.label_allocation_item_type_percentages['NON_HEALTHY'] = non_healthy_sum / self.denominator(total_sum)
 
             # Record the item IDs for each value of selected (MB/random/user/upload/non-food)
             self.selected_item_ids = defaultdict(set)  # dict of set
@@ -462,12 +471,6 @@ class AbstractStopDataExtractor(GameDataExtractor):
         self.check_points(row)
         calculate_dependent_variables()
         self.calculate_ssrt(row)
-
-        def mean(numbers):
-            if numbers and len(numbers) > 0:
-                return statistics.mean(numbers)
-            else:
-                return 0
 
         def cell(row, column):
             return '{}{}'.format(str(row), str(column))
@@ -724,17 +727,17 @@ class AbstractStopDataExtractor(GameDataExtractor):
         pprint(self.dv_correct_session_percentages)
         # assert False
 
-        print('mean CORRECT_GO responses', mean(self.dv_correct_go_responses))
-        print('mean CORRECT_GO HEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
-        print('mean CORRECT_GO UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['NON_HEALTHY']))
-        print('mean CORRECT_STOP responses', mean(self.dv_correct_stop_responses))
-        print('mean CORRECT_STOP HEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY']))
-        print('mean CORRECT_STOP UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['NON_HEALTHY']))
+        print('mean CORRECT_GO responses', self.mean(self.dv_correct_go_responses))
+        print('mean CORRECT_GO HEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
+        print('mean CORRECT_GO UNHEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_GO']['NON_HEALTHY']))
+        print('mean CORRECT_STOP responses', self.mean(self.dv_correct_stop_responses))
+        print('mean CORRECT_STOP HEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY']))
+        print('mean CORRECT_STOP UNHEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['NON_HEALTHY']))
 
-        print('mean INCORRECT HEALTHY SELECTED responses', mean(self.dv_incorrect_healthy_selected_responses))
-        print('mean INCORRECT HEALTHY NOT SELECTED responses', mean(self.dv_incorrect_healthy_not_selected_responses))
-        print('mean INCORRECT UNHEALTHY SELECTED responses', mean(self.dv_incorrect_unhealthy_selected_responses))
-        print('mean INCORRECT UNHEALTHY NOT SELECTED responses', mean(self.dv_incorrect_unhealthy_not_selected_responses))
+        print('mean INCORRECT HEALTHY SELECTED responses', self.mean(self.dv_incorrect_healthy_selected_responses))
+        print('mean INCORRECT HEALTHY NOT SELECTED responses', self.mean(self.dv_incorrect_healthy_not_selected_responses))
+        print('mean INCORRECT UNHEALTHY SELECTED responses', self.mean(self.dv_incorrect_unhealthy_selected_responses))
+        print('mean INCORRECT UNHEALTHY NOT SELECTED responses', self.mean(self.dv_incorrect_unhealthy_not_selected_responses))
 
         excel_filename = 'DerivedValues.xlsx'
         wb.save(excel_filename)
