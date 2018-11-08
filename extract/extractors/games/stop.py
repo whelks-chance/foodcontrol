@@ -150,36 +150,35 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
     def calculate_ssrt(self, row):
         session_events = self.get_session_events(row)
-        if session_events:
 
-            # Mean SSRT
-            tap_response_start_total = 0
-            stop_signal_delay_total = 0
-            stop_signal_onset_total = 0
-            for session_event in session_events:
-                trial_type = session_event['trialType']
-                tap_response_start = self.numericify(session_event['tapResponseStart'])
-                if trial_type == 'GO' and tap_response_start > 0:
-                    tap_response_start_total += tap_response_start
-                stop_signal_delay = self.numericify(session_event['stopSignalDelay'])
-                stop_signal_delay_total += stop_signal_delay
-                stop_signal_onset = self.numericify(session_event['stopSignalOnset'])
-                stop_signal_onset_total += stop_signal_onset
-            mean_tap_response_start = tap_response_start_total / len(session_events)
-            mean_stop_signal_delay = stop_signal_delay_total / len(session_events)
-            mean_stop_signal_onset = stop_signal_onset_total / len(session_events)
-            mean_ideal_ssrt = mean_tap_response_start - mean_stop_signal_delay  # What the SSRT should be
-            mean_actual_ssrt = mean_tap_response_start - mean_stop_signal_onset  # What the SSRT actually is
-            print('\n IDEAL MEAN SSRT:', mean_ideal_ssrt)
-            print('ACTUAL MEAN SSRT:', mean_actual_ssrt)
+        # Mean SSRT
+        tap_response_start_total = 0
+        stop_signal_delay_total = 0
+        stop_signal_onset_total = 0
+        for session_event in session_events:
+            trial_type = session_event['trialType']
+            tap_response_start = self.numericify(session_event['tapResponseStart'])
+            if trial_type == 'GO' and tap_response_start > 0:
+                tap_response_start_total += tap_response_start
+            stop_signal_delay = self.numericify(session_event['stopSignalDelay'])
+            stop_signal_delay_total += stop_signal_delay
+            stop_signal_onset = self.numericify(session_event['stopSignalOnset'])
+            stop_signal_onset_total += stop_signal_onset
+        mean_tap_response_start = tap_response_start_total / len(session_events)
+        mean_stop_signal_delay = stop_signal_delay_total / len(session_events)
+        mean_stop_signal_onset = stop_signal_onset_total / len(session_events)
+        mean_ideal_ssrt = mean_tap_response_start - mean_stop_signal_delay  # What the SSRT should be
+        mean_actual_ssrt = mean_tap_response_start - mean_stop_signal_onset  # What the SSRT actually is
+        print('\n IDEAL MEAN SSRT:', mean_ideal_ssrt)
+        print('ACTUAL MEAN SSRT:', mean_actual_ssrt)
 
-            # Integration SSRT
-            incorrect_stop_trials_count = 0
-            for session_event in session_events:
-                tap_response_type = session_event['tapResponseType']
-                if tap_response_type == 'INCORRECT_STOP' or tap_response_type == 'MISS_STOP':
-                    incorrect_stop_trials_count += 1
-            print('INCORRECT STOP TRIALS:', incorrect_stop_trials_count)
+        # Integration SSRT
+        incorrect_stop_trials_count = 0
+        for session_event in session_events:
+            tap_response_type = session_event['tapResponseType']
+            if tap_response_type == 'INCORRECT_STOP' or tap_response_type == 'MISS_STOP':
+                incorrect_stop_trials_count += 1
+        print('INCORRECT STOP TRIALS:', incorrect_stop_trials_count)
 
     def calculate(self, row):
         super(AbstractStopDataExtractor, self).calculate(row)
