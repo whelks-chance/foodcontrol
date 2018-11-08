@@ -42,6 +42,9 @@ class Spreadsheet:
         sheet = self.current_sheet()
         cell = self.current_cell()
         sheet[cell] = value
+        self.advance(advance_row, advance_by_rows)
+
+    def advance(self, advance_row, advance_by_rows):
         if advance_row or advance_by_rows > 1:
             for _ in range(0, advance_by_rows):
                 self.advance_row()
