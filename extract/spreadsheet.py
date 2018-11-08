@@ -46,15 +46,16 @@ class Spreadsheet:
     def set_value(self, value, advance_row=False, advance_by_rows=1, cell_offset=None):
         self.set_values([value], advance_row=advance_row, advance_by_rows=advance_by_rows, cell_offset=cell_offset)
 
-    def set_values(self, values, advance_row=False, advance_by_rows=1, cell_offset=None):
+    def set_values(self, values, advance_row=True, advance_by_rows=1, cell_offset=None):
         """Set the value of the current cell"""
         sheet = self.current_sheet()
         if cell_offset:
             self.column, self.row = cell_offset
-        for value in values:
+        for index, value in enumerate(values):
             cell = self.current_cell()
             sheet[cell] = value
-            self.advance_column()
+            if index < len(values)-1:
+                self.advance_column()
         self.advance(advance_row, advance_by_rows)
 
     def advance(self, advance_row, advance_by_rows):

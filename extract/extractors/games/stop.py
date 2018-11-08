@@ -488,18 +488,17 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
         # Trial Counts
         spreadsheet.select_sheet('Trial Count')
-        spreadsheet.set_value('Trial Count')
-        spreadsheet.set_value(self.trial_count, advance_by_rows=2)
+        spreadsheet.set_values(['Trial Count', self.trial_count], advance_by_rows=2)
 
         # Raw Counts
         spreadsheet.set_value('Raw Counts', advance_by_rows=2)
-        spreadsheet.set_value('On', advance_row=True)
+        spreadsheet.set_values(['On'])
         for key, value in self.raw_count['on'].items():
-            spreadsheet.set_values([key, value], advance_row=True)
+            spreadsheet.set_values([key, value])
         spreadsheet.advance_row()
-        spreadsheet.set_value('Off', advance_row=True)
+        spreadsheet.set_values(['Off'])
         for key, value in self.raw_count['off'].items():
-            spreadsheet.set_values([key, value], advance_row=True)
+            spreadsheet.set_values([key, value])
 
         # Durations
         print('\nTRIAL DURATIONS:')
@@ -508,25 +507,25 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
         # Trial Stats
         spreadsheet.select_sheet('Stats')
-        spreadsheet.set_values(['Field', 'Min', 'Max', 'Mean', 'St Dev'], advance_row=True)
+        spreadsheet.set_values(['Field', 'Min', 'Max', 'Mean', 'St Dev'])
         for field, stats in self.trial_stats.items():
-            spreadsheet.set_values([field, stats['min'], stats['max'], stats['mean'], stats['stdev']], advance_row=True)
+            spreadsheet.set_values([field, stats['min'], stats['max'], stats['mean'], stats['stdev']])
 
         # Trial Types
         spreadsheet.select_sheet('Trial Types')
         # - Blocks
-        spreadsheet.set_value('Session', advance_row=True)
-        spreadsheet.set_values(['Trial Type', 'Count', 'Percentage'], advance_row=True)
+        spreadsheet.set_values(['Session'])
+        spreadsheet.set_values(['Trial Type', 'Count', 'Percentage'])
         for trial_type in ['GO', 'STOP']:
             spreadsheet.set_values([
                 trial_type,
                 self.session_trial_type_counts[trial_type],
                 self.session_trial_type_percentages[trial_type]
-            ], advance_row=True)
+            ])
         # - Session
         spreadsheet.advance_row()
-        spreadsheet.set_value('Block', advance_row=True)
-        spreadsheet.set_values(['Block', 'Trial Type', 'Count', 'Percentage'], advance_row=True)
+        spreadsheet.set_values(['Block'])
+        spreadsheet.set_values(['Block', 'Trial Type', 'Count', 'Percentage'])
         for block_key in irange(1, 4):
             for trial_type in ['GO', 'STOP']:
                 spreadsheet.set_values([
@@ -534,7 +533,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
                     trial_type,
                     self.block_trial_type_counts[block_key][trial_type],
                     self.block_trial_type_percentages[block_key][trial_type]
-                ], advance_row=True)
+                ])
 
         print('\nSESSION TRIAL TYPE COUNTS:')
         pprint(self.session_trial_type_counts)
@@ -585,12 +584,12 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
         # Raw Rounds
         spreadsheet.select_sheet('Raw Rounds')
-        spreadsheet.set_values(['Round', 'Count'], advance_row=True)
+        spreadsheet.set_values(['Round', 'Count'])
         for block_key in irange(1, 4):
             spreadsheet.set_values([
                 block_key,
                 len(self.raw_round_trial_counts[block_key])
-            ], advance_row=True)
+            ])
 
         # Label Allocation Counts
         r = 1
@@ -641,7 +640,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
         # - Session
         spreadsheet.select_sheet('Unique Items - Session')
         for index, unique_item_id in enumerate(self.session_item_ids):
-            spreadsheet.set_value(unique_item_id, advance_row=True)
+            spreadsheet.set_values([unique_item_id])
         # - Blocks
         spreadsheet.select_sheet('Unique Items - Blocks')
         for block_key in irange(1, 4):
