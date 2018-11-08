@@ -495,11 +495,11 @@ class AbstractStopDataExtractor(GameDataExtractor):
         spreadsheet.set_value('Raw Counts', advance_by_rows=2)
         spreadsheet.set_value('On', advance_row=True)
         for key, value in self.raw_count['on'].items():
-            spreadsheet.set_value([key, value], advance_row=True)
+            spreadsheet.set_values([key, value], advance_row=True)
         spreadsheet.advance_row()
         spreadsheet.set_value('Off', advance_row=True)
         for key, value in self.raw_count['off'].items():
-            spreadsheet.set_value([key, value], advance_row=True)
+            spreadsheet.set_values([key, value], advance_row=True)
 
         # Durations
         print('\nTRIAL DURATIONS:')
@@ -508,17 +508,17 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
         # Trial Stats
         spreadsheet.select_sheet('Stats')
-        spreadsheet.set_value(['Field', 'Min', 'Max', 'Mean', 'St Dev'], advance_row=True)
+        spreadsheet.set_values(['Field', 'Min', 'Max', 'Mean', 'St Dev'], advance_row=True)
         for field, stats in self.trial_stats.items():
-            spreadsheet.set_value([field, stats['min'], stats['max'], stats['mean'], stats['stdev']], advance_row=True)
+            spreadsheet.set_values([field, stats['min'], stats['max'], stats['mean'], stats['stdev']], advance_row=True)
 
         # Trial Types
         spreadsheet.select_sheet('Trial Types')
         # - Blocks
         spreadsheet.set_value('Session', advance_row=True)
-        spreadsheet.set_value(['Trial Type', 'Count', 'Percentage'], advance_row=True)
+        spreadsheet.set_values(['Trial Type', 'Count', 'Percentage'], advance_row=True)
         for trial_type in ['GO', 'STOP']:
-            spreadsheet.set_value([
+            spreadsheet.set_values([
                 trial_type,
                 self.session_trial_type_counts[trial_type],
                 self.session_trial_type_percentages[trial_type]
@@ -526,10 +526,10 @@ class AbstractStopDataExtractor(GameDataExtractor):
         # - Session
         spreadsheet.advance_row()
         spreadsheet.set_value('Block', advance_row=True)
-        spreadsheet.set_value(['Block', 'Trial Type', 'Count', 'Percentage'], advance_row=True)
+        spreadsheet.set_values(['Block', 'Trial Type', 'Count', 'Percentage'], advance_row=True)
         for block_key in irange(1, 4):
             for trial_type in ['GO', 'STOP']:
-                spreadsheet.set_value([
+                spreadsheet.set_values([
                     block_key,
                     trial_type,
                     self.block_trial_type_counts[block_key][trial_type],
@@ -585,9 +585,9 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
         # Raw Rounds
         spreadsheet.select_sheet('Raw Rounds')
-        spreadsheet.set_value(['Round', 'Count'], advance_row=True)
+        spreadsheet.set_values(['Round', 'Count'], advance_row=True)
         for block_key in irange(1, 4):
-            spreadsheet.set_value([
+            spreadsheet.set_values([
                 block_key,
                 len(self.raw_round_trial_counts[block_key])
             ], advance_row=True)

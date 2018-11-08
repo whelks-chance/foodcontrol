@@ -44,16 +44,13 @@ class Spreadsheet:
         return self.workbook.active
 
     def set_value(self, value, advance_row=False, advance_by_rows=1, cell_offset=None):
+        self.set_values([value], advance_row=advance_row, advance_by_rows=advance_by_rows, cell_offset=cell_offset)
+
+    def set_values(self, values, advance_row=False, advance_by_rows=1, cell_offset=None):
         """Set the value of the current cell"""
         sheet = self.current_sheet()
-        if type(value) is list:
-            values = value
-        else:
-            values = [value]
         if cell_offset:
-            print(cell_offset)
-            self.column = cell_offset[0]
-            self.row = cell_offset[1]
+            self.column, self.row = cell_offset
         for value in values:
             cell = self.current_cell()
             sheet[cell] = value
