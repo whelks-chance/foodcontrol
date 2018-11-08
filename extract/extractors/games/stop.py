@@ -137,7 +137,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
             }
         }
         running_total = 0
-        session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+        session_events = self.get_session_events(row)
         for session_event in session_events:
             trial_type = session_event['trialType']
             tap_response_type = session_event['tapResponseType']
@@ -778,7 +778,7 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
 
     def check_points(self, row):
         running_total = 0
-        session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+        session_events = self.get_session_events(row)
         for session_event in session_events:
 
             trial_type = session_event['trialType']
