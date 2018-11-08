@@ -86,28 +86,29 @@ class AbstractStopDataExtractor(GameDataExtractor):
         return session_events
 
     @staticmethod
-    def within_stimulus_boundaries(session_event, item_radius=95, prefix='tapResponsePosition'):
+    def within_stimulus_boundary(session_event, item_radius=95, prefix='tapResponsePosition'):
         tx = float(session_event['{}X'.format(prefix)])
         ty = float(session_event['{}Y'.format(prefix)])
         ix = session_event['itemPositionX']
         iy = session_event['itemPositionY']
         # print(tx, ty, ix, iy)
-        if ((tx - ix) ** 2) + ((ty - iy) ** 2) < (item_radius ** 2):
-            return True
-        else:
-            return False
+        return ((tx - ix) ** 2) + ((ty - iy) ** 2) < (item_radius ** 2)
+
+    def outside_stimulus_boundaries(self, session_event, prefix='tapResponsePosition'):
+        return not self.within_stimulus_boundary(session_event, prefix=prefix)
 
     def check_tap_responses(self, row):
+        # trs = tap response start
         checks = {
             'GO': {
-                'CORRECT_GO': lambda tap_response_start, session_event: tap_response_start > 0 and self.within_stimulus_boundaries(session_event),
-                'INCORRECT_GO': lambda tap_response_start, session_event: tap_response_start == 0,
-                'MISS_GO': lambda tap_response_start, session_event: tap_response_start > 0 and not self.within_stimulus_boundaries(session_event),
+                'CORRECT_GO': lambda trs, session_event: trs > 0 and self.within_stimulus_boundary(session_event),
+                'INCORRECT_GO': lambda trs, session_event: trs == 0,
+                'MISS_GO': lambda trs, session_event: trs > 0 and self.outside_stimulus_boundaries(session_event),
             },
             'STOP': {
-                'CORRECT_STOP': lambda tap_response_start, session_event: tap_response_start == 0,
-                'INCORRECT_STOP': lambda tap_response_start, session_event: tap_response_start > 0 and self.within_stimulus_boundaries(session_event),
-                'MISS_STOP': lambda tap_response_start, session_event: tap_response_start > 0 and not self.within_stimulus_boundaries(session_event),
+                'CORRECT_STOP': lambda trs, session_event: trs == 0,
+                'INCORRECT_STOP': lambda trs, session_event: trs > 0 and self.within_stimulus_boundary(session_event),
+                'MISS_STOP': lambda trs, session_event: trs > 0 and self.outside_stimulus_boundaries(session_event),
             }
         }
         session_events = self.get_session_events(row)
@@ -810,43 +811,58 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
             self.session_event_log.log_message_if_check_failed(check_passed, session_event, extra_message='points_running_total != running_total')
 
     def check_tap_responses(self, row):
+        # trs = tap response start
         initial_tap_response_checks = {
             'GO': {
-                'CORRECT_GO': lambda initial_tap_response_start, session_event: initial_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
-                'INCORRECT_GO': lambda initial_tap_response_start, session_event: initial_tap_response_start == 0,
-                'MISS_GO': lambda initial_tap_response_start, session_event: initial_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
+                'CORRECT_GO': lambda trs, session_event: trs > 0 and self.within_first_stimulus_boundary(session_event),
+                'INCORRECT_GO': lambda trs, session_event: trs == 0,
+                'MISS_GO': lambda trs, session_event: trs > 0 and self.outside_first_stimulus_boundary(session_event),
             },
             'DOUBLE': {
-                'CORRECT': lambda initial_tap_response_start, session_event: initial_tap_response_start == 0,
-                'INCORRECT': lambda initial_tap_response_start, session_event: initial_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
-                'MISS': lambda initial_tap_response_start, session_event: initial_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
+                'CORRECT': lambda trs, session_event: trs == 0,
+                'INCORRECT': lambda trs, session_event: trs > 0 and self.within_first_stimulus_boundary(session_event),
+                'MISS': lambda trs, session_event: trs > 0 and self.outside_first_stimulus_boundary(session_event),
             }
         }
         second_tap_response_checks = {
             'GO': {
-                'N/A': lambda second_tap_response_start, session_event: second_tap_response_start == 0,
-                'INCORRECT_DOUBLE_GO': lambda second_tap_response_start, session_event: second_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
-                'MISS_GO': lambda second_tap_response_start, session_event: second_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
+                'N/A': lambda trs, session_event: trs == 0,
+                'INCORRECT_DOUBLE_GO': lambda trs, session_event: trs > 0 and self.within_second_stimulus_boundary(session_event),
+                'MISS_GO': lambda trs, session_event: trs > 0 and self.outside_second_stimulus_boundary(session_event),
             },
             'DOUBLE': {
-                'CORRECT': lambda second_tap_response_start, session_event: second_tap_response_start > 0 and self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
-                'INCORRECT': lambda second_tap_response_start, session_event: second_tap_response_start == 0,
-                'MISS': lambda second_tap_response_start, session_event: second_tap_response_start > 0 and not self.within_stimulus_boundaries(session_event, prefix='initialTapResponsePosition'),
+                'CORRECT': lambda trs, session_event: trs > 0 and self.within_second_stimulus_boundary(session_event),
+                'INCORRECT': lambda trs, session_event: trs == 0,
+                'MISS': lambda trs, session_event: trs > 0 and self.outside_second_stimulus_boundary(session_event),
             }
         }
+
+        def check_tap_response(tap_response_checks, session_event, prefix):
+            tap_response_type = session_event['{}TapResponseType'.format(prefix)]
+            # Fix incorrectly names key
+            if tap_response_type == 'INCORR_DOUB_GO':
+                tap_response_type = 'INCORRECT_DOUBLE_GO'
+            tap_response_start = self.numericify(session_event['{}TapResponseStart'.format(prefix)])
+            check_passed = tap_response_checks[trial_type][tap_response_type](tap_response_start, session_event)
+            self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+
         session_events = self.get_session_events(row)
         for session_event in session_events:
             trial_type = session_event['trialType']
+            check_tap_response(initial_tap_response_checks, session_event, 'initial')
+            check_tap_response(second_tap_response_checks, session_event, 'second')
 
-            initial_tap_response_type = session_event['initialTapResponseType']
-            initial_tap_response_start = self.numericify(session_event['initialTapResponseStart'])
-            check_passed = initial_tap_response_checks[trial_type][initial_tap_response_type](initial_tap_response_start, session_event)
-            self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+    def within_first_stimulus_boundary(self, session_event):
+        self.within_stimulus_boundary(session_event, prefix='initialTapResponsePosition')
 
-            second_tap_response_type = session_event['secondTapResponseType']
-            second_tap_response_start = self.numericify(session_event['secondTapResponseStart'])
-            check_passed = second_tap_response_checks[trial_type][second_tap_response_type](second_tap_response_start, session_event)
-            self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+    def outside_first_stimulus_boundary(self, session_event):
+        self.outside_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
+
+    def within_second_stimulus_boundary(self, session_event):
+        self.within_stimulus_boundary(session_event, prefix='secondTapResponsePosition')
+
+    def outside_second_stimulus_boundary(self, session_event):
+        self.outside_stimulus_boundaries(session_event, prefix='secondTapResponsePosition')
 
     def calculate_ssrt(self, row):
         pass
