@@ -777,37 +777,43 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
     type = 'DOUBLE'
 
     def check_points(self, row):
+
+        def check_go(initial_tap_response_type, second_tap_response_type):
+            if initial_tap_response_type == 'CORRECT_GO' and second_tap_response_type == 'N/A':
+                check_passed = points_this_trial == 20
+                self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+            elif initial_tap_response_type == 'INCORRECT_GO' and second_tap_response_type == 'N/A':
+                check_passed = points_this_trial == -20
+                self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+            else:
+                check_passed = points_this_trial == -50
+                self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+
+        def check_double(initial_tap_response_type, second_tap_response_type):
+            if initial_tap_response_type == 'CORRECT' and second_tap_response_type == 'CORRECT':
+                check_passed = points_this_trial == 50
+                self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+            else:
+                check_passed = points_this_trial == -50
+                self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+
+        checks = {
+            'GO': check_go,
+            'DOUBLE': check_double,
+        }
+
         running_total = 0
         session_events = self.get_session_events(row)
         for session_event in session_events:
-
+            # Points Awarded
             trial_type = session_event['trialType']
             initial_tap_response_type = session_event['initialTapResponseType']
             second_tap_response_type = session_event['secondTapResponseType']
             points_this_trial = session_event['pointsThisTrial']
-
-            if trial_type == 'GO':
-                if initial_tap_response_type == 'CORRECT_GO' and second_tap_response_type == 'N/A':
-                    check_passed = points_this_trial == 20
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                elif initial_tap_response_type == 'INCORRECT_GO' and second_tap_response_type == 'N/A':
-                    check_passed = points_this_trial == -20
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                else:
-                    # print(initial_tap_response_type, second_tap_response_type)
-                    check_passed = points_this_trial == -50
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-            if trial_type == 'DOUBLE':
-                if initial_tap_response_type == 'CORRECT' and second_tap_response_type == 'CORRECT':
-                    check_passed = points_this_trial == 50
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-                else:
-                    check_passed = points_this_trial == -50
-                    self.session_event_log.log_message_if_check_failed(check_passed, session_event)
-
+            checks[trial_type](initial_tap_response_type, second_tap_response_type)
+            # Running Total
             running_total += points_this_trial
             points_running_total = session_event['pointsRunningTotal']
-
             check_passed = points_running_total == running_total
             self.session_event_log.log_message_if_check_failed(check_passed, session_event, extra_message='points_running_total != running_total')
 
