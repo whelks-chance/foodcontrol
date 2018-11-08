@@ -122,7 +122,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
             tap_response_type = session_event['tapResponseType']
             tap_response_start = self.numericify(session_event['tapResponseStart'])
             check_result = checks[trial_type][tap_response_type](tap_response_start, session_event)
-            self.session_event_log.log_message_if_check_failed(check_result, session_event)
+            self.session_event_log.log_if_check_failed(check_result, session_event)
 
     def check_points(self, row):
         points = {
@@ -741,21 +741,21 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
         def check_go(initial_tap_response_type, second_tap_response_type):
             if initial_tap_response_type == 'CORRECT_GO' and second_tap_response_type == 'N/A':
                 check_passed = points_this_trial == 20
-                self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+                self.session_event_log.log_if_check_failed(check_passed, session_event)
             elif initial_tap_response_type == 'INCORRECT_GO' and second_tap_response_type == 'N/A':
                 check_passed = points_this_trial == -20
-                self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+                self.session_event_log.log_if_check_failed(check_passed, session_event)
             else:
                 check_passed = points_this_trial == -50
-                self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+                self.session_event_log.log_if_check_failed(check_passed, session_event)
 
         def check_double(initial_tap_response_type, second_tap_response_type):
             if initial_tap_response_type == 'CORRECT' and second_tap_response_type == 'CORRECT':
                 check_passed = points_this_trial == 50
-                self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+                self.session_event_log.log_if_check_failed(check_passed, session_event)
             else:
                 check_passed = points_this_trial == -50
-                self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+                self.session_event_log.log_if_check_failed(check_passed, session_event)
 
         checks = {
             'GO': check_go,
@@ -775,7 +775,7 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
             running_total += points_this_trial
             points_running_total = session_event['pointsRunningTotal']
             check_passed = points_running_total == running_total
-            self.session_event_log.log_message_if_check_failed(check_passed, session_event, extra_message='points_running_total != running_total')
+            self.session_event_log.log_if_check_failed(check_passed, session_event, extra_message='points_running_total != running_total')
 
     def check_tap_responses(self, row):
         # trs = tap response start
@@ -811,7 +811,7 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
                 tap_response_type = 'INCORRECT_DOUBLE_GO'
             tap_response_start = self.numericify(session_event['{}TapResponseStart'.format(prefix)])
             check_result = tap_response_checks[trial_type][tap_response_type](tap_response_start, session_event)
-            self.session_event_log.log_message_if_check_failed(check_result, session_event)
+            self.session_event_log.log_if_check_failed(check_result, session_event)
 
         session_events = self.get_session_events(row)
         for session_event in session_events:
