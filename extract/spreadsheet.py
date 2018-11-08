@@ -3,7 +3,7 @@ from openpyxl import Workbook
 
 
 class Spreadsheet:
-    """A wrapper around the openpyxl Workbook that provides a typewriter write-and-advance metaphor"""
+    """A wrapper around the openpyxl Workbook that provides a typewriter style write-and-advance metaphor"""
 
     alphabet = list(string.ascii_uppercase)
 
@@ -18,10 +18,12 @@ class Spreadsheet:
     def current_cell(self):
         """
         Return the Excel letter/number coordinates of the current cell using the
-        1-based row,column coordinates of the current cell, e.g. 3,2 -> C2"""
+        1-based row,column coordinates of the current cell, e.g. 3,2 -> C2
+        """
         return '{}{}'.format(self.letter(self.column-1), str(self.row))
 
     def select_sheet(self, sheet_name):
+        """Set the active sheet by the given name (creating it if necessary)"""
         sheet = self.get_sheet(sheet_name)
         self.workbook.active = sheet
 
@@ -35,12 +37,16 @@ class Spreadsheet:
     def current_sheet(self):
         return self.workbook.active
 
-    def set_value(self, value):
+    def set_value(self, value, advance_row=False, advance_by_rows=1):
         """Set the value of the current cell"""
         sheet = self.current_sheet()
         cell = self.current_cell()
         sheet[cell] = value
-        self.advance_column()
+        if advance_row or advance_by_rows > 1:
+            for _ in range(0, advance_by_rows):
+                self.advance_row()
+        else:
+            self.advance_column()
 
     def advance_column(self):
         self.column += 1

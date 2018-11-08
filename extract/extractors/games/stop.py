@@ -6,6 +6,7 @@ from pprint import pprint
 from .gamedataextractor import GameDataExtractor
 from .session_event_log import SessionEventLog
 from keypath_extractor import Keypath
+from spreadsheet import Spreadsheet
 from utils import irange
 
 
@@ -467,6 +468,8 @@ class AbstractStopDataExtractor(GameDataExtractor):
         calculate_dependent_variables()
         self.calculate_ssrt(row)
 
+        spreadsheet = Spreadsheet()
+
         def cell(row, column):
             return '{}{}'.format(str(row), str(column))
 
@@ -483,38 +486,22 @@ class AbstractStopDataExtractor(GameDataExtractor):
         letters = [A, B, C, D, E, F, G, H, I, J]
         wb = Workbook()
 
-        # Counts
-        print('TRIAL COUNT: ', self.trial_count)
-        # Reuse the default sheet
-        counts_sheet = wb.active
-        counts_sheet.title = 'Counts'
-
         # Trial Counts
-        counts_sheet[cell(A, 1)] = 'Trial Count'
-        counts_sheet[cell(B, 1)] = self.trial_count
+        spreadsheet.select_sheet('Trial Count')
+        spreadsheet.set_value('Trial Count')
+        spreadsheet.set_value(self.trial_count, advance_by_rows=2)
 
-        print('\nRAW COUNTS:')
-        print(' ON', self.raw_count['on'])
-        r = 3
-        counts_sheet[cell(A, r)] = 'Raw Counts'
-        r += 1
-        counts_sheet[cell(A, r)] = 'On'
-        r += 1
+        # Raw Counts
+        spreadsheet.set_value('Raw Counts', advance_by_rows=2)
+        spreadsheet.set_value('On', advance_row=True)
         for key, value in self.raw_count['on'].items():
-            counts_sheet[cell(A, r)] = key
-            counts_sheet[cell(B, r)] = value
-            r += 1
-            print(key, value)
-
-        print('OFF', self.raw_count['off'])
-        r += 1
-        counts_sheet[cell(A, r)] = 'Off'
-        r += 1
+            spreadsheet.set_value(key)
+            spreadsheet.set_value(value, advance_row=True)
+        spreadsheet.advance_row()
+        spreadsheet.set_value('Off', advance_row=True)
         for key, value in self.raw_count['off'].items():
-            counts_sheet[cell(A, r)] = key
-            counts_sheet[cell(B, r)] = value
-            r += 1
-            print(key, value)
+            spreadsheet.set_value(key)
+            spreadsheet.set_value(value, advance_row=True)
 
         # Durations
         print('\nTRIAL DURATIONS:')
@@ -736,7 +723,8 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
         excel_filename = 'DerivedValues.xlsx'
         wb.save(excel_filename)
-        # assert False
+        spreadsheet.save('new-DerivedValues.xlsx')
+        assert False
         # print('\nLog')
 
         self.session_event_log.print()
