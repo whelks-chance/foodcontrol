@@ -46,6 +46,10 @@ class AbstractStopDataExtractor(GameDataExtractor):
         else:
             return 0
 
+    @staticmethod
+    def remove_none_values(values):
+        return [d for d in values if d is not None]
+
     def clear(self):
         self.session_duration = 0
         self.durations.clear()
@@ -94,7 +98,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
         # print(tx, ty, ix, iy)
         return ((tx - ix) ** 2) + ((ty - iy) ** 2) < (item_radius ** 2)
 
-    def outside_stimulus_boundaries(self, session_event, prefix='tapResponsePosition'):
+    def outside_stimulus_boundary(self, session_event, prefix='tapResponsePosition'):
         return not self.within_stimulus_boundary(session_event, prefix=prefix)
 
     def check_tap_responses(self, row):
@@ -103,12 +107,12 @@ class AbstractStopDataExtractor(GameDataExtractor):
             'GO': {
                 'CORRECT_GO': lambda trs, session_event: trs > 0 and self.within_stimulus_boundary(session_event),
                 'INCORRECT_GO': lambda trs, session_event: trs == 0,
-                'MISS_GO': lambda trs, session_event: trs > 0 and self.outside_stimulus_boundaries(session_event),
+                'MISS_GO': lambda trs, session_event: trs > 0 and self.outside_stimulus_boundary(session_event),
             },
             'STOP': {
                 'CORRECT_STOP': lambda trs, session_event: trs == 0,
                 'INCORRECT_STOP': lambda trs, session_event: trs > 0 and self.within_stimulus_boundary(session_event),
-                'MISS_STOP': lambda trs, session_event: trs > 0 and self.outside_stimulus_boundaries(session_event),
+                'MISS_STOP': lambda trs, session_event: trs > 0 and self.outside_stimulus_boundary(session_event),
             }
         }
         session_events = self.get_session_events(row)
@@ -116,8 +120,8 @@ class AbstractStopDataExtractor(GameDataExtractor):
             trial_type = session_event['trialType']
             tap_response_type = session_event['tapResponseType']
             tap_response_start = self.numericify(session_event['tapResponseStart'])
-            check_passed = checks[trial_type][tap_response_type](tap_response_start, session_event)
-            self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+            check_result = checks[trial_type][tap_response_type](tap_response_start, session_event)
+            self.session_event_log.log_message_if_check_failed(check_result, session_event)
 
     def check_points(self, row):
         points = {
@@ -236,11 +240,8 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
             def calculate_trial_duration_stats():
 
-                def remove_none_values(values):
-                    return [d for d in values if d is not None]
-
                 def calculate_stats(durations_key):
-                    durations = remove_none_values(self.durations[durations_key])
+                    durations = self.remove_none_values(self.durations[durations_key])
                     return {
                         'min': min(durations),
                         'max': max(durations),
@@ -344,7 +345,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
                 self.raw_count['off'][raw_event['eventOff']] += 1
 
         def check_value_labels():
-            session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+            session_events = self.get_session_events(row)
 
             # Record healthy/non-healthy label allocation counts
             self.label_allocation_counts = defaultdict(lambda: defaultdict(int))  # dict of int dict
@@ -839,12 +840,12 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
 
         def check_tap_response(tap_response_checks, session_event, prefix):
             tap_response_type = session_event['{}TapResponseType'.format(prefix)]
-            # Fix incorrectly names key
+            # Fix incorrectly named key
             if tap_response_type == 'INCORR_DOUB_GO':
                 tap_response_type = 'INCORRECT_DOUBLE_GO'
             tap_response_start = self.numericify(session_event['{}TapResponseStart'.format(prefix)])
-            check_passed = tap_response_checks[trial_type][tap_response_type](tap_response_start, session_event)
-            self.session_event_log.log_message_if_check_failed(check_passed, session_event)
+            check_result = tap_response_checks[trial_type][tap_response_type](tap_response_start, session_event)
+            self.session_event_log.log_message_if_check_failed(check_result, session_event)
 
         session_events = self.get_session_events(row)
         for session_event in session_events:
@@ -856,13 +857,13 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
         self.within_stimulus_boundary(session_event, prefix='initialTapResponsePosition')
 
     def outside_first_stimulus_boundary(self, session_event):
-        self.outside_stimulus_boundaries(session_event, prefix='initialTapResponsePosition')
+        self.outside_stimulus_boundary(session_event, prefix='initialTapResponsePosition')
 
     def within_second_stimulus_boundary(self, session_event):
         self.within_stimulus_boundary(session_event, prefix='secondTapResponsePosition')
 
     def outside_second_stimulus_boundary(self, session_event):
-        self.outside_stimulus_boundaries(session_event, prefix='secondTapResponsePosition')
+        self.outside_stimulus_boundary(session_event, prefix='secondTapResponsePosition')
 
     def calculate_ssrt(self, row):
         pass

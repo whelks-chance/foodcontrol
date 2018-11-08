@@ -13,8 +13,8 @@ class SessionEventLog:
         }
         self.logs.append(log)
 
-    def log_message_if_check_failed(self, check_passed, session_event, extra_message=None):
-        if not check_passed:
+    def log_message_if_check_failed(self, check_result, session_event, extra_message=None):
+        if not check_result:
             message = 'Check failed: trialType={} gameSessionID={} roundID={}, trialID={}'.format(
                                 session_event['trialType'],
                                 session_event['gameSessionID'],
