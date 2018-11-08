@@ -495,66 +495,46 @@ class AbstractStopDataExtractor(GameDataExtractor):
         spreadsheet.set_value('Raw Counts', advance_by_rows=2)
         spreadsheet.set_value('On', advance_row=True)
         for key, value in self.raw_count['on'].items():
-            spreadsheet.set_value(key)
-            spreadsheet.set_value(value, advance_row=True)
+            spreadsheet.set_value([key, value], advance_row=True)
         spreadsheet.advance_row()
         spreadsheet.set_value('Off', advance_row=True)
         for key, value in self.raw_count['off'].items():
-            spreadsheet.set_value(key)
-            spreadsheet.set_value(value, advance_row=True)
+            spreadsheet.set_value([key, value], advance_row=True)
 
         # Durations
         print('\nTRIAL DURATIONS:')
         for key in self.durations:
             print(key, self.durations[key])
 
-        print('\nTRIAL STATS:')
-        pprint(self.trial_stats)
-        r = 1
-        stats_sheet = wb.create_sheet('Stats')
-        stats_sheet[cell(A, r)] = 'Field'
-        stats_sheet[cell(B, r)] = 'Min'
-        stats_sheet[cell(C, r)] = 'Max'
-        stats_sheet[cell(D, r)] = 'Mean'
-        stats_sheet[cell(E, r)] = 'St Dev'
-        r += 1
+        # Trial Stats
+        spreadsheet.select_sheet('Stats')
+        spreadsheet.set_value(['Field', 'Min', 'Max', 'Mean', 'St Dev'], advance_row=True)
         for field, stats in self.trial_stats.items():
-            stats_sheet[cell(A, r)] = field
-            stats_sheet[cell(B, r)] = stats['min']
-            stats_sheet[cell(C, r)] = stats['max']
-            stats_sheet[cell(D, r)] = stats['mean']
-            stats_sheet[cell(E, r)] = stats['stdev']
-            r += 1
+            spreadsheet.set_value([field, stats['min'], stats['max'], stats['mean'], stats['stdev']], advance_row=True)
 
         # Trial Types
-        # - Block
-        r = 1
-        trial_types_sheet = wb.create_sheet('Trial Types')
-        trial_types_sheet[cell(A, r)] = 'Session'
-        r += 1
-        trial_types_sheet[cell(A, r)] = 'Trial Type'
-        trial_types_sheet[cell(B, r)] = 'Count'
-        trial_types_sheet[cell(C, r)] = 'Percentage'
+        spreadsheet.select_sheet('Trial Types')
+        # - Blocks
+        spreadsheet.set_value('Session', advance_row=True)
+        spreadsheet.set_value(['Trial Type', 'Count', 'Percentage'], advance_row=True)
         for trial_type in ['GO', 'STOP']:
-            r += 1
-            trial_types_sheet[cell(A, r)] = trial_type
-            trial_types_sheet[cell(B, r)] = self.session_trial_type_counts[trial_type]
-            trial_types_sheet[cell(C, r)] = self.session_trial_type_percentages[trial_type]
+            spreadsheet.set_value([
+                trial_type,
+                self.session_trial_type_counts[trial_type],
+                self.session_trial_type_percentages[trial_type]
+            ], advance_row=True)
         # - Session
-        r += 2
-        trial_types_sheet[cell(A, r)] = 'Block'
-        r += 1
-        trial_types_sheet[cell(A, r)] = 'Block'
-        trial_types_sheet[cell(B, r)] = 'Trial Type'
-        trial_types_sheet[cell(C, r)] = 'Count'
-        trial_types_sheet[cell(D, r)] = 'Percentage'
+        spreadsheet.advance_row()
+        spreadsheet.set_value('Block', advance_row=True)
+        spreadsheet.set_value(['Block', 'Trial Type', 'Count', 'Percentage'], advance_row=True)
         for block_key in irange(1, 4):
             for trial_type in ['GO', 'STOP']:
-                r += 1
-                trial_types_sheet[cell(A, r)] = block_key
-                trial_types_sheet[cell(B, r)] = trial_type
-                trial_types_sheet[cell(C, r)] = self.block_trial_type_counts[block_key][trial_type]
-                trial_types_sheet[cell(D, r)] = self.block_trial_type_percentages[block_key][trial_type]
+                spreadsheet.set_value([
+                    block_key,
+                    trial_type,
+                    self.block_trial_type_counts[block_key][trial_type],
+                    self.block_trial_type_percentages[block_key][trial_type]
+                ], advance_row=True)
 
         print('\nSESSION TRIAL TYPE COUNTS:')
         pprint(self.session_trial_type_counts)
@@ -603,18 +583,14 @@ class AbstractStopDataExtractor(GameDataExtractor):
         print('\nBLOCK ITEM TYPE PERCENTAGES:')
         pprint(self.block_item_type_percentages)
 
-        r = 1
-        raw_round_sheet = wb.create_sheet('Raw Rounds')
-        raw_round_sheet[cell(A, r)] = 'Round'
-        raw_round_sheet[cell(B, r)] = 'Count'
-        r += 1
+        # Raw Rounds
+        spreadsheet.select_sheet('Raw Rounds')
+        spreadsheet.set_value(['Round', 'Count'], advance_row=True)
         for block_key in irange(1, 4):
-            raw_round_sheet[cell(A, r)] = block_key
-            raw_round_sheet[cell(B, r)] = len(self.raw_round_trial_counts[block_key])
-            r += 1
-        print('\nRAW ROUND TRIAL COUNTS:')
-        for key in self.raw_round_trial_counts:
-            print(key, len(self.raw_round_trial_counts[key]), self.raw_round_trial_counts[key])
+            spreadsheet.set_value([
+                block_key,
+                len(self.raw_round_trial_counts[block_key])
+            ], advance_row=True)
 
         # Label Allocation Counts
         r = 1
@@ -663,21 +639,18 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
         # Unique Item IDs
         # - Session
-        r = 1
-        unique_items_sheet = wb.create_sheet('Unique Items - Session')
-        unique_items_sheet[cell(A, r)] = 'Session'
-        r += 1
+        spreadsheet.select_sheet('Unique Items - Session')
         for index, unique_item_id in enumerate(self.session_item_ids):
-            unique_items_sheet[cell(A, r+index)] = unique_item_id
+            spreadsheet.set_value(unique_item_id, advance_row=True)
         # - Blocks
-        r = 1
-        unique_items_sheet = wb.create_sheet('Unique Items - Blocks')
+        spreadsheet.select_sheet('Unique Items - Blocks')
         for block_key in irange(1, 4):
-            unique_items_sheet[cell(letters[block_key-1], r)] = block_key
-        r += 1
+            spreadsheet.set_value(block_key)
+        spreadsheet.advance_row()
         for block_key in irange(1, 4):
             for index, unique_item_id in enumerate(self.block_item_ids[block_key]):
-                unique_items_sheet[cell(letters[block_key-1], r+index)] = unique_item_id
+                spreadsheet.column = block_key
+                spreadsheet.set_value(unique_item_id, cell_offset=(block_key, index+1))
 
         print('\nSESSION ITEM IDs:')
         print(self.session_item_ids)

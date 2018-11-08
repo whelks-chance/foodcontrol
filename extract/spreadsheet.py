@@ -11,6 +11,11 @@ class Spreadsheet:
         self.row = 1
         self.column = 1
         self.workbook = Workbook()
+        self.reset()
+
+    def reset(self):
+        self.row = 1
+        self.column = 1
 
     def letter(self, index):
         return self.alphabet[index]
@@ -26,6 +31,7 @@ class Spreadsheet:
         """Set the active sheet by the given name (creating it if necessary)"""
         sheet = self.get_sheet(sheet_name)
         self.workbook.active = sheet
+        self.reset()
 
     def get_sheet(self, sheet_name):
         """Return an existing sheet with the given name or create a new sheet with that name"""
@@ -37,11 +43,21 @@ class Spreadsheet:
     def current_sheet(self):
         return self.workbook.active
 
-    def set_value(self, value, advance_row=False, advance_by_rows=1):
+    def set_value(self, value, advance_row=False, advance_by_rows=1, cell_offset=None):
         """Set the value of the current cell"""
         sheet = self.current_sheet()
-        cell = self.current_cell()
-        sheet[cell] = value
+        if type(value) is list:
+            values = value
+        else:
+            values = [value]
+        if cell_offset:
+            print(cell_offset)
+            self.column = cell_offset[0]
+            self.row = cell_offset[1]
+        for value in values:
+            cell = self.current_cell()
+            sheet[cell] = value
+            self.advance_column()
         self.advance(advance_row, advance_by_rows)
 
     def advance(self, advance_row, advance_by_rows):
