@@ -1,2 +1,3 @@
 dpath==1.4.2
 openpyxl==2.5.9
+git+https://github.com/DrJeffreyMorgan/python-keypath-extractor.git
