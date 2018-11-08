@@ -696,9 +696,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
         excel_filename = 'DerivedValues.xlsx'
         wb.save(excel_filename)
         spreadsheet.save('new-DerivedValues.xlsx')
-        assert False
-        # print('\nLog')
-
+        # assert False
         self.session_event_log.print()
 
 
@@ -740,22 +738,22 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
 
         def check_go(initial_tap_response_type, second_tap_response_type):
             if initial_tap_response_type == 'CORRECT_GO' and second_tap_response_type == 'N/A':
-                check_passed = points_this_trial == 20
-                self.session_event_log.log_if_check_failed(check_passed, session_event)
+                check_result = points_this_trial == 20
+                self.session_event_log.log_if_check_failed(check_result, session_event)
             elif initial_tap_response_type == 'INCORRECT_GO' and second_tap_response_type == 'N/A':
-                check_passed = points_this_trial == -20
-                self.session_event_log.log_if_check_failed(check_passed, session_event)
+                check_result = points_this_trial == -20
+                self.session_event_log.log_if_check_failed(check_result, session_event)
             else:
-                check_passed = points_this_trial == -50
-                self.session_event_log.log_if_check_failed(check_passed, session_event)
+                check_result = points_this_trial == -50
+                self.session_event_log.log_if_check_failed(check_result, session_event)
 
         def check_double(initial_tap_response_type, second_tap_response_type):
             if initial_tap_response_type == 'CORRECT' and second_tap_response_type == 'CORRECT':
-                check_passed = points_this_trial == 50
-                self.session_event_log.log_if_check_failed(check_passed, session_event)
+                check_result = points_this_trial == 50
+                self.session_event_log.log_if_check_failed(check_result, session_event)
             else:
-                check_passed = points_this_trial == -50
-                self.session_event_log.log_if_check_failed(check_passed, session_event)
+                check_result = points_this_trial == -50
+                self.session_event_log.log_if_check_failed(check_result, session_event)
 
         checks = {
             'GO': check_go,
