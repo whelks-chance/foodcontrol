@@ -1,6 +1,5 @@
 import statistics
 from collections import defaultdict
-from openpyxl import Workbook
 from pprint import pprint
 
 from .gamedataextractor import GameDataExtractor
