@@ -90,18 +90,212 @@ class AbstractStopDataExtractor(GameDataExtractor):
                 pass
         return session_events
 
-    @staticmethod
-    def within_stimulus_boundary(session_event, item_radius=95, prefix='tapResponsePosition'):
-        tx = float(session_event['{}X'.format(prefix)])
-        ty = float(session_event['{}Y'.format(prefix)])
-        ix = session_event['itemPositionX']
-        iy = session_event['itemPositionY']
-        # print(tx, ty, ix, iy)
-        return ((tx - ix) ** 2) + ((ty - iy) ** 2) < (item_radius ** 2)
+    # 1 - Durations
+    def calculate_durations(self, row):
 
-    def outside_stimulus_boundary(self, session_event, prefix='tapResponsePosition'):
-        return not self.within_stimulus_boundary(session_event, prefix=prefix)
+        def calculate_session_duration():
+            session_start = self.get_keypath_value(row, 'data.0.sessionStart')
+            session_end = self.get_keypath_value(row, 'data.0.sessionEnd')
+            self.session_duration = session_start - session_end
 
+        def record_duration(key, value):
+            self.durations[key].append(value)
+
+        def calculate_trial_durations():
+
+            def not_none(a, b):
+                return a is not None and b is not None
+
+            session_events = self.get_session_events(row)
+            if session_events:
+                previous_session_event = None
+                for session_event in session_events:
+                    trial_start = session_event['trialStart']
+                    trial_end = session_event['trialEnd']
+                    trial_duration = trial_end - trial_start
+                    record_duration('trial', trial_duration)
+
+                    stop_signal_onset = session_event['stopSignalOnset']
+                    stop_signal_offset = session_event['stopSignalOffset']
+                    if not_none(stop_signal_onset, stop_signal_offset):
+                        stop_signal_duration = stop_signal_offset - stop_signal_onset
+                        record_duration('stop_signal', stop_signal_duration)
+
+                    stimulus_onset = session_event['stimulusOnset']
+                    stimulus_offset = session_event['stimulusOffset']
+                    if not_none(stimulus_onset, stimulus_offset):
+                        stimulus_duration = stimulus_offset - stimulus_onset
+                        record_duration('stimulus', stimulus_duration)
+
+                    # Difference between signal onset and stop signal delay
+                    stop_signal_delay = session_event['stopSignalDelay']
+                    if not_none(stop_signal_onset, stop_signal_delay):
+                        signal_stop_difference = stop_signal_onset - stop_signal_delay
+                        record_duration('signal_stop_difference', signal_stop_difference)
+
+                    # Duration between signal offset and stimulus offset
+                    if not_none(stimulus_offset, stop_signal_offset):
+                        stimulus_stop_difference = stimulus_offset - stop_signal_offset
+                        record_duration('stimulus_stop_difference', stimulus_stop_difference)
+
+                    if previous_session_event:
+                        previous_trial_start = previous_session_event['trialStart']
+                        inter_trial_duration = trial_start - previous_trial_start
+                        record_duration('inter_trial', inter_trial_duration)
+
+                    previous_session_event = session_event
+
+        def calculate_trial_duration_stats():
+
+            def calculate_stats(durations_key):
+                durations = self.remove_none_values(self.durations[durations_key])
+                return {
+                    'min': min(durations),
+                    'max': max(durations),
+                    'mean': statistics.mean(durations),
+                    'stdev': statistics.stdev(durations),
+                }
+
+            trial_categories = [
+                'trial',
+                'stop_signal',
+                'stimulus',
+                'signal_stop_difference',
+                'stimulus_stop_difference',
+                'inter_trial'
+            ]
+
+            self.trial_stats = {}
+            for trial_category in trial_categories:
+                self.trial_stats[trial_category] = calculate_stats(trial_category)
+
+        calculate_session_duration()
+        calculate_trial_durations()
+        calculate_trial_duration_stats()
+
+    # 2 - Trial Number Checks
+    def count_trial_and_types(self, row):
+        self.trial_count = 0
+        self.raw_round_trial_counts = defaultdict(set)
+        self.block_trial_type_counts = defaultdict(lambda: defaultdict(int))  # dict of int dict
+        self.block_item_type_counts = defaultdict(lambda: defaultdict(int))   # dict of int dict
+
+        session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+        for session_event in session_events:
+            self.trial_count += 1
+
+            # Create a set of the trial IDs so we can count the elements
+            block_id = session_event['roundID']
+            trial_id = session_event['trialID']
+            self.raw_round_trial_counts[block_id].add(trial_id)
+
+            # Record the block-level trial type counts (GO/STOP)
+            trial_type = session_event['trialType']
+            self.block_trial_type_counts[block_id][trial_type] += 1
+
+            # Record the block-level item type counts (HEALTHY/NON-HEALTHY)
+            item_type = session_event['itemType']
+            selected = session_event['selected']
+            if item_type == 'HEALTHY':
+                self.block_item_type_counts[block_id]['HEALTHY'] += 1
+                if selected == 'random':
+                    self.block_item_type_counts[block_id]['HEALTHY_RANDOM'] += 1
+                else:
+                    self.block_item_type_counts[block_id]['HEALTHY_NOT_RANDOM'] += 1
+            if item_type == 'NON_HEALTHY':
+                self.block_item_type_counts[block_id]['NON_HEALTHY'] += 1
+
+        # Calculate the block-level trial type percentages
+        self.block_trial_type_percentages = defaultdict(lambda: defaultdict(float))  # dict of float dict
+        for block_id_key, items in self.block_trial_type_counts.items():
+            block_total = 0
+            for item_key, item_count in items.items():
+                block_total += item_count
+            for item_key, item_count in items.items():
+                self.block_trial_type_percentages[block_id_key][item_key] = self.block_trial_type_counts[block_id_key][item_key] / block_total
+
+        # Calculate the block-level item type percentages
+        self.block_item_type_percentages = defaultdict(lambda: defaultdict(float))  # dict of float dict
+        for block_id_key, items in self.block_item_type_counts.items():
+            block_total = 0
+            for item_key, item_count in items.items():
+                block_total += item_count
+            for item_key, item_count in items.items():
+                self.block_item_type_percentages[block_id_key][item_key] = self.block_item_type_counts[block_id_key][item_key] / block_total
+
+        # Calculate the session-level trial type counts from the block-level counts
+        self.session_trial_type_counts = defaultdict(int)
+        for block_id_key, items in self.block_trial_type_counts.items():
+            for item_key, item_count in items.items():
+                self.session_trial_type_counts[item_key] += item_count
+
+        # Calculate the session-level trial type percentages
+        self.session_trial_type_percentages = defaultdict(float)
+        for trial_type, trial_type_count in self.session_trial_type_counts.items():
+            self.session_trial_type_percentages[trial_type] = trial_type_count / self.trial_count
+
+        # Calculate the session-level item type counts from the block-level counts
+        self.session_item_type_counts = defaultdict(int)
+        for block_id_key, items in self.block_item_type_counts.items():
+            for item_key, item_count in items.items():
+                self.session_item_type_counts[item_key] += item_count
+
+        # Calculate the session-level item type percentages
+        self.session_item_type_percentages = defaultdict(float)
+        for item_type, item_type_count in self.session_item_type_counts.items():
+            self.session_item_type_percentages[item_type] = item_type_count / self.trial_count
+
+    # 3 - Value Label Checks
+    def check_value_labels(self, row):
+        session_events = self.get_session_events(row)
+
+        # Record healthy/non-healthy label allocation counts
+        self.label_allocation_counts = defaultdict(lambda: defaultdict(int))  # dict of int dict
+        self.label_allocation_counts['HEALTHY']['1_'] = 0
+        self.label_allocation_counts['HEALTHY']['2_'] = 0
+        self.label_allocation_counts['NON_HEALTHY']['1_'] = 0
+        self.label_allocation_counts['NON_HEALTHY']['2_'] = 0
+        for session_event in session_events:
+            item_id = session_event['itemID']
+            item_type = session_event['itemType']
+            for prefix in ['1_', '2_']:
+                if item_id.startswith(prefix):
+                    self.label_allocation_counts[item_type][prefix] += 1
+
+        # Record healthy/non-healthy label allocation percentages
+        self.label_allocation_item_id_percentages = defaultdict(lambda: defaultdict(float))  # dict of int dict
+        healthy_sum = self.label_allocation_counts['HEALTHY']['1_'] + self.label_allocation_counts['HEALTHY']['2_']
+        pprint(self.label_allocation_counts)
+        non_healthy_sum = self.label_allocation_counts['NON_HEALTHY']['1_'] + self.label_allocation_counts['NON_HEALTHY']['2_']
+        self.label_allocation_item_id_percentages['HEALTHY']['1_'] = self.label_allocation_counts['HEALTHY']['1_'] / self.denominator(healthy_sum)
+        self.label_allocation_item_id_percentages['HEALTHY']['2_'] = self.label_allocation_counts['HEALTHY']['2_'] / self.denominator(healthy_sum)
+        self.label_allocation_item_id_percentages['NON_HEALTHY']['1_'] = self.label_allocation_counts['NON_HEALTHY']['1_'] / self.denominator(non_healthy_sum)
+        self.label_allocation_item_id_percentages['NON_HEALTHY']['2_'] = self.label_allocation_counts['NON_HEALTHY']['2_'] / self.denominator(non_healthy_sum)
+        total_sum = healthy_sum + non_healthy_sum
+        self.label_allocation_item_type_percentages = defaultdict(float)
+        self.label_allocation_item_type_percentages['HEALTHY'] = healthy_sum / self.denominator(total_sum)
+        self.label_allocation_item_type_percentages['NON_HEALTHY'] = non_healthy_sum / self.denominator(total_sum)
+
+        # Record the item IDs for each value of selected (MB/random/user/upload/non-food)
+        self.selected_item_ids = defaultdict(set)  # dict of set
+        for session_event in session_events:
+            selected = session_event['selected']
+            item_id = session_event['itemID']
+            self.selected_item_ids[selected].add(item_id)
+
+        # Record the block-level set of unique item IDs
+        self.block_item_ids = defaultdict(set)  # dict of set
+        for session_event in session_events:
+            block_id = session_event['roundID']
+            item_id = session_event['itemID']
+            self.block_item_ids[block_id].add(item_id)
+
+        # Record the session-level set of unique item IDs
+        self.session_item_ids = set()
+        for _, item_ids in self.block_item_ids.items():
+            self.session_item_ids.update(item_ids)
+
+    # E
     def check_tap_responses(self, row):
         # trs = tap response start
         checks = {
@@ -124,6 +318,19 @@ class AbstractStopDataExtractor(GameDataExtractor):
             check_result = checks[trial_type][tap_response_type](tap_response_start, session_event)
             self.session_event_log.log_if_check_failed(check_result, session_event)
 
+    @staticmethod
+    def within_stimulus_boundary(session_event, item_radius=95, prefix='tapResponsePosition'):
+        tx = float(session_event['{}X'.format(prefix)])
+        ty = float(session_event['{}Y'.format(prefix)])
+        ix = session_event['itemPositionX']
+        iy = session_event['itemPositionY']
+        # print(tx, ty, ix, iy)
+        return ((tx - ix) ** 2) + ((ty - iy) ** 2) < (item_radius ** 2)
+
+    def outside_stimulus_boundary(self, session_event, prefix='tapResponsePosition'):
+        return not self.within_stimulus_boundary(session_event, prefix=prefix)
+
+    # 4 - General Checks
     def check_points(self, row):
         points = {
             'GO': {
@@ -148,10 +355,78 @@ class AbstractStopDataExtractor(GameDataExtractor):
             points_running_total = session_event['pointsRunningTotal']
             assert points_running_total == running_total
 
+    # 5 - Dependent Variables (DVs) / Additional Computations
+    def calculate_dependent_variables(self, row):
+        self.dv_correct_counts = defaultdict(lambda: defaultdict(int))
+        session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+        trial_count = len(session_events)
+        for session_event in session_events:
+            # GO/STOP
+            if 'tapResponseType' in session_event:
+                tap_response_type = session_event['tapResponseType']
+                if tap_response_type == 'CORRECT_GO' or tap_response_type == 'CORRECT_STOP':
+                    block_id = session_event['roundID']
+                    self.dv_correct_counts[block_id][tap_response_type] += 1
+
+        # Calculate the CORRECT_GO/STOP block-level percentages
+        self.dv_correct_block_percentages = defaultdict(lambda: defaultdict(int))
+        for block_id_key, tap_response_types in self.dv_correct_counts.items():
+            block_total = 0
+            for tap_response_type, count in tap_response_types.items():
+                block_total += count
+            for tap_response_type, count in tap_response_types.items():
+                self.dv_correct_block_percentages[block_id_key][tap_response_type] = count / block_total
+
+        # Calculate the CORRECT_GO/STOP session-level percentages
+        dv_correct_session_counts = defaultdict(int)
+        self.dv_correct_session_percentages = defaultdict(float)
+        for block_id_key, tap_response_types in self.dv_correct_counts.items():
+            for tap_response_type_key, item_count in tap_response_types.items():
+                dv_correct_session_counts[tap_response_type_key] += item_count
+        correct_total = 0
+        for tap_response_type_key, count in dv_correct_session_counts.items():
+            correct_total += count
+        for tap_response_type_key, count in dv_correct_session_counts.items():
+            self.dv_correct_session_percentages[tap_response_type_key] = count / correct_total
+
+        self.dv_correct_go_responses = list()
+        self.dv_correct_stop_responses = list()
+        self.dv_correct_responses = defaultdict(lambda: defaultdict(list))
+        self.dv_incorrect_healthy_selected_responses = list()
+        self.dv_incorrect_healthy_not_selected_responses = list()
+        self.dv_incorrect_unhealthy_selected_responses = list()
+        self.dv_incorrect_unhealthy_not_selected_responses = list()
+        for session_event in session_events:
+            # GO/STOP
+            if 'tapResponseType' in session_event:
+                tap_response_type = session_event['tapResponseType']
+                tap_response_start = self.numericify(session_event['tapResponseStart'])
+                item_type = session_event['itemType']
+                self.dv_correct_responses[tap_response_type][item_type].append(tap_response_start)
+                if tap_response_type == 'CORRECT_GO':
+                    self.dv_correct_go_responses.append(tap_response_start)
+                if tap_response_type == 'CORRECT_STOP':
+                    self.dv_correct_stop_responses.append(tap_response_start)
+
+                trial_type = session_event['trialType']
+                selected = session_event['selected']
+                if trial_type == 'STOP' and tap_response_type != 'CORRECT_STOP':
+                    if item_type == 'HEALTHY':
+                        if selected != 'random':
+                            self.dv_incorrect_healthy_selected_responses.append(tap_response_start)
+                        if selected == 'random':
+                            self.dv_incorrect_healthy_not_selected_responses.append(tap_response_start)
+                    if item_type == 'NON_HEALTHY':
+                        if selected != 'random':
+                            self.dv_incorrect_unhealthy_selected_responses.append(tap_response_start)
+                        if selected == 'random':
+                            self.dv_incorrect_unhealthy_not_selected_responses.append(tap_response_start)
+
+    # 6 - Stop Signal Reaction Time
     def calculate_ssrt(self, row):
         session_events = self.get_session_events(row)
 
-        # Mean SSRT
+        # A - Mean SSRT
         tap_response_start_total = 0
         stop_signal_delay_total = 0
         stop_signal_onset_total = 0
@@ -171,301 +446,34 @@ class AbstractStopDataExtractor(GameDataExtractor):
         mean_actual_ssrt = mean_tap_response_start - mean_stop_signal_onset  # What the SSRT actually is
         print('\n IDEAL MEAN SSRT:', mean_ideal_ssrt)
         print('ACTUAL MEAN SSRT:', mean_actual_ssrt)
+        # TODO: Find nth RT
 
-        # Integration SSRT
+        # B - Integration SSRT
         incorrect_stop_trials_count = 0
         for session_event in session_events:
             tap_response_type = session_event['tapResponseType']
             if tap_response_type == 'INCORRECT_STOP' or tap_response_type == 'MISS_STOP':
                 incorrect_stop_trials_count += 1
         print('INCORRECT STOP TRIALS:', incorrect_stop_trials_count)
+        # TODO: Find nth RT
+
+    # 7 - Raw Data
+    def count_raw_events(self, row):
+        raw_events = self.get_keypath_value(row, 'data.0.rawEvents')
+        for raw_event in raw_events:
+            self.raw_count['on'][raw_event['eventOn']] += 1
+            self.raw_count['off'][raw_event['eventOff']] += 1
 
     def calculate(self, row):
         super(AbstractStopDataExtractor, self).calculate(row)
 
-        def calculate_durations():
-            # "Durations"
-
-            def calculate_session_duration():
-                session_start = self.get_keypath_value(row, 'data.0.sessionStart')
-                session_end = self.get_keypath_value(row, 'data.0.sessionEnd')
-                self.session_duration = session_start - session_end
-
-            def record_duration(key, value):
-                self.durations[key].append(value)
-
-            def calculate_trial_durations():
-
-                def not_none(a, b):
-                    return a is not None and b is not None
-
-                session_events = self.get_session_events(row)
-                if session_events:
-                    previous_session_event = None
-                    for session_event in session_events:
-                        trial_start = session_event['trialStart']
-                        trial_end = session_event['trialEnd']
-                        trial_duration = trial_end - trial_start
-                        record_duration('trial', trial_duration)
-
-                        stop_signal_onset = session_event['stopSignalOnset']
-                        stop_signal_offset = session_event['stopSignalOffset']
-                        if not_none(stop_signal_onset, stop_signal_offset):
-                            stop_signal_duration = stop_signal_offset - stop_signal_onset
-                            record_duration('stop_signal', stop_signal_duration)
-
-                        stimulus_onset = session_event['stimulusOnset']
-                        stimulus_offset = session_event['stimulusOffset']
-                        if not_none(stimulus_onset, stimulus_offset):
-                            stimulus_duration = stimulus_offset - stimulus_onset
-                            record_duration('stimulus', stimulus_duration)
-
-                        # Difference between signal onset and stop signal delay
-                        stop_signal_delay = session_event['stopSignalDelay']
-                        if not_none(stop_signal_onset, stop_signal_delay):
-                            signal_stop_difference = stop_signal_onset - stop_signal_delay
-                            record_duration('signal_stop_difference', signal_stop_difference)
-
-                        # Duration between signal offset and stimulus offset
-                        if not_none(stimulus_offset, stop_signal_offset):
-                            stimulus_stop_difference = stimulus_offset - stop_signal_offset
-                            record_duration('stimulus_stop_difference', stimulus_stop_difference)
-
-                        if previous_session_event:
-                            previous_trial_start = previous_session_event['trialStart']
-                            inter_trial_duration = trial_start - previous_trial_start
-                            record_duration('inter_trial', inter_trial_duration)
-
-                        previous_session_event = session_event
-
-            def calculate_trial_duration_stats():
-
-                def calculate_stats(durations_key):
-                    durations = self.remove_none_values(self.durations[durations_key])
-                    return {
-                        'min': min(durations),
-                        'max': max(durations),
-                        'mean': statistics.mean(durations),
-                        'stdev': statistics.stdev(durations),
-                    }
-
-                trial_categories = [
-                    'trial',
-                    'stop_signal',
-                    'stimulus',
-                    'signal_stop_difference',
-                    'stimulus_stop_difference',
-                    'inter_trial'
-                ]
-
-                self.trial_stats = {}
-                for trial_category in trial_categories:
-                    self.trial_stats[trial_category] = calculate_stats(trial_category)
-
-            calculate_session_duration()
-            calculate_trial_durations()
-            calculate_trial_duration_stats()
-
-        def count_trial_and_types():
-            self.trial_count = 0
-            self.raw_round_trial_counts = defaultdict(set)
-            self.block_trial_type_counts = defaultdict(lambda: defaultdict(int))  # dict of int dict
-            self.block_item_type_counts = defaultdict(lambda: defaultdict(int))   # dict of int dict
-
-            session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
-            for session_event in session_events:
-                self.trial_count += 1
-
-                # Create a set of the trial IDs so we can count the elements
-                block_id = session_event['roundID']
-                trial_id = session_event['trialID']
-                self.raw_round_trial_counts[block_id].add(trial_id)
-
-                # Record the block-level trial type counts (GO/STOP)
-                trial_type = session_event['trialType']
-                self.block_trial_type_counts[block_id][trial_type] += 1
-
-                # Record the block-level item type counts (HEALTHY/NON-HEALTHY)
-                item_type = session_event['itemType']
-                selected = session_event['selected']
-                if item_type == 'HEALTHY':
-                    self.block_item_type_counts[block_id]['HEALTHY'] += 1
-                    if selected == 'random':
-                        self.block_item_type_counts[block_id]['HEALTHY_RANDOM'] += 1
-                    else:
-                        self.block_item_type_counts[block_id]['HEALTHY_NOT_RANDOM'] += 1
-                if item_type == 'NON_HEALTHY':
-                    self.block_item_type_counts[block_id]['NON_HEALTHY'] += 1
-
-            # Calculate the block-level trial type percentages
-            self.block_trial_type_percentages = defaultdict(lambda: defaultdict(float))  # dict of float dict
-            for block_id_key, items in self.block_trial_type_counts.items():
-                block_total = 0
-                for item_key, item_count in items.items():
-                    block_total += item_count
-                for item_key, item_count in items.items():
-                    self.block_trial_type_percentages[block_id_key][item_key] = self.block_trial_type_counts[block_id_key][item_key] / block_total
-
-            # Calculate the block-level item type percentages
-            self.block_item_type_percentages = defaultdict(lambda: defaultdict(float))  # dict of float dict
-            for block_id_key, items in self.block_item_type_counts.items():
-                block_total = 0
-                for item_key, item_count in items.items():
-                    block_total += item_count
-                for item_key, item_count in items.items():
-                    self.block_item_type_percentages[block_id_key][item_key] = self.block_item_type_counts[block_id_key][item_key] / block_total
-
-            # Calculate the session-level trial type counts from the block-level counts
-            self.session_trial_type_counts = defaultdict(int)
-            for block_id_key, items in self.block_trial_type_counts.items():
-                for item_key, item_count in items.items():
-                    self.session_trial_type_counts[item_key] += item_count
-
-            # Calculate the session-level trial type percentages
-            self.session_trial_type_percentages = defaultdict(float)
-            for trial_type, trial_type_count in self.session_trial_type_counts.items():
-                self.session_trial_type_percentages[trial_type] = trial_type_count / self.trial_count
-
-            # Calculate the session-level item type counts from the block-level counts
-            self.session_item_type_counts = defaultdict(int)
-            for block_id_key, items in self.block_item_type_counts.items():
-                for item_key, item_count in items.items():
-                    self.session_item_type_counts[item_key] += item_count
-
-            # Calculate the session-level item type percentages
-            self.session_item_type_percentages = defaultdict(float)
-            for item_type, item_type_count in self.session_item_type_counts.items():
-                self.session_item_type_percentages[item_type] = item_type_count / self.trial_count
-
-        def count_raw_events():
-            # "Raw data"
-            raw_events = self.get_keypath_value(row, 'data.0.rawEvents')
-            for raw_event in raw_events:
-                self.raw_count['on'][raw_event['eventOn']] += 1
-                self.raw_count['off'][raw_event['eventOff']] += 1
-
-        def check_value_labels():
-            session_events = self.get_session_events(row)
-
-            # Record healthy/non-healthy label allocation counts
-            self.label_allocation_counts = defaultdict(lambda: defaultdict(int))  # dict of int dict
-            self.label_allocation_counts['HEALTHY']['1_'] = 0
-            self.label_allocation_counts['HEALTHY']['2_'] = 0
-            self.label_allocation_counts['NON_HEALTHY']['1_'] = 0
-            self.label_allocation_counts['NON_HEALTHY']['2_'] = 0
-            for session_event in session_events:
-                item_id = session_event['itemID']
-                item_type = session_event['itemType']
-                for prefix in ['1_', '2_']:
-                    if item_id.startswith(prefix):
-                        self.label_allocation_counts[item_type][prefix] += 1
-
-            # Record healthy/non-healthy label allocation percentages
-            self.label_allocation_item_id_percentages = defaultdict(lambda: defaultdict(float))  # dict of int dict
-            healthy_sum = self.label_allocation_counts['HEALTHY']['1_'] + self.label_allocation_counts['HEALTHY']['2_']
-            pprint(self.label_allocation_counts)
-            non_healthy_sum = self.label_allocation_counts['NON_HEALTHY']['1_'] + self.label_allocation_counts['NON_HEALTHY']['2_']
-            self.label_allocation_item_id_percentages['HEALTHY']['1_'] = self.label_allocation_counts['HEALTHY']['1_'] / self.denominator(healthy_sum)
-            self.label_allocation_item_id_percentages['HEALTHY']['2_'] = self.label_allocation_counts['HEALTHY']['2_'] / self.denominator(healthy_sum)
-            self.label_allocation_item_id_percentages['NON_HEALTHY']['1_'] = self.label_allocation_counts['NON_HEALTHY']['1_'] / self.denominator(non_healthy_sum)
-            self.label_allocation_item_id_percentages['NON_HEALTHY']['2_'] = self.label_allocation_counts['NON_HEALTHY']['2_'] / self.denominator(non_healthy_sum)
-            total_sum = healthy_sum + non_healthy_sum
-            self.label_allocation_item_type_percentages = defaultdict(float)
-            self.label_allocation_item_type_percentages['HEALTHY'] = healthy_sum / self.denominator(total_sum)
-            self.label_allocation_item_type_percentages['NON_HEALTHY'] = non_healthy_sum / self.denominator(total_sum)
-
-            # Record the item IDs for each value of selected (MB/random/user/upload/non-food)
-            self.selected_item_ids = defaultdict(set)  # dict of set
-            for session_event in session_events:
-                selected = session_event['selected']
-                item_id = session_event['itemID']
-                self.selected_item_ids[selected].add(item_id)
-
-            # Record the block-level set of unique item IDs
-            self.block_item_ids = defaultdict(set)  # dict of set
-            for session_event in session_events:
-                block_id = session_event['roundID']
-                item_id = session_event['itemID']
-                self.block_item_ids[block_id].add(item_id)
-
-            # Record the session-level set of unique item IDs
-            self.session_item_ids = set()
-            for _, item_ids in self.block_item_ids.items():
-                self.session_item_ids.update(item_ids)
-
-        def calculate_dependent_variables():
-            self.dv_correct_counts = defaultdict(lambda: defaultdict(int))
-            session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
-            trial_count = len(session_events)
-            for session_event in session_events:
-                # GO/STOP
-                if 'tapResponseType' in session_event:
-                    tap_response_type = session_event['tapResponseType']
-                    if tap_response_type == 'CORRECT_GO' or tap_response_type == 'CORRECT_STOP':
-                        block_id = session_event['roundID']
-                        self.dv_correct_counts[block_id][tap_response_type] += 1
-
-            # Calculate the CORRECT_GO/STOP block-level percentages
-            self.dv_correct_block_percentages = defaultdict(lambda: defaultdict(int))
-            for block_id_key, tap_response_types in self.dv_correct_counts.items():
-                block_total = 0
-                for tap_response_type, count in tap_response_types.items():
-                    block_total += count
-                for tap_response_type, count in tap_response_types.items():
-                    self.dv_correct_block_percentages[block_id_key][tap_response_type] = count / block_total
-
-            # Calculate the CORRECT_GO/STOP session-level percentages
-            dv_correct_session_counts = defaultdict(int)
-            self.dv_correct_session_percentages = defaultdict(float)
-            for block_id_key, tap_response_types in self.dv_correct_counts.items():
-                for tap_response_type_key, item_count in tap_response_types.items():
-                    dv_correct_session_counts[tap_response_type_key] += item_count
-            correct_total = 0
-            for tap_response_type_key, count in dv_correct_session_counts.items():
-                correct_total += count
-            for tap_response_type_key, count in dv_correct_session_counts.items():
-                self.dv_correct_session_percentages[tap_response_type_key] = count / correct_total
-
-            self.dv_correct_go_responses = list()
-            self.dv_correct_stop_responses = list()
-            self.dv_correct_responses = defaultdict(lambda: defaultdict(list))
-            self.dv_incorrect_healthy_selected_responses = list()
-            self.dv_incorrect_healthy_not_selected_responses = list()
-            self.dv_incorrect_unhealthy_selected_responses = list()
-            self.dv_incorrect_unhealthy_not_selected_responses = list()
-            for session_event in session_events:
-                # GO/STOP
-                if 'tapResponseType' in session_event:
-                    tap_response_type = session_event['tapResponseType']
-                    tap_response_start = self.numericify(session_event['tapResponseStart'])
-                    item_type = session_event['itemType']
-                    self.dv_correct_responses[tap_response_type][item_type].append(tap_response_start)
-                    if tap_response_type == 'CORRECT_GO':
-                        self.dv_correct_go_responses.append(tap_response_start)
-                    if tap_response_type == 'CORRECT_STOP':
-                        self.dv_correct_stop_responses.append(tap_response_start)
-
-                    trial_type = session_event['trialType']
-                    selected = session_event['selected']
-                    if trial_type == 'STOP' and tap_response_type != 'CORRECT_STOP':
-                        if item_type == 'HEALTHY':
-                            if selected != 'random':
-                                self.dv_incorrect_healthy_selected_responses.append(tap_response_start)
-                            if selected == 'random':
-                                self.dv_incorrect_healthy_not_selected_responses.append(tap_response_start)
-                        if item_type == 'NON_HEALTHY':
-                            if selected != 'random':
-                                self.dv_incorrect_unhealthy_selected_responses.append(tap_response_start)
-                            if selected == 'random':
-                                self.dv_incorrect_unhealthy_not_selected_responses.append(tap_response_start)
-
-        calculate_durations()
-        count_trial_and_types()
-        count_raw_events()
-        check_value_labels()
+        self.calculate_durations(row)
+        self.count_trial_and_types(row)
+        self.check_value_labels(row)
         self.check_points(row)
-        calculate_dependent_variables()
+        self.calculate_dependent_variables(row)
         self.calculate_ssrt(row)
+        self.count_raw_events(row)
 
         spreadsheet = Spreadsheet()
 
