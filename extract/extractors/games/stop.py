@@ -477,22 +477,6 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
         spreadsheet = Spreadsheet()
 
-        def cell(row, column):
-            return '{}{}'.format(str(row), str(column))
-
-        A = 'A'
-        B = 'B'
-        C = 'C'
-        D = 'D'
-        E = 'E'
-        F = 'F'
-        G = 'G'
-        H = 'H'
-        I = 'I'
-        J = 'J'
-        letters = [A, B, C, D, E, F, G, H, I, J]
-        wb = Workbook()
-
         # Trial Counts
         spreadsheet.select_sheet('Trial Count')
         spreadsheet.set_values(['Trial Count', self.trial_count], advance_by_rows=2)
@@ -683,9 +667,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
         print('mean INCORRECT UNHEALTHY NOT SELECTED responses', self.mean(self.dv_incorrect_unhealthy_not_selected_responses))
 
         excel_filename = 'DerivedValues.xlsx'
-        wb.save(excel_filename)
-        spreadsheet.save('new-DerivedValues.xlsx')
-        # assert False
+        spreadsheet.save(excel_filename)
         self.session_event_log.print()
 
 
