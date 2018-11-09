@@ -464,7 +464,6 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
     def calculate(self, row):
         super(AbstractStopDataExtractor, self).calculate(row)
-
         self.calculate_durations(row)
         self.count_trial_and_types(row)
         self.check_value_labels(row)
@@ -473,7 +472,9 @@ class AbstractStopDataExtractor(GameDataExtractor):
         self.calculate_dependent_variables(row)
         self.calculate_ssrt(row)
         self.count_raw_events(row)
+        self.create_spreadsheet()
 
+    def create_spreadsheet(self):
         spreadsheet = Spreadsheet()
 
         # Trial Counts
