@@ -8,7 +8,9 @@ from extractors import ExtractorFactory
 
 class Extractor:
 
-    extractor_factory = ExtractorFactory()
+    def __init__(self):
+        self.extractor_factory = ExtractorFactory()
+        self.previous_row = None
 
     def extract_from_json(self, json_array, json_csv_path):
         for extractor in self.extractor_factory.extractors:
@@ -25,9 +27,11 @@ class Extractor:
         with open(output_filename, 'w', encoding='utf-8') as csv_file:
             csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
             for row in json_array:
-                if extractor.process_row(row):
-                    for extracted_row in extractor.extracted_rows():
-                        csv_writer.writerow(extracted_row)
+                if not self.is_duplicate(row):
+                    if extractor.process_row(row):
+                        for extracted_row in extractor.extracted_rows():
+                            csv_writer.writerow(extracted_row)
+                self.previous_row = row
 
         # We need to prepend the column header row to the file containing the data rows
         # because in the case of question extraction the column names are not known until
@@ -39,6 +43,15 @@ class Extractor:
             column_names = extractor.get_column_names()
             csv_writer.writerow(column_names)  # Write the header row
             csv_file.write(file_data)          # Write the data rows
+
+    def is_duplicate(self, row):
+        if self.previous_row:
+            return row['studyId'] == self.previous_row['studyId']\
+                and row['userId'] == self.previous_row['userId']\
+                and row['captureDate'] == self.previous_row['captureDate'] \
+                and abs(row['creationDate'] - self.previous_row['creationDate']) <= 2500
+        else:
+            return False
 
     @staticmethod
     def clean_filename(filename):
@@ -74,6 +87,8 @@ if __name__ == '__main__':
         '040918.json',
         '260918.json',
         '010618_to_040918.json',
+
+        '041018_SameDay.json'
     ]
 
     def create_folder(path):
