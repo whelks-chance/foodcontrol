@@ -1,3 +1,4 @@
+import math
 import statistics
 from collections import defaultdict
 from pprint import pprint
@@ -83,8 +84,8 @@ class AbstractStopDataExtractor(GameDataExtractor):
             old_number_of_trials = 48
             new_number_of_trials = 24
             session_events = self.get_session_events(row)
-            assert len(session_events) == (number_of_rounds * old_number_of_trials) or (
-                        number_of_rounds * new_number_of_trials)
+            assert len(session_events) == (number_of_rounds * old_number_of_trials) or\
+                   (number_of_rounds * new_number_of_trials)
 
         check_trials_count()
 
@@ -314,18 +315,36 @@ class AbstractStopDataExtractor(GameDataExtractor):
             tap_response_type = session_event['tapResponseType']
             tap_response_start = self.numericify(session_event['tapResponseStart'])
             check_result = checks[trial_type][tap_response_type](tap_response_start, session_event)
-            self.session_event_log.log_if_check_failed(check_result, session_event)
+            # if not check_result:
+            #     prefix = 'tapResponsePosition'
+            #     tx = float(session_event['{}X'.format(prefix)])
+            #     ty = float(session_event['{}Y'.format(prefix)])
+            #     ix = float(session_event['itemPositionX'])
+            #     iy = float(session_event['itemPositionY'])
+            #     print('\nCheck Failed:')
+            #     print(type(check_result))
+            #     print(trial_type)
+            #     print(tap_response_type)
+            #     print(tap_response_start, session_event['tapResponseStart'])
+            #     print(tx, ty, ix, iy)
+                # input('Press return to continue...')
+            # assert check_result
+            self.session_event_log.log_if_check_failed(check_result, session_event, extra_message='tapResponseType={}'.format(tap_response_type))
 
     @staticmethod
     def within_stimulus_boundary(session_event, item_radius=95, prefix='tapResponsePosition'):
         tx = float(session_event['{}X'.format(prefix)])
         ty = float(session_event['{}Y'.format(prefix)])
-        ix = session_event['itemPositionX']
-        iy = session_event['itemPositionY']
-        # print(tx, ty, ix, iy)
-        return ((tx - ix) ** 2) + ((ty - iy) ** 2) < (item_radius ** 2)
+        ix = float(session_event['itemPositionX'])
+        iy = float(session_event['itemPositionY'])
+        # print('\n', tx, ty, ix, iy)
+        # return ((tx - ix) ** 2 + ((ty - iy) ** 2)) < (item_radius ** 2)
+        distance = math.sqrt(((tx-ix)**2) + ((ty-iy)**2))
+        # print(distance, item_radius)
+        return distance < item_radius
 
     def outside_stimulus_boundary(self, session_event, prefix='tapResponsePosition'):
+        # print('within=', self.within_stimulus_boundary(session_event, prefix=prefix))
         return not self.within_stimulus_boundary(session_event, prefix=prefix)
 
     # 4 - General Checks
@@ -708,10 +727,10 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
     def check_points(self, row):
 
         def check_go(initial_tap_response_type, second_tap_response_type):
-            if initial_tap_response_type == 'CORRECT_GO' and second_tap_response_type == 'N/A':
+            if (initial_tap_response_type, second_tap_response_type) == ('CORRECT_GO', 'N/A'):
                 check_result = points_this_trial == 20
                 self.session_event_log.log_if_check_failed(check_result, session_event)
-            elif initial_tap_response_type == 'INCORRECT_GO' and second_tap_response_type == 'N/A':
+            elif (initial_tap_response_type, second_tap_response_type) == ('INCORRECT_GO', 'N/A'):
                 check_result = points_this_trial == -20
                 self.session_event_log.log_if_check_failed(check_result, session_event)
             else:
@@ -719,7 +738,7 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
                 self.session_event_log.log_if_check_failed(check_result, session_event)
 
         def check_double(initial_tap_response_type, second_tap_response_type):
-            if initial_tap_response_type == 'CORRECT' and second_tap_response_type == 'CORRECT':
+            if (initial_tap_response_type, second_tap_response_type) == ('CORRECT', 'CORRECT'):
                 check_result = points_this_trial == 50
                 self.session_event_log.log_if_check_failed(check_result, session_event)
             else:
@@ -747,7 +766,7 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
             self.session_event_log.log_if_check_failed(check_passed, session_event, extra_message='points_running_total != running_total')
 
     def check_tap_responses(self, row):
-        # trs = tap response start
+        # trs is tap response start
         initial_tap_response_checks = {
             'GO': {
                 'CORRECT_GO': lambda trs, session_event: trs > 0 and self.within_first_stimulus_boundary(session_event),

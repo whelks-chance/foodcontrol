@@ -21,7 +21,7 @@ class SessionEventLog:
                                 session_event['roundID'],
                                 session_event['trialID'])
             if extra_message:
-                message = ' ({})'.format(extra_message)
+                message += ' ({})'.format(extra_message)
             self.log(message, session_event)
 
     def print(self):
