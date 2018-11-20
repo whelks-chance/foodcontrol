@@ -340,7 +340,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
         # print('\n', tx, ty, ix, iy)
         # return ((tx - ix) ** 2 + ((ty - iy) ** 2)) < (item_radius ** 2)
         distance = math.sqrt(((tx-ix)**2) + ((ty-iy)**2))
-        # print(distance, item_radius)
+        print(distance, item_radius)
         return distance < item_radius
 
     def outside_stimulus_boundary(self, session_event, prefix='tapResponsePosition'):
@@ -463,16 +463,39 @@ class AbstractStopDataExtractor(GameDataExtractor):
         mean_actual_ssrt = mean_tap_response_start - mean_stop_signal_onset  # What the SSRT actually is
         print('\n IDEAL MEAN SSRT:', mean_ideal_ssrt)
         print('ACTUAL MEAN SSRT:', mean_actual_ssrt)
-        # TODO: Find nth RT
 
         # B - Integration SSRT
+        go_trial_count = 0
+        stop_trial_count = 0
+        stop_trail_with_response_count = 0
         incorrect_stop_trials_count = 0
+        go_trial_tap_response_starts = []
         for session_event in session_events:
+            trial_type = session_event['trialType']
+            tap_response_start = session_event['tapResponseStart']
+            if trial_type == 'GO':
+                go_trial_count += 1
+                go_trial_tap_response_starts.append(tap_response_start)
+            elif trial_type == 'STOP':
+                stop_trial_count += 1
+                if tap_response_start:
+                    stop_trail_with_response_count += 1
             tap_response_type = session_event['tapResponseType']
-            if tap_response_type == 'INCORRECT_STOP' or tap_response_type == 'MISS_STOP':
+            if tap_response_type in ['INCORRECT_STOP', 'MISS_STOP']:
                 incorrect_stop_trials_count += 1
+        go_trial_tap_response_starts = self.remove_none_values(go_trial_tap_response_starts)
+        go_trial_tap_response_starts.sort()
+        stop_signal_trial_probability = stop_trail_with_response_count / stop_trial_count
+        n = go_trial_count * stop_signal_trial_probability
+        print('GO TRIALS TRSs:', go_trial_tap_response_starts)
+        print('GO TRIALS TRSs count:', len(go_trial_tap_response_starts))
         print('INCORRECT STOP TRIALS:', incorrect_stop_trials_count)
-        # TODO: Find nth RT
+        print('p(stop signal trial):', stop_signal_trial_probability)
+        print('n:', n)
+        n = int(n) - 1
+        assert n >= 0
+        print('nth:', go_trial_tap_response_starts[int(n)])
+        # assert False
 
     # 7 - Raw Data
     def count_raw_events(self, row):
@@ -729,21 +752,21 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
         def check_go(initial_tap_response_type, second_tap_response_type):
             if (initial_tap_response_type, second_tap_response_type) == ('CORRECT_GO', 'N/A'):
                 check_result = points_this_trial == 20
-                self.session_event_log.log_if_check_failed(check_result, session_event)
+                # self.session_event_log.log_if_check_failed(check_result, session_event)
             elif (initial_tap_response_type, second_tap_response_type) == ('INCORRECT_GO', 'N/A'):
                 check_result = points_this_trial == -20
-                self.session_event_log.log_if_check_failed(check_result, session_event)
+                # self.session_event_log.log_if_check_failed(check_result, session_event)
             else:
                 check_result = points_this_trial == -50
-                self.session_event_log.log_if_check_failed(check_result, session_event)
+            self.session_event_log.log_if_check_failed(check_result, session_event)
 
         def check_double(initial_tap_response_type, second_tap_response_type):
             if (initial_tap_response_type, second_tap_response_type) == ('CORRECT', 'CORRECT'):
                 check_result = points_this_trial == 50
-                self.session_event_log.log_if_check_failed(check_result, session_event)
+                # self.session_event_log.log_if_check_failed(check_result, session_event)
             else:
                 check_result = points_this_trial == -50
-                self.session_event_log.log_if_check_failed(check_result, session_event)
+            self.session_event_log.log_if_check_failed(check_result, session_event)
 
         checks = {
             'GO': check_go,
@@ -774,8 +797,8 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
                 'MISS_GO': lambda trs, session_event: trs > 0 and self.outside_first_stimulus_boundary(session_event),
             },
             'DOUBLE': {
-                'CORRECT': lambda trs, session_event: trs == 0,
-                'INCORRECT': lambda trs, session_event: trs > 0 and self.within_first_stimulus_boundary(session_event),
+                'CORRECT': lambda trs, session_event: trs > 0 and self.within_first_stimulus_boundary(session_event),
+                'INCORRECT': lambda trs, session_event: trs == 0,
                 'MISS': lambda trs, session_event: trs > 0 and self.outside_first_stimulus_boundary(session_event),
             }
         }
@@ -799,7 +822,29 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
                 tap_response_type = 'INCORRECT_DOUBLE_GO'
             tap_response_start = self.numericify(session_event['{}TapResponseStart'.format(prefix)])
             check_result = tap_response_checks[trial_type][tap_response_type](tap_response_start, session_event)
-            self.session_event_log.log_if_check_failed(check_result, session_event)
+            if not check_result:
+                if prefix == 'initial':
+                    _prefix = 'initialTapResponsePosition'
+                elif prefix == 'second':
+                    _prefix = 'secondTapResponsePosition'
+                print('prefix', prefix)
+                import json
+                print(json.dumps(session_event))
+                tx = float(session_event['{}X'.format(_prefix)])
+                ty = float(session_event['{}Y'.format(_prefix)])
+                ix = float(session_event['itemPositionX'])
+                iy = float(session_event['itemPositionY'])
+                print('\nCheck Failed:')
+                print(type(check_result))
+                print(trial_type)
+                print(tap_response_type)
+                if _prefix == 'initialTapResponsePosition':
+                    print(tap_response_start, session_event['initialTapResponseStart'])
+                if _prefix == 'secondTapResponsePosition':
+                    print(tap_response_start, session_event['secondTapResponseStart'])
+                print(tx, ty, ix, iy)
+                # assert False
+            self.session_event_log.log_if_check_failed(check_result, session_event, extra_message='tapResponseType={}'.format(tap_response_type))
 
         session_events = self.get_session_events(row)
         for session_event in session_events:
