@@ -7,7 +7,7 @@ from .gamedataextractor import GameDataExtractor
 from .session_event_log import SessionEventLog
 from keypath_extractor import Keypath
 from spreadsheet import Spreadsheet
-from utils import irange
+from ...utils import irange
 
 
 class AbstractStopDataExtractor(GameDataExtractor):
