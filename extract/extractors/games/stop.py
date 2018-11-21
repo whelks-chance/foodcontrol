@@ -7,7 +7,7 @@ from .gamedataextractor import GameDataExtractor
 from .session_event_log import SessionEventLog
 from keypath_extractor import Keypath
 from spreadsheet import Spreadsheet
-from ...utils import irange
+from utils import irange
 
 
 class AbstractStopDataExtractor(GameDataExtractor):
@@ -340,7 +340,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
         # print('\n', tx, ty, ix, iy)
         # return ((tx - ix) ** 2 + ((ty - iy) ** 2)) < (item_radius ** 2)
         distance = math.sqrt(((tx-ix)**2) + ((ty-iy)**2))
-        print(distance, item_radius)
+        # print(distance, item_radius)
         return distance < item_radius
 
     def outside_stimulus_boundary(self, session_event, prefix='tapResponsePosition'):
@@ -532,11 +532,6 @@ class AbstractStopDataExtractor(GameDataExtractor):
         spreadsheet.set_values(['Off'])
         for key, value in self.raw_count['off'].items():
             spreadsheet.set_values([key, value])
-
-        # Durations
-        print('\nTRIAL DURATIONS:')
-        for key in self.durations:
-            print(key, self.durations[key])
 
         # Trial Stats
         spreadsheet.select_sheet('Stats')
