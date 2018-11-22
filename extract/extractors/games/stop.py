@@ -812,9 +812,6 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
 
         def check_tap_response(tap_response_checks, session_event, prefix):
             tap_response_type = session_event['{}TapResponseType'.format(prefix)]
-            # Fix incorrectly named key
-            if tap_response_type == 'INCORR_DOUB_GO':
-                tap_response_type = 'INCORRECT_DOUBLE_GO'
             tap_response_start = self.numericify(session_event['{}TapResponseStart'.format(prefix)])
             check_result = tap_response_checks[trial_type][tap_response_type](tap_response_start, session_event)
             if not check_result:
