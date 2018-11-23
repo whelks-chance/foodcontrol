@@ -315,20 +315,24 @@ class AbstractStopDataExtractor(GameDataExtractor):
             tap_response_type = session_event['tapResponseType']
             tap_response_start = self.numericify(session_event['tapResponseStart'])
             check_result = checks[trial_type][tap_response_type](tap_response_start, session_event)
-            # if not check_result:
-            #     prefix = 'tapResponsePosition'
-            #     tx = float(session_event['{}X'.format(prefix)])
-            #     ty = float(session_event['{}Y'.format(prefix)])
-            #     ix = float(session_event['itemPositionX'])
-            #     iy = float(session_event['itemPositionY'])
-            #     print('\nCheck Failed:')
-            #     print(type(check_result))
-            #     print(trial_type)
-            #     print(tap_response_type)
-            #     print(tap_response_start, session_event['tapResponseStart'])
-            #     print(tx, ty, ix, iy)
+            if not check_result:
+                prefix = 'tapResponsePosition'
+                tx = float(session_event['{}X'.format(prefix)])
+                ty = float(session_event['{}Y'.format(prefix)])
+                ix = float(session_event['itemPositionX'])
+                iy = float(session_event['itemPositionY'])
+                print('\nCheck Failed:')
+                print('      Game Session ID:', session_event['gameSessionID'])
+                print('             Round ID:', session_event['roundID'])
+                print('             Trial ID:', session_event['trialID'])
+                print('           Trial Type:', trial_type)
+                print('    Tap Response Type:', tap_response_type)
+                print('   Tap Response Start:', tap_response_start, session_event['tapResponseStart'])
+                print('Tap Response Position: ({},{})'.format(tx, ty))
+                print('        Item Position: ({},{})'.format(ix, iy))
+                print(tx, ty, ix, iy)
                 # input('Press return to continue...')
-            # assert check_result
+            assert check_result
             self.session_event_log.log_if_check_failed(check_result, session_event, extra_message='tapResponseType={}'.format(tap_response_type))
 
     @staticmethod
@@ -340,7 +344,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
         # print('\n', tx, ty, ix, iy)
         # return ((tx - ix) ** 2 + ((ty - iy) ** 2)) < (item_radius ** 2)
         distance = math.sqrt(((tx-ix)**2) + ((ty-iy)**2))
-        # print(distance, item_radius)
+        print(distance, item_radius)
         return distance < item_radius
 
     def outside_stimulus_boundary(self, session_event, prefix='tapResponsePosition'):
