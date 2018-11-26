@@ -45,7 +45,6 @@ class Extractor:
             csv_file.write(file_data)          # Write the data rows
 
         if hasattr(extractor, 'spreadsheet'):
-            print("\nWriting spreadsheet!!!\n")
             output_filename = json_csv_path / '{}.xlsx'.format(filename)
             extractor.spreadsheet.save(output_filename)
 
