@@ -22,8 +22,8 @@ class Extractor:
             print('no rows to extract with: ', extractor.type)
             return
 
-        csv_filename = self.clean_filename(extractor.get_filename())
-        output_filename = json_csv_path / '{}.csv'.format(csv_filename.upper())
+        filename = self.clean_filename(extractor.get_filename()).upper()
+        output_filename = json_csv_path / '{}.csv'.format(filename)
         with open(output_filename, 'w', encoding='utf-8') as csv_file:
             csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
             for row in json_array:
@@ -43,6 +43,11 @@ class Extractor:
             column_names = extractor.get_column_names()
             csv_writer.writerow(column_names)  # Write the header row
             csv_file.write(file_data)          # Write the data rows
+
+        if hasattr(extractor, 'spreadsheet'):
+            print("\nWriting spreadsheet!!!\n")
+            output_filename = json_csv_path / '{}.xlsx'.format(filename)
+            extractor.spreadsheet.save(output_filename)
 
     def is_duplicate(self, row):
         if self.previous_row:
