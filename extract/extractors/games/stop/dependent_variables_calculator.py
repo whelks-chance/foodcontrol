@@ -1,7 +1,9 @@
 from collections import defaultdict
 
+from .abstract_stop_evaluator import AbstractStopEvaluator
 
-class DependentVariablesCalculator:
+
+class DependentVariablesCalculator(AbstractStopEvaluator):
 
     def __init__(self):
         self.dv_correct_counts = None
@@ -14,6 +16,9 @@ class DependentVariablesCalculator:
         self.dv_incorrect_healthy_not_selected_responses = None
         self.dv_incorrect_unhealthy_selected_responses = None
         self.dv_incorrect_unhealthy_not_selected_responses = None
+
+    def evaluate(self, row):
+        self.calculate_dependent_variables(row)
 
     def calculate_dependent_variables(self, row):
         self.dv_correct_counts = defaultdict(lambda: defaultdict(int))

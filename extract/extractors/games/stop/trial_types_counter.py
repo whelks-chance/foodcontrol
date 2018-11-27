@@ -20,6 +20,9 @@ class TrialTypesCalculator(AbstractStopEvaluator):
         self.session_item_type_counts = None
         self.session_item_type_percentages = None
 
+    def evaluate(self, row):
+        self.count_trial_and_types(row)
+
     def count_trial_and_types(self, row):
         session_events = get_session_events(row)
 
@@ -92,6 +95,3 @@ class TrialTypesCalculator(AbstractStopEvaluator):
         self.session_item_type_percentages = defaultdict(float)
         for item_type, item_type_count in self.session_item_type_counts.items():
             self.session_item_type_percentages[item_type] = item_type_count / self.trial_count
-
-    def evaluate(self, row):
-        self.count_trial_and_types(row)

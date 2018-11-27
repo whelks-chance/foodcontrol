@@ -1,8 +1,10 @@
 from pprint import pprint
 from collections import defaultdict
 
+from .abstract_stop_evaluator import AbstractStopEvaluator
 
-class ValueLabelChecker:
+
+class ValueLabelChecker(AbstractStopEvaluator):
 
     def __init__(self):
         self.label_allocation_counts = None
@@ -11,6 +13,9 @@ class ValueLabelChecker:
         self.selected_item_ids = None
         self.block_item_ids = None
         self.session_item_ids = None
+
+    def evaluate(self, row):
+        self.check_value_labels(row)
 
     def check_value_labels(self, row):
         session_events = self.get_session_events(row)

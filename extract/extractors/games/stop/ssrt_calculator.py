@@ -1,4 +1,9 @@
-class SSRTCalculator:
+from .abstract_stop_evaluator import AbstractStopEvaluator
+
+from utils import get_session_events, numericify
+
+
+class SSRTCalculator(AbstractStopEvaluator):
 
     def __init__(self):
         self.mean_ideal_ssrt = None
@@ -6,8 +11,11 @@ class SSRTCalculator:
         self.ideal_integration_ssrt = None
         self.actual_integration_ssrt = None
 
+    def evaluate(self, row):
+        self.calculate_ssrt(row)
+
     def calculate_ssrt(self, row):
-        session_events = self.get_session_events(row)
+        session_events = get_session_events(row)
 
         # A - Mean SSRT
         tap_response_start_total = 0
@@ -15,12 +23,12 @@ class SSRTCalculator:
         stop_signal_onset_total = 0
         for session_event in session_events:
             trial_type = session_event['trialType']
-            tap_response_start = self.numericify(session_event['tapResponseStart'])
+            tap_response_start = numericify(session_event['tapResponseStart'])
             if trial_type == 'GO' and tap_response_start > 0:
                 tap_response_start_total += tap_response_start
-            stop_signal_delay = self.numericify(session_event['stopSignalDelay'])
+            stop_signal_delay = numericify(session_event['stopSignalDelay'])
             stop_signal_delay_total += stop_signal_delay
-            stop_signal_onset = self.numericify(session_event['stopSignalOnset'])
+            stop_signal_onset = numericify(session_event['stopSignalOnset'])
             stop_signal_onset_total += stop_signal_onset
         mean_tap_response_start = tap_response_start_total / len(session_events)
         mean_stop_signal_delay = stop_signal_delay_total / len(session_events)

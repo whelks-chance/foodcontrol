@@ -1,14 +1,19 @@
 import statistics
 from collections import defaultdict
 
+from .abstract_stop_evaluator import AbstractStopEvaluator
+
 from utils import get_session_events, get_keypath_value, remove_none_values
 
 
-class DurationsCalculator:
+class DurationsCalculator(AbstractStopEvaluator):
 
     def __init__(self):
         self.session_duration = 0
         self.durations = defaultdict(list)
+
+    def evaluate(self, row):
+        self.calculate_durations(row)
 
     def calculate_durations(self, row):
 

@@ -1,7 +1,15 @@
 from .abstract_stop_evaluator import AbstractStopEvaluator
 
+from utils import get_session_events
+
 
 class PointsChecker(AbstractStopEvaluator):
+
+    def __init__(self):
+        pass
+
+    def evaluate(self, row):
+        self.check_points(row)
 
     def check_points(self, row):
         points = {
@@ -17,7 +25,7 @@ class PointsChecker(AbstractStopEvaluator):
             }
         }
         running_total = 0
-        session_events = self.get_session_events(row)
+        session_events = get_session_events(row)
         for session_event in session_events:
             trial_type = session_event['trialType']
             tap_response_type = session_event['tapResponseType']
@@ -26,6 +34,3 @@ class PointsChecker(AbstractStopEvaluator):
             running_total += points_this_trial
             points_running_total = session_event['pointsRunningTotal']
             assert points_running_total == running_total
-
-    def evaluate(self, row):
-        self.check_points(row)

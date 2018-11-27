@@ -13,11 +13,11 @@ class RawEventsCalculator(AbstractStopEvaluator):
             'off': defaultdict(int)
         }
 
+    def evaluate(self, row):
+        self.count_raw_events(row)
+
     def count_raw_events(self, row):
         raw_events = get_keypath_value(row, 'data.0.rawEvents')
         for raw_event in raw_events:
             self.raw_count['on'][raw_event['eventOn']] += 1
             self.raw_count['off'][raw_event['eventOff']] += 1
-
-    def evaluate(self, row):
-        self.count_raw_events(row)

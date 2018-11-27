@@ -1,12 +1,17 @@
 import math
 
+from .abstract_stop_evaluator import AbstractStopEvaluator
+
 from utils import get_session_events, numericify
 
 
-class TapResponseChecker:
+class TapResponseChecker(AbstractStopEvaluator):
 
     def __init__(self):
         pass
+
+    def evaluate(self, row):
+        self.check_tap_responses(row)
 
     def check_tap_responses(self, row):
         # trs = tap response start
