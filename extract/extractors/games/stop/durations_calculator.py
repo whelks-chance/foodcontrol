@@ -96,3 +96,9 @@ class DurationsCalculator(AbstractStopEvaluator):
         calculate_session_duration()
         calculate_trial_durations()
         calculate_trial_duration_stats()
+
+    def populate_spreadsheet(self, spreadsheet):
+        spreadsheet.select_sheet('Stats')
+        spreadsheet.set_values(['Field', 'Min', 'Max', 'Mean', 'St Dev'])
+        for field, stats in self.trial_stats.items():
+            spreadsheet.set_values([field, stats['min'], stats['max'], stats['mean'], stats['stdev']])

@@ -21,3 +21,13 @@ class RawEventsCalculator(AbstractStopEvaluator):
         for raw_event in raw_events:
             self.raw_count['on'][raw_event['eventOn']] += 1
             self.raw_count['off'][raw_event['eventOff']] += 1
+
+    def populate_spreadsheet(self, spreadsheet):
+        spreadsheet.select_sheet('Raw Counts')
+        spreadsheet.set_values(['On'])
+        for key, value in self.raw_count['on'].items():
+            spreadsheet.set_values([key, value])
+        spreadsheet.advance_row()
+        spreadsheet.set_values(['Off'])
+        for key, value in self.raw_count['off'].items():
+            spreadsheet.set_values([key, value])

@@ -75,3 +75,10 @@ class SSRTCalculator(AbstractStopEvaluator):
         print('ideal_integration_ssrt:', self.ideal_integration_ssrt)
         print('actual_integration_ssrt:', self.actual_integration_ssrt)
         # assert False
+
+    def populate_spreadsheet(self, spreadsheet):
+        spreadsheet.select_sheet('SSRT')
+        spreadsheet.set_values(['Ideal Mean SSRT', self.mean_ideal_ssrt])
+        spreadsheet.set_values(['Actual Mean SSRT', self.mean_actual_ssrt])
+        spreadsheet.set_values(['Ideal Integration SSRT', self.ideal_integration_ssrt])
+        spreadsheet.set_values(['Actual Integration SSRT', self.actual_integration_ssrt])

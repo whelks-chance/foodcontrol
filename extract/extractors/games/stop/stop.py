@@ -1,13 +1,17 @@
 # import math
 # import statistics
 # from collections import defaultdict
-from pprint import pprint
+# from pprint import pprint
 
 from ..gamedataextractor import GameDataExtractor
 from ..session_event_log import SessionEventLog
-from keypath_extractor import Keypath
+
+from .raw_events_calculator import RawEventsCalculator
+from .points_checker import PointsChecker
+
+# from utils import irange
 from spreadsheet import Spreadsheet
-from utils import irange
+from keypath_extractor import Keypath
 
 
 class AbstractStopDataExtractor(GameDataExtractor):
@@ -19,6 +23,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
             Keypath('data.captureDate', 'Capture Date'),
         ]
 
+    spreadsheet = None
     session_event_log = SessionEventLog()
 
     # session_duration = 0
@@ -517,6 +522,17 @@ class AbstractStopDataExtractor(GameDataExtractor):
 
     def calculate(self, row):
         super(AbstractStopDataExtractor, self).calculate(row)
+
+        evaluators = [
+            RawEventsCalculator(),
+            # PointsChecker(),
+        ]
+
+        self.spreadsheet = Spreadsheet()
+        for evaluator in evaluators:
+            evaluator.evaluate(row)
+            evaluator.populate_spreadsheet(self.spreadsheet)
+
         # self.calculate_durations(row)
         # self.count_trial_and_types(row)
         # self.check_value_labels(row)
@@ -530,231 +546,231 @@ class AbstractStopDataExtractor(GameDataExtractor):
     def create_spreadsheet(self):
         spreadsheet = Spreadsheet()
 
-        # Trial Counts
-        spreadsheet.select_sheet('Trial Count')
-        spreadsheet.set_values(['Trial Count', self.trial_count], advance_by_rows=2)
+        # # Trial Counts
+        # spreadsheet.select_sheet('Trial Count')
+        # spreadsheet.set_values(['Trial Count', self.trial_count], advance_by_rows=2)
 
-        # Raw Counts
-        spreadsheet.set_value('Raw Counts', advance_by_rows=2)
-        spreadsheet.set_values(['On'])
-        for key, value in self.raw_count['on'].items():
-            spreadsheet.set_values([key, value])
-        spreadsheet.advance_row()
-        spreadsheet.set_values(['Off'])
-        for key, value in self.raw_count['off'].items():
-            spreadsheet.set_values([key, value])
+        # # Raw Counts
+        # spreadsheet.set_value('Raw Counts', advance_by_rows=2)
+        # spreadsheet.set_values(['On'])
+        # for key, value in self.raw_count['on'].items():
+        #     spreadsheet.set_values([key, value])
+        # spreadsheet.advance_row()
+        # spreadsheet.set_values(['Off'])
+        # for key, value in self.raw_count['off'].items():
+        #     spreadsheet.set_values([key, value])
 
-        # Trial Stats
-        spreadsheet.select_sheet('Stats')
-        spreadsheet.set_values(['Field', 'Min', 'Max', 'Mean', 'St Dev'])
-        for field, stats in self.trial_stats.items():
-            spreadsheet.set_values([field, stats['min'], stats['max'], stats['mean'], stats['stdev']])
+        # # Trial Stats
+        # spreadsheet.select_sheet('Stats')
+        # spreadsheet.set_values(['Field', 'Min', 'Max', 'Mean', 'St Dev'])
+        # for field, stats in self.trial_stats.items():
+        #     spreadsheet.set_values([field, stats['min'], stats['max'], stats['mean'], stats['stdev']])
 
-        # Trial Types
-        spreadsheet.select_sheet('Trial Types')
-        # - Blocks
-        spreadsheet.set_values(['Session'])
-        spreadsheet.set_values(['Trial Type', 'Count', 'Percentage'])
-        for trial_type in ['GO', 'STOP']:
-            spreadsheet.set_values([
-                trial_type,
-                self.session_trial_type_counts[trial_type],
-                self.session_trial_type_percentages[trial_type]
-            ])
-        # - Session
-        spreadsheet.advance_row()
-        spreadsheet.set_values(['Block'])
-        spreadsheet.set_values(['Block', 'Trial Type', 'Count', 'Percentage'])
-        for block_key in irange(1, 4):
-            for trial_type in ['GO', 'STOP']:
-                spreadsheet.set_values([
-                    block_key,
-                    trial_type,
-                    self.block_trial_type_counts[block_key][trial_type],
-                    self.block_trial_type_percentages[block_key][trial_type]
-                ])
+        # # Trial Types
+        # spreadsheet.select_sheet('Trial Types')
+        # # - Blocks
+        # spreadsheet.set_values(['Session'])
+        # spreadsheet.set_values(['Trial Type', 'Count', 'Percentage'])
+        # for trial_type in ['GO', 'STOP']:
+        #     spreadsheet.set_values([
+        #         trial_type,
+        #         self.session_trial_type_counts[trial_type],
+        #         self.session_trial_type_percentages[trial_type]
+        #     ])
+        # # - Session
+        # spreadsheet.advance_row()
+        # spreadsheet.set_values(['Block'])
+        # spreadsheet.set_values(['Block', 'Trial Type', 'Count', 'Percentage'])
+        # for block_key in irange(1, 4):
+        #     for trial_type in ['GO', 'STOP']:
+        #         spreadsheet.set_values([
+        #             block_key,
+        #             trial_type,
+        #             self.block_trial_type_counts[block_key][trial_type],
+        #             self.block_trial_type_percentages[block_key][trial_type]
+        #         ])
+        #
+        # print('\nSESSION TRIAL TYPE COUNTS:')
+        # pprint(self.session_trial_type_counts)
+        # print('\nSESSION TRIAL TYPE PERCENTAGES:')
+        # pprint(self.session_trial_type_percentages)
+        # print('\nBLOCK TRIAL TYPE COUNTS:')
+        # pprint(self.block_trial_type_counts)
+        # print('\nBLOCK TRIAL TYPE PERCENTAGES:')
+        # pprint(self.block_trial_type_percentages)
 
-        print('\nSESSION TRIAL TYPE COUNTS:')
-        pprint(self.session_trial_type_counts)
-        print('\nSESSION TRIAL TYPE PERCENTAGES:')
-        pprint(self.session_trial_type_percentages)
-        print('\nBLOCK TRIAL TYPE COUNTS:')
-        pprint(self.block_trial_type_counts)
-        print('\nBLOCK TRIAL TYPE PERCENTAGES:')
-        pprint(self.block_trial_type_percentages)
+        # # Trial Items
+        # spreadsheet.select_sheet('Item Types')
+        # # - Block
+        # spreadsheet.set_values(['Session'])
+        # spreadsheet.set_values(['Item Type', 'Count', 'Percentage'])
+        # for trial_type in ['HEALTHY', 'HEALTHY_RANDOM', 'HEALTHY_NOT_RANDOM', 'NON_HEALTHY']:
+        #     spreadsheet.set_values([
+        #         trial_type,
+        #         self.session_item_type_counts[trial_type],
+        #         self.session_item_type_percentages[trial_type]
+        #     ])
+        # # - Session
+        # spreadsheet.set_values(['Block'])
+        # spreadsheet.set_values(['Block', 'Item Type', 'Count', 'Percentage'])
+        # for block_key in irange(1, 4):
+        #     for trial_type in ['HEALTHY', 'HEALTHY_RANDOM', 'HEALTHY_NOT_RANDOM', 'NON_HEALTHY']:
+        #         spreadsheet.set_values([
+        #             block_key,
+        #             trial_type,
+        #             self.block_item_type_counts[block_key][trial_type],
+        #             self.block_item_type_percentages[block_key][trial_type]
+        #         ])
+        # print('\nSESSION ITEM TYPE COUNTS:')
+        # pprint(self.session_item_type_counts)
+        # print('\nSESSION ITEM TYPE PERCENTAGES:')
+        # pprint(self.session_item_type_percentages)
+        # print('\nBLOCK ITEM TYPE COUNTS:')
+        # pprint(self.block_item_type_counts)
+        # print('\nBLOCK ITEM TYPE PERCENTAGES:')
+        # pprint(self.block_item_type_percentages)
 
-        # Trial Items
-        spreadsheet.select_sheet('Item Types')
-        # - Block
-        spreadsheet.set_values(['Session'])
-        spreadsheet.set_values(['Item Type', 'Count', 'Percentage'])
-        for trial_type in ['HEALTHY', 'HEALTHY_RANDOM', 'HEALTHY_NOT_RANDOM', 'NON_HEALTHY']:
-            spreadsheet.set_values([
-                trial_type,
-                self.session_item_type_counts[trial_type],
-                self.session_item_type_percentages[trial_type]
-            ])
-        # - Session
-        spreadsheet.set_values(['Block'])
-        spreadsheet.set_values(['Block', 'Item Type', 'Count', 'Percentage'])
-        for block_key in irange(1, 4):
-            for trial_type in ['HEALTHY', 'HEALTHY_RANDOM', 'HEALTHY_NOT_RANDOM', 'NON_HEALTHY']:
-                spreadsheet.set_values([
-                    block_key,
-                    trial_type,
-                    self.block_item_type_counts[block_key][trial_type],
-                    self.block_item_type_percentages[block_key][trial_type]
-                ])
-        print('\nSESSION ITEM TYPE COUNTS:')
-        pprint(self.session_item_type_counts)
-        print('\nSESSION ITEM TYPE PERCENTAGES:')
-        pprint(self.session_item_type_percentages)
-        print('\nBLOCK ITEM TYPE COUNTS:')
-        pprint(self.block_item_type_counts)
-        print('\nBLOCK ITEM TYPE PERCENTAGES:')
-        pprint(self.block_item_type_percentages)
+        # # Raw Rounds
+        # spreadsheet.select_sheet('Raw Rounds')
+        # spreadsheet.set_values(['Round', 'Count'])
+        # for block_key in irange(1, 4):
+        #     spreadsheet.set_values([
+        #         block_key,
+        #         len(self.raw_round_trial_counts[block_key])
+        #     ])
 
-        # Raw Rounds
-        spreadsheet.select_sheet('Raw Rounds')
-        spreadsheet.set_values(['Round', 'Count'])
-        for block_key in irange(1, 4):
-            spreadsheet.set_values([
-                block_key,
-                len(self.raw_round_trial_counts[block_key])
-            ])
+        # # Label Allocations
+        # spreadsheet.select_sheet('Label Allocations')
+        #
+        # # - Counts
+        # spreadsheet.set_values(['Session'])
+        # spreadsheet.set_values(['Trial Type', 'Prefix', 'Count', 'Percentage'])
+        # for item_type in ['HEALTHY', 'NON_HEALTHY']:
+        #     for prefix in ['1_', '2_']:
+        #         spreadsheet.set_values([
+        #             item_type,
+        #             prefix,
+        #             self.label_allocation_counts[item_type][prefix],
+        #             self.label_allocation_item_id_percentages[item_type][prefix]
+        #         ])
+        # print('\nLABEL ALLOCATION COUNTS:')
+        # pprint(self.label_allocation_counts)
+        #
+        # # - Percentages
+        # spreadsheet.advance_row()
+        # spreadsheet.set_values(['Item Type', 'Percentage'])
+        # for item_type in self.label_allocation_item_type_percentages:
+        #     spreadsheet.set_values([
+        #         item_type,
+        #         self.label_allocation_item_type_percentages[item_type]
+        #     ])
+        # print('\nLABEL ALLOCATION PERCENTAGES:')
+        # pprint(self.label_allocation_item_id_percentages)
+        # pprint(self.label_allocation_item_type_percentages)
+        #
+        # # Selected Item IDs
+        # spreadsheet.select_sheet('Selected Items')
+        # for index, selected_label in enumerate(self.selected_item_ids):
+        #     spreadsheet.set_values([selected_label])
+        # for index, selected_label in enumerate(self.selected_item_ids):
+        #     for i, selected_item_id in enumerate(self.selected_item_ids[selected_label]):
+        #         spreadsheet.set_values([selected_item_id])
+        # print('\nSELCTED ITEM IDs:')
+        # print(self.selected_item_ids)
+        #
+        # # Unique Item IDs
+        # # - Session
+        # spreadsheet.select_sheet('Unique Items - Session')
+        # for index, unique_item_id in enumerate(self.session_item_ids):
+        #     spreadsheet.set_values([unique_item_id])
+        # # - Blocks
+        # spreadsheet.select_sheet('Unique Items - Blocks')
+        # for block_key in irange(1, 4):
+        #     spreadsheet.set_value(block_key)
+        # spreadsheet.advance_row()
+        # for block_key in irange(1, 4):
+        #     for index, unique_item_id in enumerate(self.block_item_ids[block_key]):
+        #         spreadsheet.column = block_key
+        #         spreadsheet.set_value(unique_item_id, cell_offset=(block_key, index+1))
+        #
+        # print('\nSESSION ITEM IDs:')
+        # print(self.session_item_ids)
+        # print('\nBLOCK ITEM IDs:')
+        # pprint(self.block_item_ids)
 
-        # Label Allocations
-        spreadsheet.select_sheet('Label Allocations')
+        # # Correct Counts
+        # spreadsheet.select_sheet('Correct Counts')
+        # spreadsheet.set_values(['Block'])
+        # spreadsheet.set_values(['Block', 'Trial Type', 'Count'])
+        # for block_key in irange(1, 4):
+        #     for trial_type in ['CORRECT_GO', 'CORRECT_STOP']:
+        #         spreadsheet.set_values([
+        #             block_key,
+        #             trial_type,
+        #             self.dv_correct_counts[block_key][trial_type]
+        #         ])
+        #         print([
+        #             block_key,
+        #             trial_type,
+        #             self.dv_correct_counts[block_key][trial_type]
+        #         ])
+        # pprint(self.dv_correct_counts)
+        #
+        # print('DV BLOCK LEVEL CORRECT PERCENTAGES:')
+        # pprint(self.dv_correct_block_percentages)
+        # spreadsheet.advance_row()
+        # spreadsheet.set_values(['Block'])
+        # spreadsheet.set_values(['Block', 'Trial Type', 'Count'])
+        # for block_key in irange(1, 4):
+        #     for trial_type in ['CORRECT_GO', 'CORRECT_STOP']:
+        #         spreadsheet.set_values([
+        #             block_key,
+        #             trial_type,
+        #             self.dv_correct_block_percentages[block_key][trial_type]
+        #         ])
+        #
+        # print('DV SESSION LEVEL CORRECT PERCENTAGES:')
+        # pprint(self.dv_correct_session_percentages)
+        # spreadsheet.advance_row()
+        # spreadsheet.set_values(['Session'])
+        # spreadsheet.set_values(['CORRECT_GO', self.dv_correct_session_percentages['CORRECT_GO']])
+        # spreadsheet.set_values(['CORRECT_STOP', self.dv_correct_session_percentages['CORRECT_STOP']])
+        #
+        # spreadsheet.select_sheet('Mean Response Times')
+        # spreadsheet.set_values(['Correct Go'])
+        # spreadsheet.set_values(['Mean CORRECT_GO Responses', self.mean(self.dv_correct_go_responses)])
+        # spreadsheet.set_values(['Mean CORRECT_GO HEALTHY Responses', self.mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY'])])
+        # spreadsheet.set_values(['Mean CORRECT_GO UNHEALTHY Responses', self.mean(self.dv_correct_responses['CORRECT_GO']['UNHEALTHY'])])
+        # spreadsheet.set_values(['Correct Stop'])
+        # spreadsheet.set_values(['Mean CORRECT_STOP Responses', self.mean(self.dv_correct_go_responses)])
+        # spreadsheet.set_values(['Mean CORRECT_STOP HEALTHY Responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY'])])
+        # spreadsheet.set_values(['Mean CORRECT_STOP UNHEALTHY Responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['UNHEALTHY'])])
+        # # print('mean CORRECT_GO responses', self.mean(self.dv_correct_go_responses))
+        # # print('mean CORRECT_GO HEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
+        # # print('mean CORRECT_GO UNHEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_GO']['NON_HEALTHY']))
+        # # print('mean CORRECT_STOP responses', self.mean(self.dv_correct_stop_responses))
+        # # print('mean CORRECT_STOP HEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY']))
+        # # print('mean CORRECT_STOP UNHEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['NON_HEALTHY']))
+        # spreadsheet.set_values(['CORRECT_GO Responses'])
+        # print('mean INCORRECT HEALTHY SELECTED responses', self.mean(self.dv_incorrect_healthy_selected_responses))
+        # print('mean INCORRECT HEALTHY NOT SELECTED responses', self.mean(self.dv_incorrect_healthy_not_selected_responses))
+        # print('mean INCORRECT UNHEALTHY SELECTED responses', self.mean(self.dv_incorrect_unhealthy_selected_responses))
+        # print('mean INCORRECT UNHEALTHY NOT SELECTED responses', self.mean(self.dv_incorrect_unhealthy_not_selected_responses))
+        # # assert False
 
-        # - Counts
-        spreadsheet.set_values(['Session'])
-        spreadsheet.set_values(['Trial Type', 'Prefix', 'Count', 'Percentage'])
-        for item_type in ['HEALTHY', 'NON_HEALTHY']:
-            for prefix in ['1_', '2_']:
-                spreadsheet.set_values([
-                    item_type,
-                    prefix,
-                    self.label_allocation_counts[item_type][prefix],
-                    self.label_allocation_item_id_percentages[item_type][prefix]
-                ])
-        print('\nLABEL ALLOCATION COUNTS:')
-        pprint(self.label_allocation_counts)
-
-        # - Percentages
-        spreadsheet.advance_row()
-        spreadsheet.set_values(['Item Type', 'Percentage'])
-        for item_type in self.label_allocation_item_type_percentages:
-            spreadsheet.set_values([
-                item_type,
-                self.label_allocation_item_type_percentages[item_type]
-            ])
-        print('\nLABEL ALLOCATION PERCENTAGES:')
-        pprint(self.label_allocation_item_id_percentages)
-        pprint(self.label_allocation_item_type_percentages)
-
-        # Selected Item IDs
-        spreadsheet.select_sheet('Selected Items')
-        for index, selected_label in enumerate(self.selected_item_ids):
-            spreadsheet.set_values([selected_label])
-        for index, selected_label in enumerate(self.selected_item_ids):
-            for i, selected_item_id in enumerate(self.selected_item_ids[selected_label]):
-                spreadsheet.set_values([selected_item_id])
-        print('\nSELCTED ITEM IDs:')
-        print(self.selected_item_ids)
-
-        # Unique Item IDs
-        # - Session
-        spreadsheet.select_sheet('Unique Items - Session')
-        for index, unique_item_id in enumerate(self.session_item_ids):
-            spreadsheet.set_values([unique_item_id])
-        # - Blocks
-        spreadsheet.select_sheet('Unique Items - Blocks')
-        for block_key in irange(1, 4):
-            spreadsheet.set_value(block_key)
-        spreadsheet.advance_row()
-        for block_key in irange(1, 4):
-            for index, unique_item_id in enumerate(self.block_item_ids[block_key]):
-                spreadsheet.column = block_key
-                spreadsheet.set_value(unique_item_id, cell_offset=(block_key, index+1))
-
-        print('\nSESSION ITEM IDs:')
-        print(self.session_item_ids)
-        print('\nBLOCK ITEM IDs:')
-        pprint(self.block_item_ids)
-
-        # Correct Counts
-        spreadsheet.select_sheet('Correct Counts')
-        spreadsheet.set_values(['Block'])
-        spreadsheet.set_values(['Block', 'Trial Type', 'Count'])
-        for block_key in irange(1, 4):
-            for trial_type in ['CORRECT_GO', 'CORRECT_STOP']:
-                spreadsheet.set_values([
-                    block_key,
-                    trial_type,
-                    self.dv_correct_counts[block_key][trial_type]
-                ])
-                print([
-                    block_key,
-                    trial_type,
-                    self.dv_correct_counts[block_key][trial_type]
-                ])
-        pprint(self.dv_correct_counts)
-
-        print('DV BLOCK LEVEL CORRECT PERCENTAGES:')
-        pprint(self.dv_correct_block_percentages)
-        spreadsheet.advance_row()
-        spreadsheet.set_values(['Block'])
-        spreadsheet.set_values(['Block', 'Trial Type', 'Count'])
-        for block_key in irange(1, 4):
-            for trial_type in ['CORRECT_GO', 'CORRECT_STOP']:
-                spreadsheet.set_values([
-                    block_key,
-                    trial_type,
-                    self.dv_correct_block_percentages[block_key][trial_type]
-                ])
-
-        print('DV SESSION LEVEL CORRECT PERCENTAGES:')
-        pprint(self.dv_correct_session_percentages)
-        spreadsheet.advance_row()
-        spreadsheet.set_values(['Session'])
-        spreadsheet.set_values(['CORRECT_GO', self.dv_correct_session_percentages['CORRECT_GO']])
-        spreadsheet.set_values(['CORRECT_STOP', self.dv_correct_session_percentages['CORRECT_STOP']])
-
-        spreadsheet.select_sheet('Mean Response Times')
-        spreadsheet.set_values(['Correct Go'])
-        spreadsheet.set_values(['Mean CORRECT_GO Responses', self.mean(self.dv_correct_go_responses)])
-        spreadsheet.set_values(['Mean CORRECT_GO HEALTHY Responses', self.mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY'])])
-        spreadsheet.set_values(['Mean CORRECT_GO UNHEALTHY Responses', self.mean(self.dv_correct_responses['CORRECT_GO']['UNHEALTHY'])])
-        spreadsheet.set_values(['Correct Stop'])
-        spreadsheet.set_values(['Mean CORRECT_STOP Responses', self.mean(self.dv_correct_go_responses)])
-        spreadsheet.set_values(['Mean CORRECT_STOP HEALTHY Responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY'])])
-        spreadsheet.set_values(['Mean CORRECT_STOP UNHEALTHY Responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['UNHEALTHY'])])
-        # print('mean CORRECT_GO responses', self.mean(self.dv_correct_go_responses))
-        # print('mean CORRECT_GO HEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
-        # print('mean CORRECT_GO UNHEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_GO']['NON_HEALTHY']))
-        # print('mean CORRECT_STOP responses', self.mean(self.dv_correct_stop_responses))
-        # print('mean CORRECT_STOP HEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY']))
-        # print('mean CORRECT_STOP UNHEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['NON_HEALTHY']))
-        spreadsheet.set_values(['CORRECT_GO Responses'])
-        print('mean INCORRECT HEALTHY SELECTED responses', self.mean(self.dv_incorrect_healthy_selected_responses))
-        print('mean INCORRECT HEALTHY NOT SELECTED responses', self.mean(self.dv_incorrect_healthy_not_selected_responses))
-        print('mean INCORRECT UNHEALTHY SELECTED responses', self.mean(self.dv_incorrect_unhealthy_selected_responses))
-        print('mean INCORRECT UNHEALTHY NOT SELECTED responses', self.mean(self.dv_incorrect_unhealthy_not_selected_responses))
-        # assert False
-
-        if hasattr(self, 'mean_ideal_ssrt'):
-            spreadsheet.select_sheet('SSRT')
-            spreadsheet.set_values(['Ideal Mean SSRT', self.mean_ideal_ssrt])
-            spreadsheet.set_values(['Actual Mean SSRT', self.mean_actual_ssrt])
-            spreadsheet.set_values(['Ideal Integration SSRT', self.ideal_integration_ssrt])
-            spreadsheet.set_values(['Actual Integration SSRT', self.actual_integration_ssrt])
-        else:
-            spreadsheet.select_sheet('DRT2')
-            spreadsheet.set_values(['Ideal DRT2', self.ideal_drt2])
-            spreadsheet.set_values(['Actual DRT2', self.actual_drt2])
-
-        self.spreadsheet = spreadsheet
-        self.session_event_log.print()
+        # if hasattr(self, 'mean_ideal_ssrt'):
+        #     spreadsheet.select_sheet('SSRT')
+        #     spreadsheet.set_values(['Ideal Mean SSRT', self.mean_ideal_ssrt])
+        #     spreadsheet.set_values(['Actual Mean SSRT', self.mean_actual_ssrt])
+        #     spreadsheet.set_values(['Ideal Integration SSRT', self.ideal_integration_ssrt])
+        #     spreadsheet.set_values(['Actual Integration SSRT', self.actual_integration_ssrt])
+        # else:
+        #     spreadsheet.select_sheet('DRT2')
+        #     spreadsheet.set_values(['Ideal DRT2', self.ideal_drt2])
+        #     spreadsheet.set_values(['Actual DRT2', self.actual_drt2])
+        #
+        # self.spreadsheet = spreadsheet
+        # self.session_event_log.print()
 
 
 class StopDataExtractor(AbstractStopDataExtractor):
@@ -791,127 +807,127 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
 
     type = 'DOUBLE'
 
-    def check_points(self, row):
+    # def check_points(self, row):
+    #
+    #     def check_go(initial_tap_response_type, second_tap_response_type):
+    #         if (initial_tap_response_type, second_tap_response_type) == ('CORRECT_GO', 'N/A'):
+    #             check_result = points_this_trial == 20
+    #             # self.session_event_log.log_if_check_failed(check_result, session_event)
+    #         elif (initial_tap_response_type, second_tap_response_type) == ('INCORRECT_GO', 'N/A'):
+    #             check_result = points_this_trial == -20
+    #             # self.session_event_log.log_if_check_failed(check_result, session_event)
+    #         else:
+    #             check_result = points_this_trial == -50
+    #         self.session_event_log.log_if_check_failed(check_result, session_event)
+    #
+    #     def check_double(initial_tap_response_type, second_tap_response_type):
+    #         if (initial_tap_response_type, second_tap_response_type) == ('CORRECT', 'CORRECT'):
+    #             check_result = points_this_trial == 50
+    #             # self.session_event_log.log_if_check_failed(check_result, session_event)
+    #         else:
+    #             check_result = points_this_trial == -50
+    #         self.session_event_log.log_if_check_failed(check_result, session_event)
+    #
+    #     checks = {
+    #         'GO': check_go,
+    #         'DOUBLE': check_double,
+    #     }
+    #
+    #     running_total = 0
+    #     session_events = self.get_session_events(row)
+    #     for session_event in session_events:
+    #         # Points Awarded
+    #         trial_type = session_event['trialType']
+    #         initial_tap_response_type = session_event['initialTapResponseType']
+    #         second_tap_response_type = session_event['secondTapResponseType']
+    #         points_this_trial = session_event['pointsThisTrial']
+    #         checks[trial_type](initial_tap_response_type, second_tap_response_type)
+    #         # Running Total
+    #         running_total += points_this_trial
+    #         points_running_total = session_event['pointsRunningTotal']
+    #         check_passed = points_running_total == running_total
+    #         self.session_event_log.log_if_check_failed(check_passed, session_event, extra_message='points_running_total != running_total')
 
-        def check_go(initial_tap_response_type, second_tap_response_type):
-            if (initial_tap_response_type, second_tap_response_type) == ('CORRECT_GO', 'N/A'):
-                check_result = points_this_trial == 20
-                # self.session_event_log.log_if_check_failed(check_result, session_event)
-            elif (initial_tap_response_type, second_tap_response_type) == ('INCORRECT_GO', 'N/A'):
-                check_result = points_this_trial == -20
-                # self.session_event_log.log_if_check_failed(check_result, session_event)
-            else:
-                check_result = points_this_trial == -50
-            self.session_event_log.log_if_check_failed(check_result, session_event)
+    # def check_tap_responses(self, row):
+    #     # trs is tap response start
+    #     initial_tap_response_checks = {
+    #         'GO': {
+    #             'CORRECT_GO': lambda trs, session_event: trs > 0 and self.within_first_stimulus_boundary(session_event),
+    #             'INCORRECT_GO': lambda trs, session_event: trs == 0,
+    #             'MISS_GO': lambda trs, session_event: trs > 0 and self.outside_first_stimulus_boundary(session_event),
+    #         },
+    #         'DOUBLE': {
+    #             'CORRECT': lambda trs, session_event: trs > 0 and self.within_first_stimulus_boundary(session_event),
+    #             'INCORRECT': lambda trs, session_event: trs == 0,
+    #             'MISS': lambda trs, session_event: trs > 0 and self.outside_first_stimulus_boundary(session_event),
+    #         }
+    #     }
+    #     second_tap_response_checks = {
+    #         'GO': {
+    #             'N/A': lambda trs, session_event: trs == 0,
+    #             'INCORRECT_DOUBLE_GO': lambda trs, session_event: trs > 0 and self.within_second_stimulus_boundary(session_event),
+    #             'MISS_GO': lambda trs, session_event: trs > 0 and self.outside_second_stimulus_boundary(session_event),
+    #             # Return True because no check is required
+    #             'INCORR_DOUB_GO': lambda trs, session_event: True,
+    #         },
+    #         'DOUBLE': {
+    #             'CORRECT': lambda trs, session_event: trs > 0 and self.within_second_stimulus_boundary(session_event),
+    #             'INCORRECT': lambda trs, session_event: trs == 0,
+    #             'MISS': lambda trs, session_event: trs > 0 and self.outside_second_stimulus_boundary(session_event),
+    #         }
+    #     }
+    #
+    #     def check_tap_response(tap_response_checks, session_event, prefix):
+    #         tap_response_type = session_event['{}TapResponseType'.format(prefix)]
+    #         tap_response_start = self.numericify(session_event['{}TapResponseStart'.format(prefix)])
+    #         print(trial_type, tap_response_type)
+    #         check_result = tap_response_checks[trial_type][tap_response_type](tap_response_start, session_event)
+    #         if not check_result:
+    #             if prefix == 'initial':
+    #                 _prefix = 'initialTapResponsePosition'
+    #             elif prefix == 'second':
+    #                 _prefix = 'secondTapResponsePosition'
+    #             print('prefix', prefix)
+    #             import json
+    #             print(json.dumps(session_event))
+    #             tx = float(session_event['{}X'.format(_prefix)])
+    #             ty = float(session_event['{}Y'.format(_prefix)])
+    #             ix = float(session_event['itemPositionX'])
+    #             iy = float(session_event['itemPositionY'])
+    #             print('\nCheck Failed:')
+    #             print(type(check_result))
+    #             print(trial_type)
+    #             print(tap_response_type)
+    #             if _prefix == 'initialTapResponsePosition':
+    #                 print(tap_response_start, session_event['initialTapResponseStart'])
+    #             if _prefix == 'secondTapResponsePosition':
+    #                 print(tap_response_start, session_event['secondTapResponseStart'])
+    #             print(tx, ty, ix, iy)
+    #             # assert False
+    #         self.session_event_log.log_if_check_failed(check_result, session_event, extra_message='tapResponseType={}'.format(tap_response_type))
+    #
+    #     session_events = self.get_session_events(row)
+    #     for session_event in session_events:
+    #         trial_type = session_event['trialType']
+    #         check_tap_response(initial_tap_response_checks, session_event, 'initial')
+    #         check_tap_response(second_tap_response_checks, session_event, 'second')
+    #
+    # def within_first_stimulus_boundary(self, session_event):
+    #     self.within_stimulus_boundary(session_event, prefix='initialTapResponsePosition')
+    #
+    # def outside_first_stimulus_boundary(self, session_event):
+    #     self.outside_stimulus_boundary(session_event, prefix='initialTapResponsePosition')
+    #
+    # def within_second_stimulus_boundary(self, session_event):
+    #     self.within_stimulus_boundary(session_event, prefix='secondTapResponsePosition')
+    #
+    # def outside_second_stimulus_boundary(self, session_event):
+    #     self.outside_stimulus_boundary(session_event, prefix='secondTapResponsePosition')
 
-        def check_double(initial_tap_response_type, second_tap_response_type):
-            if (initial_tap_response_type, second_tap_response_type) == ('CORRECT', 'CORRECT'):
-                check_result = points_this_trial == 50
-                # self.session_event_log.log_if_check_failed(check_result, session_event)
-            else:
-                check_result = points_this_trial == -50
-            self.session_event_log.log_if_check_failed(check_result, session_event)
-
-        checks = {
-            'GO': check_go,
-            'DOUBLE': check_double,
-        }
-
-        running_total = 0
-        session_events = self.get_session_events(row)
-        for session_event in session_events:
-            # Points Awarded
-            trial_type = session_event['trialType']
-            initial_tap_response_type = session_event['initialTapResponseType']
-            second_tap_response_type = session_event['secondTapResponseType']
-            points_this_trial = session_event['pointsThisTrial']
-            checks[trial_type](initial_tap_response_type, second_tap_response_type)
-            # Running Total
-            running_total += points_this_trial
-            points_running_total = session_event['pointsRunningTotal']
-            check_passed = points_running_total == running_total
-            self.session_event_log.log_if_check_failed(check_passed, session_event, extra_message='points_running_total != running_total')
-
-    def check_tap_responses(self, row):
-        # trs is tap response start
-        initial_tap_response_checks = {
-            'GO': {
-                'CORRECT_GO': lambda trs, session_event: trs > 0 and self.within_first_stimulus_boundary(session_event),
-                'INCORRECT_GO': lambda trs, session_event: trs == 0,
-                'MISS_GO': lambda trs, session_event: trs > 0 and self.outside_first_stimulus_boundary(session_event),
-            },
-            'DOUBLE': {
-                'CORRECT': lambda trs, session_event: trs > 0 and self.within_first_stimulus_boundary(session_event),
-                'INCORRECT': lambda trs, session_event: trs == 0,
-                'MISS': lambda trs, session_event: trs > 0 and self.outside_first_stimulus_boundary(session_event),
-            }
-        }
-        second_tap_response_checks = {
-            'GO': {
-                'N/A': lambda trs, session_event: trs == 0,
-                'INCORRECT_DOUBLE_GO': lambda trs, session_event: trs > 0 and self.within_second_stimulus_boundary(session_event),
-                'MISS_GO': lambda trs, session_event: trs > 0 and self.outside_second_stimulus_boundary(session_event),
-                # Return True because no check is required
-                'INCORR_DOUB_GO': lambda trs, session_event: True,
-            },
-            'DOUBLE': {
-                'CORRECT': lambda trs, session_event: trs > 0 and self.within_second_stimulus_boundary(session_event),
-                'INCORRECT': lambda trs, session_event: trs == 0,
-                'MISS': lambda trs, session_event: trs > 0 and self.outside_second_stimulus_boundary(session_event),
-            }
-        }
-
-        def check_tap_response(tap_response_checks, session_event, prefix):
-            tap_response_type = session_event['{}TapResponseType'.format(prefix)]
-            tap_response_start = self.numericify(session_event['{}TapResponseStart'.format(prefix)])
-            print(trial_type, tap_response_type)
-            check_result = tap_response_checks[trial_type][tap_response_type](tap_response_start, session_event)
-            if not check_result:
-                if prefix == 'initial':
-                    _prefix = 'initialTapResponsePosition'
-                elif prefix == 'second':
-                    _prefix = 'secondTapResponsePosition'
-                print('prefix', prefix)
-                import json
-                print(json.dumps(session_event))
-                tx = float(session_event['{}X'.format(_prefix)])
-                ty = float(session_event['{}Y'.format(_prefix)])
-                ix = float(session_event['itemPositionX'])
-                iy = float(session_event['itemPositionY'])
-                print('\nCheck Failed:')
-                print(type(check_result))
-                print(trial_type)
-                print(tap_response_type)
-                if _prefix == 'initialTapResponsePosition':
-                    print(tap_response_start, session_event['initialTapResponseStart'])
-                if _prefix == 'secondTapResponsePosition':
-                    print(tap_response_start, session_event['secondTapResponseStart'])
-                print(tx, ty, ix, iy)
-                # assert False
-            self.session_event_log.log_if_check_failed(check_result, session_event, extra_message='tapResponseType={}'.format(tap_response_type))
-
-        session_events = self.get_session_events(row)
-        for session_event in session_events:
-            trial_type = session_event['trialType']
-            check_tap_response(initial_tap_response_checks, session_event, 'initial')
-            check_tap_response(second_tap_response_checks, session_event, 'second')
-
-    def within_first_stimulus_boundary(self, session_event):
-        self.within_stimulus_boundary(session_event, prefix='initialTapResponsePosition')
-
-    def outside_first_stimulus_boundary(self, session_event):
-        self.outside_stimulus_boundary(session_event, prefix='initialTapResponsePosition')
-
-    def within_second_stimulus_boundary(self, session_event):
-        self.within_stimulus_boundary(session_event, prefix='secondTapResponsePosition')
-
-    def outside_second_stimulus_boundary(self, session_event):
-        self.outside_stimulus_boundary(session_event, prefix='secondTapResponsePosition')
-
-    def calculate_ssrt(self, row):
-        session_events = self.get_session_events(row)
-        self.ideal_drt2 = 0
-        self.actual_drt2 = 0
+    # def calculate_ssrt(self, row):
+    #     session_events = self.get_session_events(row)
+    #     self.ideal_drt2 = 0
+    #     self.actual_drt2 = 0
 
     def calculate(self, row):
         super(DoubleDataExtractor, self).calculate(row)

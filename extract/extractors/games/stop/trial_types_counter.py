@@ -21,9 +21,10 @@ class TrialTypesCalculator(AbstractStopEvaluator):
         self.session_item_type_percentages = None
 
     def evaluate(self, row):
-        self.count_trial_and_types(row)
+        self.count_trials(row)
+        self.count_trial_types()
 
-    def count_trial_and_types(self, row):
+    def count_trials(self, row):
         session_events = get_session_events(row)
 
         self.trial_count = 0
@@ -54,6 +55,7 @@ class TrialTypesCalculator(AbstractStopEvaluator):
             if item_type == 'NON_HEALTHY':
                 self.block_item_type_counts[block_id]['NON_HEALTHY'] += 1
 
+    def count_trial_types(self):
         # Calculate the block-level trial type percentages
         self.block_trial_type_percentages = defaultdict(lambda: defaultdict(float))  # dict of float dict
         for block_id_key, items in self.block_trial_type_counts.items():
@@ -95,3 +97,92 @@ class TrialTypesCalculator(AbstractStopEvaluator):
         self.session_item_type_percentages = defaultdict(float)
         for item_type, item_type_count in self.session_item_type_counts.items():
             self.session_item_type_percentages[item_type] = item_type_count / self.trial_count
+
+    def populate_spreadsheet(self, spreadsheet):
+        self.populate_trial_counts(spreadsheet)
+        self.populate_trial_type_counts(spreadsheet)
+
+        # Raw Rounds
+        spreadsheet.select_sheet('Raw Rounds')
+        spreadsheet.set_values(['Round', 'Count'])
+        for block_key in irange(1, 4):
+            spreadsheet.set_values([
+                block_key,
+                len(self.raw_round_trial_counts[block_key])
+            ])
+
+        # Trial Types
+        spreadsheet.select_sheet('Trial Types')
+        # - Blocks
+        spreadsheet.set_values(['Session'])
+        spreadsheet.set_values(['Trial Type', 'Count', 'Percentage'])
+        for trial_type in ['GO', 'STOP']:
+            spreadsheet.set_values([
+                trial_type,
+                self.session_trial_type_counts[trial_type],
+                self.session_trial_type_percentages[trial_type]
+            ])
+        # - Session
+        spreadsheet.advance_row()
+        spreadsheet.set_values(['Block'])
+        spreadsheet.set_values(['Block', 'Trial Type', 'Count', 'Percentage'])
+        for block_key in irange(1, 4):
+            for trial_type in ['GO', 'STOP']:
+                spreadsheet.set_values([
+                    block_key,
+                    trial_type,
+                    self.block_trial_type_counts[block_key][trial_type],
+                    self.block_trial_type_percentages[block_key][trial_type]
+                ])
+
+        print('\nSESSION TRIAL TYPE COUNTS:')
+        pprint(self.session_trial_type_counts)
+        print('\nSESSION TRIAL TYPE PERCENTAGES:')
+        pprint(self.session_trial_type_percentages)
+        print('\nBLOCK TRIAL TYPE COUNTS:')
+        pprint(self.block_trial_type_counts)
+        print('\nBLOCK TRIAL TYPE PERCENTAGES:')
+        pprint(self.block_trial_type_percentages)
+
+
+
+
+        # Trial Items
+        spreadsheet.select_sheet('Item Types')
+        # - Block
+        spreadsheet.set_values(['Session'])
+        spreadsheet.set_values(['Item Type', 'Count', 'Percentage'])
+        for trial_type in ['HEALTHY', 'HEALTHY_RANDOM', 'HEALTHY_NOT_RANDOM', 'NON_HEALTHY']:
+            spreadsheet.set_values([
+                trial_type,
+                self.session_item_type_counts[trial_type],
+                self.session_item_type_percentages[trial_type]
+            ])
+        # - Session
+        spreadsheet.set_values(['Block'])
+        spreadsheet.set_values(['Block', 'Item Type', 'Count', 'Percentage'])
+        for block_key in irange(1, 4):
+            for trial_type in ['HEALTHY', 'HEALTHY_RANDOM', 'HEALTHY_NOT_RANDOM', 'NON_HEALTHY']:
+                spreadsheet.set_values([
+                    block_key,
+                    trial_type,
+                    self.block_item_type_counts[block_key][trial_type],
+                    self.block_item_type_percentages[block_key][trial_type]
+                ])
+        print('\nSESSION ITEM TYPE COUNTS:')
+        pprint(self.session_item_type_counts)
+        print('\nSESSION ITEM TYPE PERCENTAGES:')
+        pprint(self.session_item_type_percentages)
+        print('\nBLOCK ITEM TYPE COUNTS:')
+        pprint(self.block_item_type_counts)
+        print('\nBLOCK ITEM TYPE PERCENTAGES:')
+        pprint(self.block_item_type_percentages)
+
+
+
+
+    def populate_trial_counts(self, spreadsheet):
+        pass  # TODO
+
+    def populate_trial_type_counts(self, spreadsheet):
+        pass  # TODO

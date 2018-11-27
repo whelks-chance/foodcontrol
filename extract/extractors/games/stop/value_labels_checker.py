@@ -3,6 +3,8 @@ from collections import defaultdict
 
 from .abstract_stop_evaluator import AbstractStopEvaluator
 
+from utils import irange, get_session_events
+
 
 class ValueLabelChecker(AbstractStopEvaluator):
 
@@ -16,9 +18,10 @@ class ValueLabelChecker(AbstractStopEvaluator):
 
     def evaluate(self, row):
         self.check_value_labels(row)
+        self.record_item_ids(row)
 
     def check_value_labels(self, row):
-        session_events = self.get_session_events(row)
+        session_events = get_session_events(row)
 
         # Record healthy/non-healthy label allocation counts
         self.label_allocation_counts = defaultdict(lambda: defaultdict(int))  # dict of int dict
@@ -52,6 +55,9 @@ class ValueLabelChecker(AbstractStopEvaluator):
         self.label_allocation_item_type_percentages['HEALTHY'] = healthy_sum / self.denominator(total_sum)
         self.label_allocation_item_type_percentages['NON_HEALTHY'] = non_healthy_sum / self.denominator(total_sum)
 
+    def record_item_ids(self, row):
+        session_events = get_session_events(row)
+
         # Record the item IDs for each value of selected (MB/random/user/upload/non-food)
         self.selected_item_ids = defaultdict(set)  # dict of set
         for session_event in session_events:
@@ -70,3 +76,67 @@ class ValueLabelChecker(AbstractStopEvaluator):
         self.session_item_ids = set()
         for _, item_ids in self.block_item_ids.items():
             self.session_item_ids.update(item_ids)
+
+    def populate_spreadsheet(self, spreadsheet):
+        self.populate_label_allocations(spreadsheet)
+        self.populate_item_ids(spreadsheet)
+
+    def populate_label_allocations(self, spreadsheet):
+        spreadsheet.select_sheet('Label Allocations')
+
+        # - Counts
+        spreadsheet.set_values(['Session'])
+        spreadsheet.set_values(['Trial Type', 'Prefix', 'Count', 'Percentage'])
+        for item_type in ['HEALTHY', 'NON_HEALTHY']:
+            for prefix in ['1_', '2_']:
+                spreadsheet.set_values([
+                    item_type,
+                    prefix,
+                    self.label_allocation_counts[item_type][prefix],
+                    self.label_allocation_item_id_percentages[item_type][prefix]
+                ])
+        print('\nLABEL ALLOCATION COUNTS:')
+        pprint(self.label_allocation_counts)
+
+        # - Percentages
+        spreadsheet.advance_row()
+        spreadsheet.set_values(['Item Type', 'Percentage'])
+        for item_type in self.label_allocation_item_type_percentages:
+            spreadsheet.set_values([
+                item_type,
+                self.label_allocation_item_type_percentages[item_type]
+            ])
+        print('\nLABEL ALLOCATION PERCENTAGES:')
+        pprint(self.label_allocation_item_id_percentages)
+        pprint(self.label_allocation_item_type_percentages)
+
+    def populate_item_ids(self, spreadsheet):
+        # Selected Item IDs
+        spreadsheet.select_sheet('Selected Items')
+        for index, selected_label in enumerate(self.selected_item_ids):
+            spreadsheet.set_values([selected_label])
+        for index, selected_label in enumerate(self.selected_item_ids):
+            for i, selected_item_id in enumerate(self.selected_item_ids[selected_label]):
+                spreadsheet.set_values([selected_item_id])
+        print('\nSELCTED ITEM IDs:')
+        print(self.selected_item_ids)
+
+        # Unique Item IDs
+        # - Session
+        spreadsheet.select_sheet('Unique Items - Session')
+        for index, unique_item_id in enumerate(self.session_item_ids):
+            spreadsheet.set_values([unique_item_id])
+        # - Blocks
+        spreadsheet.select_sheet('Unique Items - Blocks')
+        for block_key in irange(1, 4):
+            spreadsheet.set_value(block_key)
+        spreadsheet.advance_row()
+        for block_key in irange(1, 4):
+            for index, unique_item_id in enumerate(self.block_item_ids[block_key]):
+                spreadsheet.column = block_key
+                spreadsheet.set_value(unique_item_id, cell_offset=(block_key, index+1))
+
+        print('\nSESSION ITEM IDs:')
+        print(self.session_item_ids)
+        print('\nBLOCK ITEM IDs:')
+        pprint(self.block_item_ids)

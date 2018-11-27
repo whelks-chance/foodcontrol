@@ -1,3 +1,4 @@
+from pprint import pprint
 from collections import defaultdict
 
 from .abstract_stop_evaluator import AbstractStopEvaluator
@@ -85,3 +86,70 @@ class DependentVariablesCalculator(AbstractStopEvaluator):
                             self.dv_incorrect_unhealthy_selected_responses.append(tap_response_start)
                         if selected == 'random':
                             self.dv_incorrect_unhealthy_not_selected_responses.append(tap_response_start)
+
+    def populate_spreadsheet(self, spreadsheet):
+        # Correct Counts
+        spreadsheet.select_sheet('Correct Counts')
+        spreadsheet.set_values(['Block'])
+        spreadsheet.set_values(['Block', 'Trial Type', 'Count'])
+        for block_key in irange(1, 4):
+            for trial_type in ['CORRECT_GO', 'CORRECT_STOP']:
+                spreadsheet.set_values([
+                    block_key,
+                    trial_type,
+                    self.dv_correct_counts[block_key][trial_type]
+                ])
+                print([
+                    block_key,
+                    trial_type,
+                    self.dv_correct_counts[block_key][trial_type]
+                ])
+        pprint(self.dv_correct_counts)
+
+        print('DV BLOCK LEVEL CORRECT PERCENTAGES:')
+        pprint(self.dv_correct_block_percentages)
+        spreadsheet.advance_row()
+        spreadsheet.set_values(['Block'])
+        spreadsheet.set_values(['Block', 'Trial Type', 'Count'])
+        for block_key in irange(1, 4):
+            for trial_type in ['CORRECT_GO', 'CORRECT_STOP']:
+                spreadsheet.set_values([
+                    block_key,
+                    trial_type,
+                    self.dv_correct_block_percentages[block_key][trial_type]
+                ])
+
+        print('DV SESSION LEVEL CORRECT PERCENTAGES:')
+        pprint(self.dv_correct_session_percentages)
+        spreadsheet.advance_row()
+        spreadsheet.set_values(['Session'])
+        spreadsheet.set_values(['CORRECT_GO', self.dv_correct_session_percentages['CORRECT_GO']])
+        spreadsheet.set_values(['CORRECT_STOP', self.dv_correct_session_percentages['CORRECT_STOP']])
+
+        spreadsheet.select_sheet('Mean Response Times')
+        spreadsheet.set_values(['Correct Go'])
+        spreadsheet.set_values(['Mean CORRECT_GO Responses', self.mean(self.dv_correct_go_responses)])
+        spreadsheet.set_values(
+            ['Mean CORRECT_GO HEALTHY Responses', self.mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY'])])
+        spreadsheet.set_values(
+            ['Mean CORRECT_GO UNHEALTHY Responses', self.mean(self.dv_correct_responses['CORRECT_GO']['UNHEALTHY'])])
+        spreadsheet.set_values(['Correct Stop'])
+        spreadsheet.set_values(['Mean CORRECT_STOP Responses', self.mean(self.dv_correct_go_responses)])
+        spreadsheet.set_values(
+            ['Mean CORRECT_STOP HEALTHY Responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY'])])
+        spreadsheet.set_values(['Mean CORRECT_STOP UNHEALTHY Responses',
+                                self.mean(self.dv_correct_responses['CORRECT_STOP']['UNHEALTHY'])])
+        # print('mean CORRECT_GO responses', self.mean(self.dv_correct_go_responses))
+        # print('mean CORRECT_GO HEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
+        # print('mean CORRECT_GO UNHEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_GO']['NON_HEALTHY']))
+        # print('mean CORRECT_STOP responses', self.mean(self.dv_correct_stop_responses))
+        # print('mean CORRECT_STOP HEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY']))
+        # print('mean CORRECT_STOP UNHEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['NON_HEALTHY']))
+        spreadsheet.set_values(['CORRECT_GO Responses'])
+        print('mean INCORRECT HEALTHY SELECTED responses', self.mean(self.dv_incorrect_healthy_selected_responses))
+        print('mean INCORRECT HEALTHY NOT SELECTED responses',
+              self.mean(self.dv_incorrect_healthy_not_selected_responses))
+        print('mean INCORRECT UNHEALTHY SELECTED responses', self.mean(self.dv_incorrect_unhealthy_selected_responses))
+        print('mean INCORRECT UNHEALTHY NOT SELECTED responses',
+              self.mean(self.dv_incorrect_unhealthy_not_selected_responses))
+        # assert False
