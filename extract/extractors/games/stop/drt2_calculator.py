@@ -10,6 +10,7 @@ class DRT2Calculator(AbstractStopEvaluator):
         self.actual_drt2 = None
 
     def evaluate(self, row):
+        # TODO: Add calculation
         session_events = get_session_events(row)
         self.ideal_drt2 = 0
         self.actual_drt2 = 0

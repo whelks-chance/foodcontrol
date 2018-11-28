@@ -141,17 +141,4 @@ class DependentVariablesCalculator(AbstractStopEvaluator):
             ['Mean CORRECT_STOP HEALTHY Responses', mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY'])])
         spreadsheet.set_values(['Mean CORRECT_STOP UNHEALTHY Responses',
                                 mean(self.dv_correct_responses['CORRECT_STOP']['UNHEALTHY'])])
-        # print('mean CORRECT_GO responses', mean(self.dv_correct_go_responses))
-        # print('mean CORRECT_GO HEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
-        # print('mean CORRECT_GO UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['NON_HEALTHY']))
-        # print('mean CORRECT_STOP responses', mean(self.dv_correct_stop_responses))
-        # print('mean CORRECT_STOP HEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY']))
-        # print('mean CORRECT_STOP UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['NON_HEALTHY']))
         spreadsheet.set_values(['CORRECT_GO Responses'])
-        print('mean INCORRECT HEALTHY SELECTED responses', mean(self.dv_incorrect_healthy_selected_responses))
-        print('mean INCORRECT HEALTHY NOT SELECTED responses',
-              mean(self.dv_incorrect_healthy_not_selected_responses))
-        print('mean INCORRECT UNHEALTHY SELECTED responses', mean(self.dv_incorrect_unhealthy_selected_responses))
-        print('mean INCORRECT UNHEALTHY NOT SELECTED responses',
-              mean(self.dv_incorrect_unhealthy_not_selected_responses))
-        # assert False

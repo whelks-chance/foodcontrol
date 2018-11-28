@@ -11,7 +11,8 @@ class PointsChecker(AbstractStopEvaluator):
     def evaluate(self, row):
         self.check_points(row)
 
-    def check_points(self, row):
+    @staticmethod
+    def check_points(row):
         points = {
             'GO': {
                 'CORRECT_GO': 20,

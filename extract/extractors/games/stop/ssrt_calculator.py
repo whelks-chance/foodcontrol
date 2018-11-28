@@ -10,14 +10,18 @@ class SSRTCalculator(AbstractStopEvaluator):
         self.mean_actual_ssrt = None
         self.ideal_integration_ssrt = None
         self.actual_integration_ssrt = None
+        self.mean_stop_signal_delay = None
+        self.mean_stop_signal_onset = None
 
     def evaluate(self, row):
         self.calculate_ssrt(row)
 
     def calculate_ssrt(self, row):
         session_events = get_session_events(row)
+        self.calculate_mean_ssrt(session_events)
+        self.calculate_integration_ssrt(session_events)
 
-        # A - Mean SSRT
+    def calculate_mean_ssrt(self, session_events):
         tap_response_start_total = 0
         stop_signal_delay_total = 0
         stop_signal_onset_total = 0
@@ -31,14 +35,14 @@ class SSRTCalculator(AbstractStopEvaluator):
             stop_signal_onset = numericify(session_event['stopSignalOnset'])
             stop_signal_onset_total += stop_signal_onset
         mean_tap_response_start = tap_response_start_total / len(session_events)
-        mean_stop_signal_delay = stop_signal_delay_total / len(session_events)
-        mean_stop_signal_onset = stop_signal_onset_total / len(session_events)
-        self.mean_ideal_ssrt = mean_tap_response_start - mean_stop_signal_delay  # What the SSRT should be
-        self.mean_actual_ssrt = mean_tap_response_start - mean_stop_signal_onset  # What the SSRT actually is
+        self.mean_stop_signal_delay = stop_signal_delay_total / len(session_events)
+        self.mean_stop_signal_onset = stop_signal_onset_total / len(session_events)
+        self.mean_ideal_ssrt = mean_tap_response_start - self.mean_stop_signal_delay  # What the SSRT should be
+        self.mean_actual_ssrt = mean_tap_response_start - self.mean_stop_signal_onset  # What the SSRT actually is
         print('\n IDEAL MEAN SSRT:', self.mean_ideal_ssrt)
         print('ACTUAL MEAN SSRT:', self.mean_actual_ssrt)
 
-        # B - Integration SSRT
+    def calculate_integration_ssrt(self, session_events):
         go_trial_count = 0
         stop_trial_count = 0
         stop_trail_with_response_count = 0
@@ -70,8 +74,8 @@ class SSRTCalculator(AbstractStopEvaluator):
         assert n >= 0
         nth = go_trial_tap_response_starts[int(n)]
         print('nth:', nth)
-        self.ideal_integration_ssrt = nth - mean_stop_signal_delay
-        self.actual_integration_ssrt = nth - mean_stop_signal_onset
+        self.ideal_integration_ssrt = nth - self.mean_stop_signal_delay
+        self.actual_integration_ssrt = nth - self.mean_stop_signal_onset
         print('ideal_integration_ssrt:', self.ideal_integration_ssrt)
         print('actual_integration_ssrt:', self.actual_integration_ssrt)
         # assert False
