@@ -1,13 +1,12 @@
-from ..session_event_log import SessionEventLog
 from .tap_response_checker import TapResponseChecker
 
-from utils import get_session_events, numericify
+from utils import get_session_events, numericify, log_error_if_check_failed
 
 
 class DoubleTapResponseChecker(TapResponseChecker):
 
     def __init__(self):
-        self.session_event_log = SessionEventLog()
+        pass
 
     def evaluate(self, row):
         self.check_tap_responses(row)
@@ -68,7 +67,8 @@ class DoubleTapResponseChecker(TapResponseChecker):
             #         print(tap_response_start, session_event['secondTapResponseStart'])
             #     print(tx, ty, ix, iy)
             #     # assert False
-            self.session_event_log.log_if_check_failed(check_result, session_event, extra_message='tapResponseType={}'.format(tap_response_type))
+            log_error_if_check_failed(check_result, row, session_event,
+                                      extra_message='tapResponseType={}'.format(tap_response_type))
 
         session_events = get_session_events(row)
         for session_event in session_events:

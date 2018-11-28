@@ -42,8 +42,6 @@ class AbstractStopDataExtractor(GameDataExtractor):
         for evaluator in self.evaluators():
             evaluator.evaluate(row)
             evaluator.populate_spreadsheet(self.spreadsheet)
-            if evaluator.has_session_log_entries():
-                evaluator.session_event_log.print()
 
     def evaluators(self):
         return self.common_evaluators() + self.custom_evaluators()

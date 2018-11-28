@@ -1,13 +1,12 @@
 from .abstract_stop_evaluator import AbstractStopEvaluator
-from ..session_event_log import SessionEventLog
 
-from utils import get_session_events
+from utils import get_session_events, log_error_if_check_failed
 
 
 class DoublePointsChecker(AbstractStopEvaluator):
 
     def __init__(self):
-        self.session_event_log = SessionEventLog()
+        pass
 
     def evaluate(self, row):
         self.check_points(row)
@@ -23,7 +22,7 @@ class DoublePointsChecker(AbstractStopEvaluator):
                 # self.session_event_log.log_if_check_failed(check_result, session_event)
             else:
                 check_result = points_this_trial == -50
-            self.session_event_log.log_if_check_failed(check_result, session_event)
+            log_error_if_check_failed(check_result, row, session_event)
 
         def check_double(initial_tap_response_type, second_tap_response_type):
             if (initial_tap_response_type, second_tap_response_type) == ('CORRECT', 'CORRECT'):
@@ -31,7 +30,7 @@ class DoublePointsChecker(AbstractStopEvaluator):
                 # self.session_event_log.log_if_check_failed(check_result, session_event)
             else:
                 check_result = points_this_trial == -50
-            self.session_event_log.log_if_check_failed(check_result, session_event)
+            log_error_if_check_failed(check_result, row, session_event)
 
         checks = {
             'GO': check_go,
@@ -51,5 +50,5 @@ class DoublePointsChecker(AbstractStopEvaluator):
             running_total += points_this_trial
             points_running_total = session_event['pointsRunningTotal']
             check_passed = points_running_total == running_total
-            self.session_event_log.log_if_check_failed(check_passed, session_event,
-                                                       extra_message='points_running_total != running_total')
+            log_error_if_check_failed(check_passed, row, session_event,
+                                      extra_message='points_running_total != running_total')

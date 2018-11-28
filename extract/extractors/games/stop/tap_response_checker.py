@@ -1,15 +1,14 @@
 import math
 
-from ..session_event_log import SessionEventLog
 from .abstract_stop_evaluator import AbstractStopEvaluator
 
-from utils import get_session_events, numericify
+from utils import get_session_events, numericify, log_error_if_check_failed
 
 
 class TapResponseChecker(AbstractStopEvaluator):
 
     def __init__(self):
-        self.session_event_log = SessionEventLog()
+        pass
 
     def evaluate(self, row):
         self.check_tap_responses(row)
@@ -51,9 +50,11 @@ class TapResponseChecker(AbstractStopEvaluator):
             #     print('        Item Position: ({},{})'.format(ix, iy))
             #     print(tx, ty, ix, iy)
             #     # input('Press return to continue...')
-            # # assert check_result
-            self.session_event_log.log_if_check_failed(check_result, session_event,
-                                                       extra_message='tapResponseType={}'.format(tap_response_type))
+            # if not check_result:
+            #     print(row)
+            # assert check_result
+            log_error_if_check_failed(check_result, row, session_event,
+                                      extra_message='tapResponseType={}'.format(tap_response_type))
 
     @staticmethod
     def within_stimulus_boundary(session_event, item_radius=95, prefix='tapResponsePosition'):

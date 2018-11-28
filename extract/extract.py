@@ -1,9 +1,12 @@
 import os
 import csv
 import json
+import logging
 
 from settings import JSON_PATH, CSV_PATH
 from extractors import ExtractorFactory
+
+logging.basicConfig(filename='error.log', level=logging.ERROR)
 
 
 class Extractor:

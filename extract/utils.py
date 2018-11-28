@@ -1,4 +1,5 @@
 import dpath
+import logging
 import statistics
 
 
@@ -54,3 +55,16 @@ def mean(numbers):
 def remove_none_values(values):
     """"""  # TODO
     return [d for d in values if d is not None]
+
+
+def log_error_if_check_failed(check_result, row, session_event, extra_message=None):
+    if not check_result:
+        message = 'Check failed: userID={}, trialType={} gameSessionID={} roundID={}, trialID={}'.format(
+                            row['userId'],
+                            session_event['trialType'],
+                            session_event['gameSessionID'],
+                            session_event['roundID'],
+                            session_event['trialID'])
+        if extra_message:
+            message += ' ({})'.format(extra_message)
+        logging.error(message, session_event)
