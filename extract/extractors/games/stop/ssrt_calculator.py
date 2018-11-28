@@ -1,6 +1,6 @@
 from .abstract_stop_evaluator import AbstractStopEvaluator
 
-from utils import get_session_events, numericify
+from utils import get_session_events, numericify, remove_none_values
 
 
 class SSRTCalculator(AbstractStopEvaluator):
@@ -57,7 +57,7 @@ class SSRTCalculator(AbstractStopEvaluator):
             tap_response_type = session_event['tapResponseType']
             if tap_response_type in ['INCORRECT_STOP', 'MISS_STOP']:
                 incorrect_stop_trials_count += 1
-        go_trial_tap_response_starts = self.remove_none_values(go_trial_tap_response_starts)
+        go_trial_tap_response_starts = remove_none_values(go_trial_tap_response_starts)
         go_trial_tap_response_starts.sort()
         stop_signal_trial_probability = stop_trail_with_response_count / stop_trial_count
         n = go_trial_count * stop_signal_trial_probability

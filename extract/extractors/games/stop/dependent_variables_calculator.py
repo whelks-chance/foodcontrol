@@ -3,6 +3,8 @@ from collections import defaultdict
 
 from .abstract_stop_evaluator import AbstractStopEvaluator
 
+from utils import irange, get_session_events, numericify, mean
+
 
 class DependentVariablesCalculator(AbstractStopEvaluator):
 
@@ -23,7 +25,7 @@ class DependentVariablesCalculator(AbstractStopEvaluator):
 
     def calculate_dependent_variables(self, row):
         self.dv_correct_counts = defaultdict(lambda: defaultdict(int))
-        session_events = self.get_keypath_value(row, 'data.0.sessionEvents')
+        session_events = get_session_events(row)
         trial_count = len(session_events)
         for session_event in session_events:
             # GO/STOP
@@ -65,7 +67,7 @@ class DependentVariablesCalculator(AbstractStopEvaluator):
             # GO/STOP
             if 'tapResponseType' in session_event:
                 tap_response_type = session_event['tapResponseType']
-                tap_response_start = self.numericify(session_event['tapResponseStart'])
+                tap_response_start = numericify(session_event['tapResponseStart'])
                 item_type = session_event['itemType']
                 self.dv_correct_responses[tap_response_type][item_type].append(tap_response_start)
                 if tap_response_type == 'CORRECT_GO':
@@ -128,28 +130,28 @@ class DependentVariablesCalculator(AbstractStopEvaluator):
 
         spreadsheet.select_sheet('Mean Response Times')
         spreadsheet.set_values(['Correct Go'])
-        spreadsheet.set_values(['Mean CORRECT_GO Responses', self.mean(self.dv_correct_go_responses)])
+        spreadsheet.set_values(['Mean CORRECT_GO Responses', mean(self.dv_correct_go_responses)])
         spreadsheet.set_values(
-            ['Mean CORRECT_GO HEALTHY Responses', self.mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY'])])
+            ['Mean CORRECT_GO HEALTHY Responses', mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY'])])
         spreadsheet.set_values(
-            ['Mean CORRECT_GO UNHEALTHY Responses', self.mean(self.dv_correct_responses['CORRECT_GO']['UNHEALTHY'])])
+            ['Mean CORRECT_GO UNHEALTHY Responses', mean(self.dv_correct_responses['CORRECT_GO']['UNHEALTHY'])])
         spreadsheet.set_values(['Correct Stop'])
-        spreadsheet.set_values(['Mean CORRECT_STOP Responses', self.mean(self.dv_correct_go_responses)])
+        spreadsheet.set_values(['Mean CORRECT_STOP Responses', mean(self.dv_correct_go_responses)])
         spreadsheet.set_values(
-            ['Mean CORRECT_STOP HEALTHY Responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY'])])
+            ['Mean CORRECT_STOP HEALTHY Responses', mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY'])])
         spreadsheet.set_values(['Mean CORRECT_STOP UNHEALTHY Responses',
-                                self.mean(self.dv_correct_responses['CORRECT_STOP']['UNHEALTHY'])])
-        # print('mean CORRECT_GO responses', self.mean(self.dv_correct_go_responses))
-        # print('mean CORRECT_GO HEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
-        # print('mean CORRECT_GO UNHEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_GO']['NON_HEALTHY']))
-        # print('mean CORRECT_STOP responses', self.mean(self.dv_correct_stop_responses))
-        # print('mean CORRECT_STOP HEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY']))
-        # print('mean CORRECT_STOP UNHEALTHY responses', self.mean(self.dv_correct_responses['CORRECT_STOP']['NON_HEALTHY']))
+                                mean(self.dv_correct_responses['CORRECT_STOP']['UNHEALTHY'])])
+        # print('mean CORRECT_GO responses', mean(self.dv_correct_go_responses))
+        # print('mean CORRECT_GO HEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['HEALTHY']))
+        # print('mean CORRECT_GO UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_GO']['NON_HEALTHY']))
+        # print('mean CORRECT_STOP responses', mean(self.dv_correct_stop_responses))
+        # print('mean CORRECT_STOP HEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['HEALTHY']))
+        # print('mean CORRECT_STOP UNHEALTHY responses', mean(self.dv_correct_responses['CORRECT_STOP']['NON_HEALTHY']))
         spreadsheet.set_values(['CORRECT_GO Responses'])
-        print('mean INCORRECT HEALTHY SELECTED responses', self.mean(self.dv_incorrect_healthy_selected_responses))
+        print('mean INCORRECT HEALTHY SELECTED responses', mean(self.dv_incorrect_healthy_selected_responses))
         print('mean INCORRECT HEALTHY NOT SELECTED responses',
-              self.mean(self.dv_incorrect_healthy_not_selected_responses))
-        print('mean INCORRECT UNHEALTHY SELECTED responses', self.mean(self.dv_incorrect_unhealthy_selected_responses))
+              mean(self.dv_incorrect_healthy_not_selected_responses))
+        print('mean INCORRECT UNHEALTHY SELECTED responses', mean(self.dv_incorrect_unhealthy_selected_responses))
         print('mean INCORRECT UNHEALTHY NOT SELECTED responses',
-              self.mean(self.dv_incorrect_unhealthy_not_selected_responses))
+              mean(self.dv_incorrect_unhealthy_not_selected_responses))
         # assert False

@@ -6,7 +6,7 @@ from .abstract_stop_evaluator import AbstractStopEvaluator
 from utils import irange, get_session_events
 
 
-class TrialTypesCalculator(AbstractStopEvaluator):
+class TrialTypesCounter(AbstractStopEvaluator):
 
     def __init__(self):
         self.trial_count = None

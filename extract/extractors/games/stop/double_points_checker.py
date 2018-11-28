@@ -1,4 +1,5 @@
 from .abstract_stop_evaluator import AbstractStopEvaluator
+from ..session_event_log import SessionEventLog
 
 from utils import get_session_events
 
@@ -6,7 +7,7 @@ from utils import get_session_events
 class DoublePointsChecker(AbstractStopEvaluator):
 
     def __init__(self):
-        pass
+        self.session_event_log = SessionEventLog()
 
     def evaluate(self, row):
         self.check_points(row)

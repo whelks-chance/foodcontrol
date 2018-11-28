@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from .abstract_stop_evaluator import AbstractStopEvaluator
 
-from utils import irange, get_session_events
+from utils import irange, get_session_events, denominator
 
 
 class ValueLabelChecker(AbstractStopEvaluator):
@@ -43,17 +43,17 @@ class ValueLabelChecker(AbstractStopEvaluator):
         non_healthy_sum = self.label_allocation_counts['NON_HEALTHY']['1_'] + \
             self.label_allocation_counts['NON_HEALTHY']['2_']
         self.label_allocation_item_id_percentages['HEALTHY']['1_'] =\
-            self.label_allocation_counts['HEALTHY']['1_'] / self.denominator(healthy_sum)
+            self.label_allocation_counts['HEALTHY']['1_'] / denominator(healthy_sum)
         self.label_allocation_item_id_percentages['HEALTHY']['2_'] =\
-            self.label_allocation_counts['HEALTHY']['2_'] / self.denominator(healthy_sum)
+            self.label_allocation_counts['HEALTHY']['2_'] / denominator(healthy_sum)
         self.label_allocation_item_id_percentages['NON_HEALTHY']['1_'] =\
-            self.label_allocation_counts['NON_HEALTHY']['1_'] / self.denominator(non_healthy_sum)
+            self.label_allocation_counts['NON_HEALTHY']['1_'] / denominator(non_healthy_sum)
         self.label_allocation_item_id_percentages['NON_HEALTHY']['2_'] =\
-            self.label_allocation_counts['NON_HEALTHY']['2_'] / self.denominator(non_healthy_sum)
+            self.label_allocation_counts['NON_HEALTHY']['2_'] / denominator(non_healthy_sum)
         total_sum = healthy_sum + non_healthy_sum
         self.label_allocation_item_type_percentages = defaultdict(float)
-        self.label_allocation_item_type_percentages['HEALTHY'] = healthy_sum / self.denominator(total_sum)
-        self.label_allocation_item_type_percentages['NON_HEALTHY'] = non_healthy_sum / self.denominator(total_sum)
+        self.label_allocation_item_type_percentages['HEALTHY'] = healthy_sum / denominator(total_sum)
+        self.label_allocation_item_type_percentages['NON_HEALTHY'] = non_healthy_sum / denominator(total_sum)
 
     def record_item_ids(self, row):
         session_events = get_session_events(row)

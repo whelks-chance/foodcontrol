@@ -1,8 +1,14 @@
 from ..gamedataextractor import GameDataExtractor
-from ..session_event_log import SessionEventLog
 
-from .raw_events_calculator import RawEventsCalculator
+
 from .points_checker import PointsChecker
+from .ssrt_calculator import SSRTCalculator
+from .trial_count_checker import TrialCountChecker
+from .trial_types_counter import TrialTypesCounter
+from .value_labels_checker import ValueLabelChecker
+from .durations_calculator import DurationsCalculator
+from .raw_events_calculator import RawEventsCalculator
+from .dependent_variables_calculator import DependentVariablesCalculator
 from .double_points_checker import DoublePointsChecker
 from .double_tap_response_checker import DoubleTapResponseChecker
 from .drt2_calculator import DRT2Calculator
@@ -21,7 +27,6 @@ class AbstractStopDataExtractor(GameDataExtractor):
         ]
 
     spreadsheet = None
-    session_event_log = SessionEventLog()
 
     def clear(self):
         pass
@@ -32,28 +37,33 @@ class AbstractStopDataExtractor(GameDataExtractor):
     def calculate(self, row):
         super(AbstractStopDataExtractor, self).calculate(row)
 
-        evaluators = [
-            RawEventsCalculator(),
-            # PointsChecker(),
-        ]
-
         self.spreadsheet = Spreadsheet()
-        for evaluator in evaluators:
+        for evaluator in self.evaluators():
             evaluator.evaluate(row)
             evaluator.populate_spreadsheet(self.spreadsheet)
+            if evaluator.has_session_log_entries():
+                evaluator.session_event_log.print()
 
-        # self.calculate_durations(row)
-        # self.count_trial_and_types(row)
-        # self.check_value_labels(row)
-        # self.check_tap_responses(row)
-        # self.check_points(row)
-        # self.calculate_dependent_variables(row)
-        # self.calculate_ssrt(row)
-        # self.count_raw_events(row)
-        # self.create_spreadsheet()
+    def evaluators(self):
+        return self.common_evaluators() + self.custom_evaluators()
 
-    # def create_spreadsheet(self):
-    #     spreadsheet = Spreadsheet()
+    @staticmethod
+    def common_evaluators():
+        return [
+            DurationsCalculator(),
+            TrialCountChecker(),
+            ValueLabelChecker(),
+            TrialTypesCounter(),
+            DependentVariablesCalculator(),
+            RawEventsCalculator(),
+        ]
+
+    @staticmethod
+    def custom_evaluators():
+        return [
+            PointsChecker(),
+            SSRTCalculator(),
+        ]
 
 
 class StopDataExtractor(AbstractStopDataExtractor):
@@ -90,16 +100,10 @@ class DoubleDataExtractor(AbstractStopDataExtractor):
 
     type = 'DOUBLE'
 
-    def calculate(self, row):
-        super(DoubleDataExtractor, self).calculate(row)
-
-        evaluators = [
+    @staticmethod
+    def custom_evaluators():
+        return [
             DoublePointsChecker(),
             DoubleTapResponseChecker(),
             DRT2Calculator(),
         ]
-
-        self.spreadsheet = Spreadsheet()
-        for evaluator in evaluators:
-            evaluator.evaluate(row)
-            evaluator.populate_spreadsheet(self.spreadsheet)

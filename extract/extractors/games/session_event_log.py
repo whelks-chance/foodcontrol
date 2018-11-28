@@ -6,6 +6,9 @@ class SessionEventLog:
     def clear(self):
         self.logs = []
 
+    def is_empty(self):
+        return len(self.logs) == 0
+
     def log(self, message, data=None):
         log = {
             'message': message,
