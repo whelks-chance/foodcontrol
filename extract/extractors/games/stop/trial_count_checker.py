@@ -11,10 +11,11 @@ class TrialCountChecker(AbstractStopEvaluator):
     def evaluate(self, row):
         self.check_trials_count(row)
 
-    def check_trials_count(self, row):
+    @staticmethod
+    def check_trials_count(row):
         number_of_rounds = 4
-        old_number_of_trials = 48
-        new_number_of_trials = 24
+        old_number_of_trials = 48  # App data version 1 had 48 trials...
+        new_number_of_trials = 24  # ...now its 24 trials
         session_events = get_session_events(row)
         assert len(session_events) == (number_of_rounds * old_number_of_trials)\
             or (number_of_rounds * new_number_of_trials)

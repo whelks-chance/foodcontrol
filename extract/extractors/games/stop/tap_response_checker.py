@@ -1,5 +1,6 @@
 import math
 
+from ..session_event_log import SessionEventLog
 from .abstract_stop_evaluator import AbstractStopEvaluator
 
 from utils import get_session_events, numericify
@@ -8,7 +9,7 @@ from utils import get_session_events, numericify
 class TapResponseChecker(AbstractStopEvaluator):
 
     def __init__(self):
-        pass
+        self.session_event_log = SessionEventLog()
 
     def evaluate(self, row):
         self.check_tap_responses(row)

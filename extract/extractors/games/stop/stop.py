@@ -6,6 +6,7 @@ from .ssrt_calculator import SSRTCalculator
 from .trial_count_checker import TrialCountChecker
 from .trial_types_counter import TrialTypesCounter
 from .value_labels_checker import ValueLabelChecker
+from .tap_response_checker import TapResponseChecker
 from .durations_calculator import DurationsCalculator
 from .raw_events_calculator import RawEventsCalculator
 from .dependent_variables_calculator import DependentVariablesCalculator
@@ -62,6 +63,7 @@ class AbstractStopDataExtractor(GameDataExtractor):
     def custom_evaluators():
         return [
             PointsChecker(),
+            TapResponseChecker(),
             SSRTCalculator(),
         ]
 
