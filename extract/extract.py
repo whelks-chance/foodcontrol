@@ -47,7 +47,8 @@ class Extractor:
             csv_writer.writerow(column_names)  # Write the header row
             csv_file.write(file_data)          # Write the data rows
 
-        if hasattr(extractor, 'spreadsheet'):
+        if extractor.has_spreadsheet():
+            print(type(extractor).__name__)
             output_filename = json_csv_path / '{}.xlsx'.format(filename)
             extractor.spreadsheet.save(output_filename)
 
@@ -91,9 +92,9 @@ if __name__ == '__main__':
         # '060618.json',
         # '070618.json',
         # '200818.json',
-        '040918.json',
+        # '040918.json',
         # '260918.json',
-        # '010618_to_040918.json',
+        '010618_to_040918.json',
 
         # '041018_SameDay.json'
     ]

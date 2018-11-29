@@ -16,6 +16,9 @@ class DataExtractor:
     def get_filename(self):
         return self.get_extractor_type()
 
+    def has_spreadsheet(self):
+        return hasattr(self, 'spreadsheet') and self.spreadsheet is not None
+
     def get_common_keypaths(self):
         """Return a list of keypaths common to all rows"""
         return [
