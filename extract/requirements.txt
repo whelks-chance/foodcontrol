@@ -1,4 +1,4 @@
 dpath==1.4.2
 openpyxl==2.5.9
-git+https://github.com/DrJeffreyMorgan/python-keypath-extractor.git
-git+https://github.com/DrJeffreyMorgan/python-spreadsheet.git
+git+https://github.com/Data-Innovation-Research-Institute/python-spreadsheet.git
+git+https://github.com/Data-Innovation-Research-Institute/python-keypath-extractor.git
