@@ -95,8 +95,8 @@ class ValueLabelChecker(AbstractStopEvaluator):
                     self.label_allocation_counts[item_type][prefix],
                     self.label_allocation_item_id_percentages[item_type][prefix]
                 ])
-        print('\nLABEL ALLOCATION COUNTS:')
-        pprint(self.label_allocation_counts)
+        # print('\nLABEL ALLOCATION COUNTS:')
+        # pprint(self.label_allocation_counts)
 
         # - Percentages
         spreadsheet.advance_row()
@@ -106,9 +106,9 @@ class ValueLabelChecker(AbstractStopEvaluator):
                 item_type,
                 self.label_allocation_item_type_percentages[item_type]
             ])
-        print('\nLABEL ALLOCATION PERCENTAGES:')
-        pprint(self.label_allocation_item_id_percentages)
-        pprint(self.label_allocation_item_type_percentages)
+        # print('\nLABEL ALLOCATION PERCENTAGES:')
+        # pprint(self.label_allocation_item_id_percentages)
+        # pprint(self.label_allocation_item_type_percentages)
 
     def populate_item_ids(self, spreadsheet):
         # Selected Item IDs
@@ -118,8 +118,8 @@ class ValueLabelChecker(AbstractStopEvaluator):
         for index, selected_label in enumerate(self.selected_item_ids):
             for i, selected_item_id in enumerate(self.selected_item_ids[selected_label]):
                 spreadsheet.set_values([selected_item_id])
-        print('\nSELCTED ITEM IDs:')
-        print(self.selected_item_ids)
+        # print('\nSELCTED ITEM IDs:')
+        # print(self.selected_item_ids)
 
         # Unique Item IDs
         # - Session
@@ -136,7 +136,7 @@ class ValueLabelChecker(AbstractStopEvaluator):
                 spreadsheet.column = block_key
                 spreadsheet.set_value(unique_item_id, cell_offset=(block_key, index+1))
 
-        print('\nSESSION ITEM IDs:')
-        print(self.session_item_ids)
-        print('\nBLOCK ITEM IDs:')
-        pprint(self.block_item_ids)
+        # print('\nSESSION ITEM IDs:')
+        # print(self.session_item_ids)
+        # print('\nBLOCK ITEM IDs:')
+        # pprint(self.block_item_ids)

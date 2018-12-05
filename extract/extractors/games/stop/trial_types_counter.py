@@ -135,17 +135,14 @@ class TrialTypesCounter(AbstractStopEvaluator):
                     self.block_trial_type_percentages[block_key][trial_type]
                 ])
 
-        print('\nSESSION TRIAL TYPE COUNTS:')
-        pprint(self.session_trial_type_counts)
-        print('\nSESSION TRIAL TYPE PERCENTAGES:')
-        pprint(self.session_trial_type_percentages)
-        print('\nBLOCK TRIAL TYPE COUNTS:')
-        pprint(self.block_trial_type_counts)
-        print('\nBLOCK TRIAL TYPE PERCENTAGES:')
-        pprint(self.block_trial_type_percentages)
-
-
-
+        # print('\nSESSION TRIAL TYPE COUNTS:')
+        # pprint(self.session_trial_type_counts)
+        # print('\nSESSION TRIAL TYPE PERCENTAGES:')
+        # pprint(self.session_trial_type_percentages)
+        # print('\nBLOCK TRIAL TYPE COUNTS:')
+        # pprint(self.block_trial_type_counts)
+        # print('\nBLOCK TRIAL TYPE PERCENTAGES:')
+        # pprint(self.block_trial_type_percentages)
 
         # Trial Items
         spreadsheet.select_sheet('Item Types')

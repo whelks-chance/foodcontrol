@@ -101,14 +101,14 @@ class DependentVariablesCalculator(AbstractStopEvaluator):
                     trial_type,
                     self.dv_correct_counts[block_key][trial_type]
                 ])
-                print([
-                    block_key,
-                    trial_type,
-                    self.dv_correct_counts[block_key][trial_type]
-                ])
+                # print([
+                #     block_key,
+                #     trial_type,
+                #     self.dv_correct_counts[block_key][trial_type]
+                # ])
         pprint(self.dv_correct_counts)
 
-        print('DV BLOCK LEVEL CORRECT PERCENTAGES:')
+        # print('DV BLOCK LEVEL CORRECT PERCENTAGES:')
         pprint(self.dv_correct_block_percentages)
         spreadsheet.advance_row()
         spreadsheet.set_values(['Block'])
@@ -121,7 +121,7 @@ class DependentVariablesCalculator(AbstractStopEvaluator):
                     self.dv_correct_block_percentages[block_key][trial_type]
                 ])
 
-        print('DV SESSION LEVEL CORRECT PERCENTAGES:')
+        # print('DV SESSION LEVEL CORRECT PERCENTAGES:')
         pprint(self.dv_correct_session_percentages)
         spreadsheet.advance_row()
         spreadsheet.set_values(['Session'])
